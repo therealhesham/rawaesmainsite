@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+:root {
+  --background: #faf9f6;
+  --foreground: #002a3a;
+  --card: #ffffff;
+}
+
+@theme {
+  --color-primary: #d4af79;
+  --color-secondary: #002a3a;
+  --color-background-light: #faf9f6;
+  --color-background-dark: #0f172a;
+  --color-card-light: #ffffff;
+  --color-card-dark: #1e293b;
+  --color-text-dark: #002a3a;
+  --color-text-light: #e2e8f0;
+  --font-display: "Tajawal", sans-serif;
+  --font-body: "Tajawal", sans-serif;
+  --radius: 0.5rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0f172a;
+    --foreground: #e2e8f0;
+    --card: #1e293b;
+  }
+}
+
+body {
+  font-family: "Tajawal", sans-serif;
+  background: var(--background);
+  color: var(--foreground);
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.text-shadow {
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+::-webkit-scrollbar-thumb {
+  background: #d4af79;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #b5905f;
+}
+
+@media (prefers-color-scheme: dark) {
+  ::-webkit-scrollbar-track {
+    background: #1e293b;
+  }
+}
