@@ -1,5 +1,7 @@
 "use client";
 
+import { motion } from "framer-motion";
+
 const reasons = [
     {
         title: "فريق محترف",
@@ -17,13 +19,27 @@ const reasons = [
 
 export function WhyUsSection() {
     return (
-        <section className="flex flex-col lg:flex-row h-auto min-h-[500px]">
+        <section className="flex flex-col lg:flex-row h-auto min-h-[500px] overflow-hidden">
 
             {/* Left Side (White) - List of Reasons */}
-            <div className="w-full lg:w-1/2 bg-white dark:bg-card-dark p-12 md:p-20 flex flex-col justify-center">
+            <motion.div
+                className="w-full lg:w-1/2 bg-white dark:bg-card-dark p-12 md:p-20 flex flex-col justify-center"
+                initial={{ opacity: 0, x: -50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8 }}
+            >
                 <div className="space-y-12">
                     {reasons.map((reason, index) => (
-                        <div key={index} className="text-right">
+                        <motion.div
+                            key={index}
+                            className="text-right"
+                            initial={{ opacity: 0, x: -30 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: 0.3 + (index * 0.2), duration: 0.6 }}
+                            whileHover={{ x: -10 }}
+                        >
                             <h3 className="text-secondary dark:text-primary font-bold text-xl mb-2">
                                 {reason.title}
                             </h3>
@@ -33,21 +49,44 @@ export function WhyUsSection() {
                             <button className="text-[#c49b60] text-sm font-bold hover:underline">
                                 اقرأ المزيد
                             </button>
-                        </div>
+                        </motion.div>
                     ))}
                 </div>
-            </div>
+            </motion.div>
             {/* Right Side (Dark Blue) - Title & Description */}
-            <div className="w-full lg:w-1/2 bg-[#001f2b] text-white p-12 md:p-20 flex flex-col justify-center items-start text-right">
-                <h2 className="text-4xl md:text-5xl font-bold mb-6 w-full">لماذا نحن؟</h2>
-                <p className="text-gray-300 text-lg leading-loose mb-10 max-w-lg">
+            <motion.div
+                className="w-full lg:w-1/2 bg-[#001f2b] text-white p-12 md:p-20 flex flex-col justify-center items-start text-right"
+                initial={{ opacity: 0, x: 50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8 }}
+            >
+                <motion.h2
+                    className="text-4xl md:text-5xl font-bold mb-6 w-full"
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4, duration: 0.6 }}
+                >
+                    لماذا نحن؟
+                </motion.h2>
+                <motion.p
+                    className="text-gray-300 text-lg leading-loose mb-10 max-w-lg"
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    transition={{ delay: 0.6, duration: 0.6 }}
+                >
                     نحن مجموعة روائس للاستثمار، ونحن ملتزمون بتفير فرص استثماريه رائده لعملائنا. نحن نعمل بجد لتحقيق أهدافكم الماليه، فيما يتعلق بالاستثمار في المشاريع الجديده والمبتكره.
-                </p>
-                <button className="bg-[#c49b60] hover:bg-[#b08a50] text-white px-8 py-3 rounded-lg font-bold transition-colors">
+                </motion.p>
+                <motion.button
+                    className="bg-[#c49b60] hover:bg-[#b08a50] text-white px-8 py-3 rounded-lg font-bold transition-colors"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                >
                     اقرأ المزيد
-                </button>
-            </div>
+                </motion.button>
+            </motion.div>
 
         </section>
     );
 }
+

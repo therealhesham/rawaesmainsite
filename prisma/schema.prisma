@@ -19,7 +19,6 @@ model user {
   profilepicture String?
   email          String          @unique
   notfications   notifications[]
-  password       String
   nationalId     String          @unique
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt

@@ -21,7 +21,7 @@ export function InvestorLoginSection() {
                             استعرض الملفات الخاصة فيك وقيم بتحميلها او تصفحها
                         </p>
                         <Link
-                            href="#"
+                            href="/login"
                             className="inline-block bg-[#c49b60] hover:bg-[#b08a50] text-white font-bold py-3 px-10 rounded-lg shadow-md transition-colors"
                         >
                             تسجيل دخول المستثمرين
