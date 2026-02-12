@@ -1,11 +1,18 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export function Header() {
+  const pathname = usePathname();
+  const navLinkClass =
+    "px-6 py-2 text-sm font-medium text-[#003749] hover:bg-[#003749] hover:text-white rounded-full transition-colors";
+
   return (
     <header className="bg-white dark:bg-card-dark shadow-sm sticky top-0 z-50">
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
         <div className="flex items-center">
-          <div className="w-16 h-16 md:w-20 md:h-20 relative flex items-center justify-center">
+          <div className="w-16 h-16 md:w-20 md:h-20 relative flex items-center justify-center ">
             <div className="relative w-14 h-14">
           
           <img
@@ -21,34 +28,24 @@ export function Header() {
             </div>
           </div>
         </div>
-        <nav className="hidden lg:flex items-center bg-primary/20 dark:bg-card-dark border border-primary/30 rounded-full px-1 py-1">
-          <Link
-            className="px-6 py-2 text-sm font-medium text-secondary hover:text-primary transition-colors dark:text-gray-200"
-            href="#contact"
-          >
+        <nav className="hidden lg:flex items-center bg-[#ecc383] border border-[#003749]/20 rounded-full px-1 py-1 ">
+          <Link className={`${navLinkClass}`} href="#contact">
             تواصل معنا
           </Link>
-          <a
-            className="px-6 py-2 text-sm font-medium text-secondary hover:text-primary transition-colors flex items-center gap-1 dark:text-gray-200"
-            href="#"
-          >
+          <a className={`${navLinkClass} flex items-center gap-1`} href="#">
             استثمر معنا{" "}
             <span className="material-icons text-sm">expand_more</span>
           </a>
-          <a
-            className="px-6 py-2 text-sm font-medium text-secondary hover:text-primary transition-colors flex items-center gap-1 dark:text-gray-200"
-            href="#sectors"
-          >
+          <a className={`${navLinkClass} flex items-center gap-1`} href="#sectors">
             قطاعاتنا <span className="material-icons text-sm">expand_more</span>
           </a>
-          <Link
-            className="px-6 py-2 text-sm font-medium text-secondary hover:text-primary transition-colors dark:text-gray-200"
-            href="#about"
-          >
+          <Link className={navLinkClass} href="#about">
             نبذه عنا
           </Link>
           <Link
-            className="bg-secondary text-white px-8 py-2 rounded-full text-sm font-bold hover:bg-opacity-90 transition-all shadow-md"
+            className={`px-8 py-2 rounded-full text-sm font-bold transition-all shadow-md ${
+              pathname === "/" ? "bg-[#003749] text-white" : "bg-[#003749] text-white hover:bg-[#003749]/90"
+            }`}
             href="/"
           >
             الرئيسة
