@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LogoSvg } from "./logosvg";
 
 export function AboutSection() {
   return (
@@ -7,26 +8,10 @@ export function AboutSection() {
       className="py-20 bg-background-light dark:bg-background-dark relative overflow-hidden"
     >
       <div className="absolute top-0 right-0 w-1/3 h-full bg-primary/5 -skew-x-12 hidden md:block" />
-      <div className="container mx-auto px-4 flex flex-col md:flex-row items-center gap-12">
-        <div className="w-full md:w-1/3 flex flex-col items-center">
-          <div className="w-48 h-48 md:w-64 md:h-64 relative flex items-center justify-center mb-4">
-            <div className="relative w-full h-full">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-3/4 h-3/4 bg-secondary rounded-full opacity-10" />
-              </div>
-              <div className="absolute top-0 left-1/4 w-1/2 h-1/2 bg-secondary rounded-tl-full" />
-              <div className="absolute top-0 right-1/4 w-1/2 h-1/2 bg-secondary rounded-tr-full" />
-              <div className="absolute bottom-0 left-1/4 w-1/2 h-1/2 bg-secondary rounded-bl-full" />
-              <div className="absolute bottom-0 right-1/4 w-1/2 h-1/2 bg-primary rounded-br-full shadow-lg" />
-            </div>
-          </div>
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-primary">مجموعة روائس</h2>
-            <h3 className="text-xl font-semibold text-secondary dark:text-gray-300">
-              Rawaes Group
-            </h3>
-          </div>
-        </div>
+      <div className="container mx-auto px-4 flex flex-col md:flex-row items-center gap-12 justify-center ">
+      <div className="w-1/3">
+        <LogoSvg />
+      </div>
         <div className="w-full md:w-2/3 text-center md:text-right">
           <h2 className="text-4xl font-bold text-primary mb-6 relative inline-block">
             من نحن
