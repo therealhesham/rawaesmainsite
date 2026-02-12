@@ -7,11 +7,11 @@ export function Header() {
         <div className="flex items-center">
           <div className="w-16 h-16 md:w-20 md:h-20 relative flex items-center justify-center">
             <div className="relative w-12 h-12">
-              <div className="absolute inset-0 bg-secondary rounded-full opacity-20" />
+              {/* <div className="absolute inset-0 bg-secondary rounded-full opacity-20" />
               <div className="absolute top-0 left-0 w-6 h-6 bg-secondary rounded-tl-full" />
               <div className="absolute top-0 right-0 w-6 h-6 bg-secondary rounded-tr-full" />
               <div className="absolute bottom-0 left-0 w-6 h-6 bg-secondary rounded-bl-full" />
-              <div className="absolute bottom-0 right-0 w-6 h-6 bg-primary rounded-br-full" />
+              <div className="absolute bottom-0 right-0 w-6 h-6 bg-primary rounded-br-full" /> */}
             </div>
           </div>
           <div className="hidden md:block mr-3 text-secondary dark:text-white">
