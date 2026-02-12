@@ -4,6 +4,7 @@ import { AboutSection } from "./components/AboutSection";
 import { PillSection } from "./components/PillSection";
 import { SectorsSection } from "./components/SectorsSection";
 import { ValuesSection } from "./components/ValuesSection";
+import { WhyUsSection } from "./components/WhyUsSection";
 import { ContactSection } from "./components/ContactSection";
 import { Footer } from "./components/Footer";
 

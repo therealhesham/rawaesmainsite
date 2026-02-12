@@ -1,7 +1,10 @@
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
 import { InvestSection } from "../components/InvestSection";
+import { InvestorLoginSection } from "../components/InvestorLoginSection";
+import { InvestOpportunitySection } from "../components/InvestOpportunitySection";
 import { ChairmanQuote } from "../components/ChairmanQuote";
+import { WhyUsSection } from "../components/WhyUsSection";
 import { ValuesCards } from "../components/ValuesSection";
 
 export default function InvestPage() {
@@ -65,8 +68,17 @@ export default function InvestPage() {
                 {/* Invest Section — card + plant */}
                 <InvestSection />
 
+                {/* Login Section */}
+                <InvestorLoginSection />
+
+                {/* Invest Opportunity Section */}
+                <InvestOpportunitySection />
+
                 {/* Chairman Quote */}
                 <ChairmanQuote />
+
+                {/* Why Us Section */}
+                <WhyUsSection />
 
                 {/* Values Cards */}
                 <section className="py-20 relative overflow-hidden bg-gray-50 dark:bg-[#0B1120]">
