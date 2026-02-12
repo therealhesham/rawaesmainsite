@@ -1,27 +1,27 @@
 const sectors = [
   {
-    icon: "directions_car",
+    icon: "/rentcar.png",
     title: "روائس لتأجير السيارات",
     sub: "Rawaes Rent Cars",
     desc: "توفر خدمات تأجير السيارات بطريقة مبتكرة وذكية. حيث نسعى دائماً لتلبية احتياجات العملاء بمختلف الفئات والميزانيات، ونقدم خدمات موثوقة ومريحة، مع توفير خيارات التأمين الشامل ودعم الصيانة على الطريق.",
     cta: "للمزيد عن التأجير",
   },
   {
-    icon: "person_search",
+    icon: "recruitment.png",
     title: "روائس للاستقدام",
     sub: "Rawaes Recruitment",
     desc: "يعد روائس للاستقدام أحد منافذ الاستقدام المعروفة في المدينة المنورة والمملكة العربية السعودية بشكل عام. ويسعى فريق القطاع في التطوير المستمر وتحسين الاستقدام لزيادة الفعالية.",
     cta: "للمزيد عن الاستقدام",
   },
   {
-    icon: "restaurant",
+    icon: "hosting.png",
     title: "روائس للضيافة",
     sub: "Rawaes Hospitality",
     desc: "تقدم مجموعة روائس خدمات ضيافة واسعة من الخدمات التي تخدم العملاء خلال تواجدهم في مناطق مختلفة، سواء كانوا في فنادق أو شقق مفروشة أو أماكن إقامة أخرى. وتهدف هذه الخدمات إلى تلبية احتياجات الضيوف.",
     cta: "للمزيد عن الضيافة",
   },
   {
-    icon: "apartment",
+    icon: "investment.png",
     title: "شركة روائس للاستثمار",
     sub: "Rawaes Investment Company",
     desc: "تقوم الشركة بتوفير خدمات شاملة تشمل إدارة العقارات والتقييم العقاري، والاستشارات العقارية وتميز شركة الاستثمار في إدارة العقارات \"المستقبل العقاري\" برؤيتها الفذة والتي تهدف إلى تحقيق أقصى قدر من القيمة لعملائها.",
@@ -50,10 +50,10 @@ export function SectorsSection() {
               className="bg-white dark:bg-card-dark rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-shadow group border border-gray-100 dark:border-gray-700"
             >
               <div className="p-8 flex flex-col items-center border-b border-gray-100 dark:border-gray-700">
-                <div className="w-24 h-24 rounded-full bg-secondary/5 flex items-center justify-center mb-4 group-hover:bg-primary/10 transition-colors">
-                  <span className="material-icons text-secondary dark:text-primary text-5xl">
-                    {s.icon}
-                  </span>
+                <div className="w-32 h-32   flex items-center justify-center mb-4 group-hover:bg-primary/10 transition-colors">
+                  {/* <span className="material-icons text-secondary dark:text-primary text-5xl"> */}
+                   <img src={s.icon}/>
+                  {/* </span> */}
                 </div>
                 <h3 className="text-lg font-bold text-primary mb-1">{s.title}</h3>
                 <p className="text-xs text-gray-500 dark:text-gray-400 font-semibold tracking-wider">
@@ -61,7 +61,7 @@ export function SectorsSection() {
                 </p>
                 <button
                   type="button"
-                  className="mt-4 bg-primary text-white text-xs py-2 px-6 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="mt-4 bg-primary text-white text-xs py-2 px-6 rounded-full opacity-70 group-hover:opacity-100 transition-opacity"
                 >
                   {s.cta}
                 </button>
