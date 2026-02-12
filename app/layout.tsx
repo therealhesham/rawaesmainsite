@@ -1,5 +1,12 @@
 import type { Metadata } from "next";
+import { Tajawal } from "next/font/google";
 import "./globals.css";
+
+const tajawal = Tajawal({
+  subsets: ["arabic"],
+  weight: ["300", "400", "500", "700", "800"],
+  variable: "--font-tajawal",
+});
 
 export const metadata: Metadata = {
   title: "مجموعة روائس - Rawaes Group",
@@ -16,15 +23,13 @@ export default function RootLayout({
     <html dir="rtl" lang="ar" suppressHydrationWarning>
       <head>
         <link
-          href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap"
-          rel="stylesheet"
-        />
-        <link
           href="https://fonts.googleapis.com/icon?family=Material+Icons"
           rel="stylesheet"
         />
       </head>
-      <body className="min-h-screen antialiased bg-background-light dark:bg-background-dark text-text-dark dark:text-text-light font-[family-name:var(--font-body)]">
+      <body
+        className={`${tajawal.variable} min-h-screen antialiased bg-background-light dark:bg-background-dark text-text-dark dark:text-text-light font-body`}
+      >
         {children}
       </body>
     </html>

@@ -16,7 +16,7 @@ export function Hero() {
         style={{ backgroundImage: `url('${HERO_IMAGE}')` }}
       />
       <div className="absolute inset-0  dark:from-black/90 dark:via-black/70" />
-     
+
     </section>
   );
 }

@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 export function Header() {
   const pathname = usePathname();
   const navLinkClass =
-    "px-6 py-2 text-sm font-medium text-[#003749] hover:bg-[#003749] hover:text-white rounded-full transition-colors";
+    "px-6 py-2 text-md font-medium text-[#003749] hover:bg-[#003749] hover:text-white rounded-full transition-colors";
 
   return (
     <header className="bg-white dark:bg-card-dark shadow-sm sticky top-0 z-50">
@@ -14,12 +14,12 @@ export function Header() {
         <div className="flex items-center">
           <div className="w-16 h-16 md:w-20 md:h-20 relative flex items-center justify-center ">
             <div className="relative w-14 h-14">
-          
-          <img
-              src="/logo.png"
-              alt="Rawaes Group Logo"
-              className="w-full h-full object-contain relative z-10"
-            />  
+
+              <img
+                src="/logo.png"
+                alt="Rawaes Group Logo"
+                className="w-full h-full object-contain relative z-10"
+              />
               {/* <div className="absolute inset-0 bg-secondary rounded-full opacity-20" />
               <div className="absolute top-0 left-0 w-6 h-6 bg-secondary rounded-tl-full" />
               <div className="absolute top-0 right-0 w-6 h-6 bg-secondary rounded-tr-full" />
@@ -32,20 +32,19 @@ export function Header() {
           <Link className={`${navLinkClass}`} href="#contact">
             تواصل معنا
           </Link>
-          <a className={`${navLinkClass} flex items-center gap-1`} href="#">
+          <Link className={`${navLinkClass} flex items-center gap-1`} href="/invest">
             استثمر معنا{" "}
-            <span className="material-icons text-sm">expand_more</span>
-          </a>
+            <span className="material-icons text-md">expand_more</span>
+          </Link>
           <a className={`${navLinkClass} flex items-center gap-1`} href="#sectors">
-            قطاعاتنا <span className="material-icons text-sm">expand_more</span>
+            قطاعاتنا <span className="material-icons text-md">expand_more</span>
           </a>
           <Link className={navLinkClass} href="#about">
             نبذه عنا
           </Link>
           <Link
-            className={`px-8 py-2 rounded-full text-sm font-bold transition-all shadow-md ${
-              pathname === "/" ? "bg-[#003749] text-white" : "bg-[#003749] text-white hover:bg-[#003749]/90"
-            }`}
+            className={`px-8 py-2 rounded-full text-md font-bold transition-all shadow-md ${pathname === "/" ? "bg-[#003749] text-white" : "bg-[#003749] text-white hover:bg-[#003749]/90"
+              }`}
             href="/"
           >
             الرئيسة
