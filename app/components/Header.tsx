@@ -5,6 +5,15 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
+type NavItem = {
+  label: string;
+  href: string;
+  active?: boolean;
+  icon?: string;
+  children?: { label: string; href: string }[];
+};
+
+
 export function Header() {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
@@ -18,7 +27,7 @@ export function Header() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const navItems = [
+  const navItems: NavItem[] = [
     { label: "الرئيسة", href: "/", active: pathname === "/" },
     { label: "نبذه عنا", href: "/about-us", active: pathname === "/about-us" },
     {
