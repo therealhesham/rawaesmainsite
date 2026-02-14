@@ -36,9 +36,9 @@ export function Header() {
       icon: "expand_more",
       children: [
         { label: "روائس للاستثمار", href: "/investment" },
-        { label: "روائس للضيافة", href: "#" },
-        { label: "روائس لاستقدام", href: "#" },
-        { label: "روائس لتأجير السيارات", href: "#" },
+        { label: "روائس للضيافة", href: "" },
+        { label: "روائس لاستقدام", href: "rec.rawaes.com" },
+        { label: "روائس لتأجير السيارات", href: "rent.rawaes.com" },
         { label: "روائس للتقسيط", href: "#" },
       ],
     },
