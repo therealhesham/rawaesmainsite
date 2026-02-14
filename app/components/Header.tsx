@@ -10,6 +10,7 @@ type NavItem = {
   href: string;
   active?: boolean;
   icon?: string;
+  target?: string;
   children?: { label: string; href: string }[];
 };
 
@@ -37,8 +38,8 @@ export function Header() {
       children: [
         { label: "روائس للاستثمار", href: "/investment" },
         { label: "روائس للضيافة", href: "" },
-        { label: "روائس لاستقدام", href: "rec.rawaes.com" },
-        { label: "روائس لتأجير السيارات", href: "rent.rawaes.com" },
+        { label: "روائس لاستقدام", href: "https://rec.rawaes.com", target: "_blank" },// it should direct to new website no the same domain
+        { label: "روائس لتأجير السيارات", href: "https://rent.rawaes.com", target: "_blank" },
         { label: "روائس للتقسيط", href: "#" },
       ],
     },
