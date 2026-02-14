@@ -120,20 +120,7 @@ export function ContactSection() {
                 />
               </div>
               <div className="md:col-span-2">
-                <div className="bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 p-3 rounded w-fit flex items-center gap-3">
-                  <input
-                    className="w-5 h-5 text-primary rounded border-gray-400 focus:ring-primary"
-                    type="checkbox"
-                  />
-                  <span className="text-sm text-gray-600 dark:text-gray-300">
-                    أنا لست برنامج روبوت
-                  </span>
-                  <img
-                    alt="captcha"
-                    className="w-8 h-8 opacity-50 ml-2"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuBSk5ySX8AKRpA99jtCeG92deGGpmSncumsQh9Fc9EvgHGHOBUYUOWZwHleVmHKIoWR31exKGEGBkd1bGMMQOX0lw1EhregzSrUc8VBcj3br56pa7Flb6GIkKP6SSpXrw9Dgm82YRyj8l3d9_-ULeHF-IC_GY-x_Zp9MbE9Sa2uidvbkpO0na_xB0q7zTVsKDj1s8woUs58tnEfC43b10FZcpjXmp2iK7TktYwy_F1ybOrDYEcXdHEn9MFxG-f7TN46u2opTnfn81s"
-                  />
-                </div>
+
               </div>
               <div className="md:col-span-2 flex justify-end mt-4">
                 <motion.button

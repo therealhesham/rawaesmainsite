@@ -58,7 +58,7 @@ export function Footer() {
               <li>
                 <Link
                   className="text-gray-300 hover:text-white transition-colors text-xs"
-                  href="#"
+                  href="/about-us"
                 >
                   المدونة
                 </Link>
@@ -70,13 +70,12 @@ export function Footer() {
               <div className="text-right">
                 <h3 className="font-bold text-lg">مجموعة روائس</h3>
                 <p className="text-primary text-sm font-bold dir-ltr">
-                  9200 10 356
+                  920010356
                 </p>
               </div>
-              <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
-                <span className="material-icons text-secondary text-2xl">
-                  grid_view
-                </span>
+              <div className="w-12 h-12 flex items-center justify-center">
+
+                <img src="/transperantlogo.svg" alt="Rawaes Group Logo" className="w-full h-full object-contain drop-shadow-sm" />
               </div>
             </div>
             <p className="text-[10px] text-gray-400 leading-relaxed max-w-xs">

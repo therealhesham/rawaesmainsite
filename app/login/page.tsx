@@ -3,22 +3,35 @@
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { sendOtp, verifyOtp } from "./actions";
 
 export default function LoginPage() {
+    const router = useRouter();
     const [step, setStep] = useState<"phone" | "otp">("phone");
     const [phoneNumber, setPhoneNumber] = useState("");
     const [otp, setOtp] = useState("");
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (step === "phone") {
-            // Here you would typically validate the phone number and send OTP
             if (phoneNumber.length > 8) {
-                setStep("otp");
+                // Call server action to log OTP
+                const result = await sendOtp(phoneNumber);
+                if (result.success) {
+                    setStep("otp");
+                } else {
+                    alert(result.error);
+                }
             }
         } else {
-            // Here you would verify the OTP and log the user in
-            console.log("Logging in with", phoneNumber, otp);
+            // Verify OTP and redirect
+            const result = await verifyOtp(phoneNumber, otp);
+            if (result.success && result.userId) {
+                router.push(`/privatepage/${result.userId}`);
+            } else {
+                alert(result.error || "خطأ في تسجيل الدخول");
+            }
         }
     };
 

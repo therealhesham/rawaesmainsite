@@ -9,7 +9,9 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@prisma/client": "^7.4.0",
+    "@aws-sdk/client-s3": "^3.990.0",
+    "@aws-sdk/lib-storage": "^3.990.0",
+    "@prisma/client": "^5.22.0",
     "framer-motion": "^12.34.0",
     "ioredis": "^5.9.3",
     "next": "16.1.6",
@@ -25,7 +27,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
-    "prisma": "^7.4.0",
+    "prisma": "^5.22.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

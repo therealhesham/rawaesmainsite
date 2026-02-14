@@ -1,19 +1,23 @@
-import Link from "next/link";
+import { Header } from "../../components/Header";
+import { PrismaClient } from "@prisma/client";
+import { notFound } from "next/navigation";
 
-// Mock investor data - replace with API/database fetch using params.id
-function getInvestorData(id: string) {
-  return {
-    investorId: "252402714",
-    nationalId: "01010315691",
-    name: "هشام بدر",
-    phone: "565010026", // Added phone for the new design
-    membershipNo: "2213516269", // Added membership no
-    contracts: [
-      { id: "1", name: "عقد ر ه ب", number: "5176" },
-      { id: "2", name: "عقد د ه ر", number: "7597" }, // Fixed name to match new design expectation if needed, or kept generic
-      { id: "3", name: "عقد ر ر م", number: "3474" }, // Fixed name
-    ],
-  };
+const prisma = new PrismaClient();
+
+async function getInvestorData(id: string) {
+  const userId = parseInt(id);
+  if (isNaN(userId)) return null;
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: {
+      reports: {
+        orderBy: { createdAt: "desc" },
+      },
+    },
+  });
+
+  return user;
 }
 
 export default async function PrivateInvestorPage({
@@ -22,106 +26,29 @@ export default async function PrivateInvestorPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const investor = getInvestorData(id);
+  const investor = await getInvestorData(id);
+
+  if (!investor) {
+    notFound();
+  }
 
   return (
-    <div className="min-h-screen flex flex-col transition-colors duration-300 bg-[#F5F7FA] dark:bg-[#121212] text-[#333333] dark:text-[#E0E0E0] font-sans">
-      {/* Navigation */}
-      <nav className="container mx-auto px-4 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-16 h-16 bg-white dark:bg-[#1E1E1E] rounded-full shadow-md flex items-center justify-center p-1 overflow-hidden">
-            {/* Using a placeholder or the provided URL if accessible, utilizing next/image would be better but standard img for now to match provided HTML speed */}
-            <img
-              alt="Rawaes Group Logo"
-              className="w-full h-full object-contain rounded-full"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuCuqvyQSiArfVUTr0arwAXRIao5Moc7KLLDbLpQ5LAhnZ3bwfPS0kBpcA5RU8a8JbR206VWN0fGzEqQk0HdwlmrgsdCWBWyT64Kj5yZyxUwsv-j5bw22OvYnYep7UaJkox4jcQAsjERCoFnFo16pndIgjk9WBk3vljEEh-mgaK4iYcYvU_ZioQLoSr-FBS0YRQmX4SPDPb_9VS9dMoFxHANHFmKE2_MpEnyYInH6URqeebfSI75C_MS8_vC6omoWTvFXIOxGcOMED8"
-            />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-xl font-bold text-[#003B46] dark:text-[#D4AF37]">
-              مجموعة روائس
-            </span>
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              Rawaes Group
-            </span>
-          </div>
-        </div>
-        <div className="bg-[#D4AF37]/20 dark:bg-[#D4AF37]/10 backdrop-blur-sm rounded-full px-6 py-3 shadow-sm border border-[#D4AF37]/30">
-          <ul className="flex items-center gap-6 text-sm font-medium">
-            <li>
-              <Link
-                className="text-[#003B46] dark:text-white hover:text-[#D4AF37] dark:hover:text-[#D4AF37] transition-colors"
-                href="#"
-              >
-                الرئيسية
-              </Link>
-            </li>
-            <li>
-              <Link
-                className="text-[#003B46] dark:text-white hover:text-[#D4AF37] dark:hover:text-[#D4AF37] transition-colors"
-                href="#"
-              >
-                نبذه عنا
-              </Link>
-            </li>
-            <li className="relative group">
-              <button className="flex items-center gap-1 text-[#003B46] dark:text-white hover:text-[#D4AF37] dark:hover:text-[#D4AF37] transition-colors">
-                قطاعاتنا
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </button>
-            </li>
-            <li className="relative group">
-              <button className="flex items-center gap-1 text-[#003B46] dark:text-white hover:text-[#D4AF37] dark:hover:text-[#D4AF37] transition-colors">
-                استثمر معنا
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </button>
-            </li>
-            <li>
-              <Link
-                className="bg-[#003B46] hover:bg-[#002830] text-white px-5 py-2 rounded-full transition-colors shadow-lg shadow-[#003B46]/30"
-                href="#"
-              >
-                تواصل معنا
-              </Link>
-            </li>
-          </ul>
-        </div>
-      </nav>
+    <div className="min-h-screen flex flex-col transition-colors duration-300 bg-[#F5F7FA] dark:bg-[#121212] text-[#333333] dark:text-[#E0E0E0] font-body">
+      <Header />
+
+      {/* Spacing for fixed header */}
+      <div className="h-24"></div>
 
       <div className="container mx-auto px-4 mt-6">
         <div className="bg-[#003B46] rounded-2xl shadow-lg p-6 md:p-10 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-[#D4AF37] opacity-10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"></div>
-          <h1 className="text-2xl md:text-3xl font-bold text-white relative z-10 flex items-center gap-3">
-            <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24" fill="#D4AF37">
-              <path d="M120-120v-80h720v80H120Zm70-200 128-364 126 150 148-242 168 456H190Zm140-80h304l-72-194-110 180-122-146-124 354h124Zm0-160Z" />
-            </svg>
-            استثمر مع روائس القمم
+          <div className="absolute top-0 right-0 w-64 h-64 bg-gold opacity-20 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"></div>
+          <h1 className="text-2xl md:text-3xl font-bold text-white relative z-10 flex items-center justify-center gap-3 flex-wrap opacity-0 animate-hero-enter">
+            <span className="shrink-0 w-7 h-7 md:w-8 md:h-8 flex items-center justify-center text-gold animate-hero-breathe">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor" className="w-full h-full">
+                <path d="M120-120v-80h720v80H120Zm70-200 128-364 126 150 148-242 168 456H190Zm140-80h304l-72-194-110 180-122-146-124 354h124Zm0-160Z" />
+              </svg>
+            </span>
+            <span className="text-center break-words leading-relaxed animate-hero-breathe" style={{ animationDelay: "0.15s" }}>استثمر مع روائس القمم</span>
           </h1>
         </div>
       </div>
@@ -131,13 +58,16 @@ export default async function PrivateInvestorPage({
           <div className="lg:col-span-8 space-y-8 order-2 lg:order-1">
             {/* Notifications */}
             <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-6 relative overflow-hidden">
-              <div className="flex justify-between items-center mb-6 border-b border-gray-100 dark:border-gray-700 pb-4">
-                <h2 className="text-xl font-bold text-[#003B46] dark:text-white flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24" fill="#D4AF37">
-                    <path d="M160-200v-80h80v-280q0-83 50-147.5T420-792v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v280h80v80H160Zm320-300Zm0 420q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80ZM320-280h320v-280q0-66-47-113t-113-47q-66 0-113 47t-47 113v280Z" />
-                  </svg>
-                  اشعارات مجموعة روائس
+              <div className="flex flex-wrap justify-between items-center gap-4 mb-6 border-b border-gray-100 dark:border-gray-700 pb-4">
+                <h2 className="text-xl font-bold text-[#003B46] dark:text-white leading-relaxed flex items-center gap-2 min-w-0">
+                  <span className="shrink-0 w-6 h-6 flex items-center justify-center text-gold">
+                    <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24" fill="currentColor">
+                      <path d="M160-200v-80h80v-280q0-83 50-147.5T420-792v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v280h80v80H160Zm320-300Zm0 420q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80ZM320-280h320v-280q0-66-47-113t-113-47q-66 0-113 47t-47 113v280Z" />
+                    </svg>
+                  </span>
+                  <span className="break-words">اشعارات مجموعة روائس</span>
                 </h2>
+                {/* Logout button could be a link to api/auth/signout or similar, for now keeping visual */}
                 <button className="bg-[#003B46] hover:bg-[#002830] text-white text-sm px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
                   <svg xmlns="http://www.w3.org/2000/svg" height="18" viewBox="0 -960 960 960" width="18" fill="white">
                     <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h280v80H200Zm440-160-55-58 102-102H360v-80h327L585-622l55-58 200 200-200 200Z" />
@@ -145,7 +75,7 @@ export default async function PrivateInvestorPage({
                   تسجيل الخروج
                 </button>
               </div>
-              <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 mb-6 border-r-4 border-[#D4AF37] text-sm text-gray-600 dark:text-gray-300">
+              <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 mb-6 border-r-4 border-gold text-sm text-gray-600 dark:text-gray-300">
                 تم تفعيل استعراض ملفات الاستثمارات من خلال الموقع الرسمي لدى
                 مجموعة روائس ( النسخة التجريبية )
               </div>
@@ -160,7 +90,7 @@ export default async function PrivateInvestorPage({
 
             {/* Quick Contact */}
             <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
-              <h3 className="text-lg font-bold text-center text-[#003B46] dark:text-white mb-6">
+              <h3 className="text-lg font-bold text-center text-[#003B46] dark:text-white mb-6 leading-relaxed break-words px-2">
                 التواصل السريع للاستفسارات والاقتراحات
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -169,64 +99,112 @@ export default async function PrivateInvestorPage({
                   { title: "الإدارة العليا" },
                   { title: "للاقتراحات والمساعدة" },
                 ].map((item, i) => (
-                  <Link
+                  <div
                     key={i}
-                    className="flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white py-3 px-4 rounded-xl transition-all hover:shadow-lg hover:-translate-y-1"
-                    href="#"
+                    className="flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white py-3 px-4 rounded-xl transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer"
                   >
                     <span className="font-medium">{item.title}</span>
                     <img
                       alt="Whatsapp"
                       className="w-5 h-5 filter brightness-0 invert"
-                      src="https://lh3.googleusercontent.com/aida-public/AB6AXuCNrbfENjNw-_ARSeJXd39xiwokAMlxQWpiTNufXMCd_nbdTffrMEwPeY-uvpS4hZxEru0eoYDR5IKnHTvthTStvkRS9GXrywnSKLo7FQB9SU9slLxGJ4wT8wHKdyEayvCQiwyyitX-RL0cxsS6Tlv3XLHcIeGo4noTOoSDP8Re-xKx_oPvndcmwIoC5T71yVoVJpZoJskI5MBWPZX-b-vRWKQ9Lv4Dv86gflAswKoJ06SzMIJXAUkB4TlvxA9DO9k2R9Gh0fmiuQM"
+                      src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"
                     />
-                  </Link>
+                  </div>
                 ))}
               </div>
+            </div>
+
+            {/* Categorized Reports */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {[
+                { id: 'lease', label: 'عقد استثمار تأجير', icon: 'car_rental' },
+                { id: 'hotel', label: 'عقد استثمار فنادق', icon: 'hotel' },
+                { id: 'real_estate', label: 'عقد استثمار عقاري', icon: 'apartment' },
+                { id: 'installment', label: 'عقد استثمار تقسيط', icon: 'credit_card' },
+              ].map((type) => {
+                const reports = investor.reports.filter((r) => r.type === type.id);
+                return (
+                  <div key={type.id} className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+                    <div className="flex items-center gap-3 mb-4 border-b border-gray-100 dark:border-gray-700 pb-3">
+                      <div className="w-10 h-10 shrink-0 rounded-full bg-gold/15 flex items-center justify-center text-[#003B46] dark:text-gold">
+                        <span className="material-icons text-[22px]">{type.icon}</span>
+                      </div>
+                      <h3 className="font-bold text-[#003B46] dark:text-white text-base leading-snug min-w-0 break-words">
+                        {type.label}
+                      </h3>
+                    </div>
+
+                    <div className="space-y-3">
+                      {reports.length > 0 ? (
+                        reports.map((report) => (
+                          <div key={report.id} className="flex justify-between items-center group">
+                            <div className="flex items-center gap-2 overflow-hidden">
+                              <span className="material-icons text-gray-400 text-sm">description</span>
+                              <span className="text-sm text-gray-600 dark:text-gray-300 truncate max-w-[150px]">
+                                {report.fileName || "تقرير استثماري"}
+                              </span>
+                            </div>
+                            <a
+                              href={report.linkUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs bg-gray-100 dark:bg-gray-800 hover:bg-gold hover:text-[#003B46] text-gray-600 dark:text-gray-300 px-3 py-1.5 rounded-lg transition-colors"
+                            >
+                              عرض
+                            </a>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-sm text-gray-400 text-center py-4">
+                          لا يوجد عقود حالياً
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
           <div className="lg:col-span-4 space-y-6 order-1 lg:order-2">
             {/* User Profile */}
             <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-md border border-gray-100 dark:border-gray-800 p-8 text-center relative">
-              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#003B46] to-[#D4AF37]"></div>
+              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#003B46] to-gold"></div>
               <div className="w-24 h-24 mx-auto mb-4 bg-white dark:bg-gray-800 rounded-full shadow-md flex items-center justify-center p-2">
-                {/* Placeholder Avatar */}
-                <img
-                  alt="User Avatar"
-                  className="w-full h-full object-contain rounded-full"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuBFppnV0tBi5SNiwF5df8lFXxBJY4cegwDHLM6v6LB3dHhW9EkHJm-t3RCzaPoJZ6Cpx-wbE-WR99p7kvGWCk_DdEAsrov7fDdAOiA2UWMOCJYQzAKFagGpBxyDxz3rUsr1JQOH6x7obwQpSfrqKLJacLR89poBM-82ANdu6BsXvPI-RMJlzWl1r18z0C4XZyyZQa2C25KVudVnI5t1Lnq8cC7et3lzo1qyR5mPbChK7adIn69Me6H0hYVlvqMyDVaS3xVYnmq6U-U"
-                />
+                {/* User Avatar */}
+                <div className="w-full h-full rounded-full bg-gray-100 flex items-center justify-center text-2xl font-bold text-[#003B46]">
+                  {investor.name.charAt(0)}
+                </div>
               </div>
-              <h2 className="text-xl font-bold text-[#003B46] dark:text-[#D4AF37] mb-1">
-                مجموعة روائس
+              <h2 className="text-xl font-bold text-[#003B46] dark:text-gold mb-1">
+                {investor.name}
               </h2>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 font-mono">
-                Rawaes Group
+                {investor.email || "Rawaes Group Investor"}
               </p>
               <div className="space-y-4">
                 <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
-                  <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 block">
                     رقم العضوية
                   </p>
-                  <p className="text-lg font-bold text-gray-800 dark:text-gray-200 font-mono">
-                    {investor.membershipNo}
+                  <p className="text-lg font-bold text-gray-800 dark:text-gray-200 font-mono break-all">
+                    {investor.id}
                   </p>
                 </div>
                 <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
-                  <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">
-                    الاسم
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 block">
+                    الهوية الوطنية
                   </p>
-                  <p className="text-lg font-bold text-gray-800 dark:text-gray-200">
-                    {investor.name}
+                  <p className="text-lg font-bold text-gray-800 dark:text-gray-200 break-all">
+                    {investor.nationalId || "غير متوفر"}
                   </p>
                 </div>
                 <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
-                  <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 block">
                     رقم الجوال
                   </p>
-                  <p className="text-lg font-bold text-gray-800 dark:text-gray-200 font-mono">
-                    {investor.phone}
+                  <p className="text-lg font-bold text-gray-800 dark:text-gray-200 font-mono break-all">
+                    {investor.phoneNumber}
                   </p>
                 </div>
               </div>
@@ -235,28 +213,37 @@ export default async function PrivateInvestorPage({
             {/* Contracts */}
             <div className="bg-[#003B46] rounded-2xl shadow-lg p-6 text-white overflow-hidden relative">
               <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-white opacity-5 rounded-full blur-2xl"></div>
-              <h3 className="text-xl font-bold text-center mb-6 relative z-10 border-b border-white/20 pb-4">
+              <h3 className="text-xl font-bold text-center mb-6 relative z-10 border-b border-white/20 pb-4 leading-relaxed">
                 عقودي
               </h3>
               <div className="space-y-4 relative z-10">
-                {investor.contracts.map((contract) => (
-                  <div
-                    key={contract.id}
-                    className="bg-white/10 backdrop-blur-sm rounded-xl p-4 flex justify-between items-center border border-white/10 hover:bg-white/20 transition-colors group"
-                  >
-                    <div>
-                      <p className="text-sm text-gray-300 mb-1">
-                        {contract.name}
-                      </p>
-                      <p className="font-bold font-mono text-[#D4AF37]">
-                        {contract.number}
-                      </p>
+                {investor.reports.filter(r => r.type === 'contract').length > 0 ? (
+                  investor.reports.filter(r => r.type === 'contract').map((report) => (
+                    <div
+                      key={report.id}
+                      className="bg-white/10 backdrop-blur-sm rounded-xl p-4 flex justify-between items-center border border-white/10 hover:bg-white/20 transition-colors group"
+                    >
+                      <div>
+                        <p className="text-sm text-gray-300 mb-1">
+                          {report.fileName || "تقرير استثماري"}
+                        </p>
+                        <p className="font-bold font-mono text-gold">
+                          {new Date(report.createdAt).toLocaleDateString('en-GB')}
+                        </p>
+                      </div>
+                      <a
+                        href={report.linkUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-gold hover:bg-gold/90 hover:text-[#003B46] text-[#003B46] font-bold text-sm py-1.5 px-4 rounded-lg transition-all shadow-lg shadow-black/20"
+                      >
+                        معاينة
+                      </a>
                     </div>
-                    <button className="bg-[#D4AF37] hover:bg-white hover:text-[#003B46] text-[#003B46] font-bold text-sm py-1.5 px-4 rounded-lg transition-all shadow-lg shadow-black/20">
-                      معاينة
-                    </button>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <p className="text-center text-gray-300">لا يوجد عقود حالياً</p>
+                )}
               </div>
             </div>
           </div>
