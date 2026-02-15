@@ -155,3 +155,33 @@ body {
   stroke-dashoffset: 1000;
   animation: dash 3s linear forwards;
 }
+
+/* Investment Funds section */
+.perspective-shadow {
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+}
+
+.active-tab {
+  background-color: var(--color-corporate);
+  color: white;
+  box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Investment How to Start / Contact form section */
+.glass-panel {
+  background: rgba(143, 120, 85, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(236, 195, 131, 0.2);
+}
+
+.diagonal-wave {
+  clip-path: polygon(0 0, 100% 0, 100% 85%, 0% 100%);
+}
+
+.bg-desert {
+  background-image: linear-gradient(rgba(0, 43, 54, 0.4), rgba(0, 43, 54, 0.4)),
+    url(https://lh3.googleusercontent.com/aida-public/AB6AXuBfnFDhNDGuGKFa2KcDVV-X96xWCEdIQW0LAk085t0Uyi5ZJsO0uh2mfFoHAmmtaCQSw6aUI8Dl7UZJdSt_UR0s7VxzeTeFO72oSdsHp9OS-SspnDBDfiiftWbIbWjpuh0womxBEdwiYhoPWNC9YLzKpNU7R2yt78qK8Mop7t80CkDAnpyFGGM2Kd6vfbzohKOagjDoHrb1ifh2fkXX9qTEeSr3OHNZff7FJbfnkPcFTkilRGE_P_NV9xLvvpFzbSsok0OxxViJhlE);
+  background-size: cover;
+  background-position: center;
+}

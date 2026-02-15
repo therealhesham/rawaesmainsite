@@ -3,8 +3,53 @@
 import React from "react";
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
-import { ContactSection } from "../components/ContactSection";
 import { BannerHeroSection } from "../components/BannerHeroSection";
+import { InvestmentHowToSection } from "../components/InvestmentHowToSection";
+import { ThemeToggle } from "../rawaeshotels/ThemeToggle";
+import { InvestmentFundsSection } from "../components/InvestmentFundsSection";
+
+const FUND_TABS = [
+    { id: "recruitment", label: "صندوق روائس للاستقدام" },
+    { id: "cars", label: "صندوق روائس لتأجير السيارات" },
+    { id: "hospitality", label: "صندوق روائس للضيافة" },
+];
+
+const HOSPITALITY_STATS = [
+    { icon: "groups", value: "100+", label: "القوة العاملة" },
+    { icon: "restaurant_menu", value: "8+", label: "المرافق المتنوعة" },
+    { icon: "king_bed", value: "500+", label: "عدد الغرف" },
+    { icon: "apartment", value: "5", label: "عدد الفنادق" },
+];
+
+const HOTEL_BRANDS = [
+    { icon: "diamond", name: "Rest In Hotel" },
+    { icon: "bed", name: "Resan Hotel" },
+    { icon: "star", name: "Rawaes Hotel" },
+    { icon: "wb_sunny", name: "Shams Hotel" },
+];
+
+const HOSPITALITY_IMAGE =
+    "https://lh3.googleusercontent.com/aida-public/AB6AXuCj4ygmIs_eB2rNZI9TW4i4vXoUlIU-2nGsdTKJMLLv0j7qqyNAc9nB2029wLwXa7lhJrgCQObkG6Sx-o2Ct4_LPAlhqZeGCcKeJNZ7dGDNijkTMtIJ9bpipRLPYW-FT-zKPyQUy5dZsO7UWVlJSrGsYk0I6mR1dg9arDs1VsQZkC8oWT__9zKJ5t-ShzVL1F0KBYjq3N5cTgUWkw94rG6HLpPnn_HN3nwu480rcsjzNevxyx5dNSMzUwCL-95zi0wFkJHcVU2E1ss";
+
+// تأجير السيارات
+const CARS_IMAGE =
+    "/CarLeasing.avif";
+const CARS_STATS = [
+    { icon: "car_rental", value: "+50", label: "عملية تأجير في اليوم" },
+    { icon: "support_agent", value: "+6", label: "الخدمات المتوفرة" },
+    { icon: "directions_car", value: "+350", label: "عدد السيارات" },
+    { icon: "store", value: "7", label: "عدد الفروع" },
+];
+
+// الاستقدام
+const RECRUITMENT_IMAGE =
+    "istiqdam.avif";
+const RECRUITMENT_STATS = [
+    { icon: "location_city", value: "1", label: "عدد الفروع" },
+    { icon: "description", value: "+100", label: "عدد العقود في الشهر" },
+    { icon: "group_add", value: "+900", label: "عدد العمال" },
+    { icon: "workspace_premium", value: "+4", label: "تقييمنا على مساند" },
+];
 
 export default function InvestmentPage() {
     return (
@@ -172,10 +217,234 @@ export default function InvestmentPage() {
                     </div>
                 </section>
 
-                <ContactSection />
+                <InvestmentFundsSection
+                    title="صناديق روائس للاستثمار"
+                    tabs={FUND_TABS}
+                    defaultTabId="hospitality"
+                    id="funds"
+                >
+                    {(activeTabId) => (
+                        <>
+                            {activeTabId === "hospitality" && (
+                                <>
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start mb-16">
+                                        <div className="rounded-3xl overflow-hidden shadow-2xl transform -rotate-1 hover:rotate-0 transition-transform duration-500">
+                                            <img
+                                                alt="Modern Architecture Skyscraper"
+                                                className="w-full h-[400px] object-cover contrast-125 brightness-90 grayscale hover:grayscale-0 transition-all duration-700"
+                                                src={HOSPITALITY_IMAGE}
+                                            />
+                                        </div>
+                                        <div className="text-secondary dark:text-white space-y-6">
+                                            <h3 className="text-3xl font-bold border-r-4 border-gold pr-4">
+                                                صندوق روائس للضيافة
+                                            </h3>
+                                            <p className="text-lg leading-relaxed text-secondary/80 dark:text-gray-300 text-justify">
+                                                إن الضيافة من الخدمات التي تعتني بها المجموعة وتتطور من خلالها وتبني مجموعة روائس هيكلة داخلية متقنة التسلسل لتيسير العمل على راحة النزلاء وتضم المجموعة فنادق معروفة مثل:
+                                                <br />
+                                                <span className="font-bold text-gold">
+                                                    فندق رست إن - فندق شمس - فندق روائس - فندق ريسان
+                                                </span>
+                                            </p>
+                                            <div className="pt-4">
+                                                <h4 className="text-2xl font-bold mb-6 flex items-center gap-2 text-gold">
+                                                    <span className="w-8 h-[2px] bg-gold" />
+                                                    حجم الاستثمار
+                                                </h4>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+                                        {HOSPITALITY_STATS.map((stat) => (
+                                            <div
+                                                key={stat.label}
+                                                className="bg-white dark:bg-slate-800 p-8 rounded-[32px] text-center shadow-lg hover:-translate-y-2 transition-transform duration-300 group"
+                                            >
+                                                <div className="bg-gold/10 dark:bg-slate-700 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-gold transition-colors duration-300">
+                                                    <span className="material-icons-round text-gold group-hover:text-white text-4xl">
+                                                        {stat.icon}
+                                                    </span>
+                                                </div>
+                                                <div className="text-4xl font-bold text-gold mb-1">
+                                                    {stat.value}
+                                                </div>
+                                                <div className="text-secondary dark:text-gold font-medium">
+                                                    {stat.label}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="flex flex-col lg:flex-row items-center justify-between gap-8 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm p-4 rounded-3xl border border-white/20">
+                                        <div className="flex flex-wrap justify-center items-center gap-10 grayscale hover:grayscale-0 transition-all duration-500 opacity-80 hover:opacity-100">
+                                            {HOTEL_BRANDS.map((brand) => (
+                                                <div key={brand.name} className="flex flex-col items-center">
+                                                    <div className="w-12 h-12 bg-gold/20 rounded-full flex items-center justify-center mb-1 text-gold">
+                                                        <span className="material-icons-round">{brand.icon}</span>
+                                                    </div>
+                                                    <span className="text-xs font-bold text-secondary dark:text-gray-300 uppercase">
+                                                        {brand.name}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <a
+                                            href="/rawaeshotels"
+                                            className="bg-corporate hover:bg-slate-800 text-white px-10 py-4 rounded-2xl font-bold text-lg flex items-center gap-3 transition-all duration-300 group shadow-xl"
+                                        >
+                                            <span>أعرف أكثر عن صندوق روائس للضيافة</span>
+                                            <span className="material-icons-round transform group-hover:-translate-x-1 transition-transform">
+                                                chevron_left
+                                            </span>
+                                        </a>
+                                    </div>
+                                </>
+                            )}
+                            {activeTabId === "recruitment" && (
+                                <>
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start mb-16">
+                                        <div className="rounded-3xl overflow-hidden shadow-2xl transform -rotate-1 hover:rotate-0 transition-transform duration-500">
+                                            <img
+                                                alt="International flags - global reach"
+                                                className="w-full h-[400px] object-cover contrast-125 brightness-90 grayscale hover:grayscale-0 transition-all duration-700"
+                                                src={RECRUITMENT_IMAGE}
+                                            />
+                                        </div>
+                                        <div className="text-secondary dark:text-white space-y-6">
+                                            <h3 className="text-3xl font-bold border-r-4 border-gold pr-4">
+                                                صندوق روائس للاستقدام
+                                            </h3>
+                                            <p className="text-lg leading-relaxed text-secondary/80 dark:text-gray-300 text-justify">
+                                                نفخر بتقديم خدمات استقدام العمالة المنزلية بجودة عالية لتلبية احتياجات منازلكم وضمان راحتكم. نحن فريق من الخبراء ملتزمون بتقديم حل شامل للأسر والأفراد الراغبين في خدمات منزلية موثوقة واحترافية.
+                                            </p>
+                                            <div className="pt-4">
+                                                <h4 className="text-2xl font-bold mb-6 flex items-center gap-2 text-gold">
+                                                    <span className="w-8 h-[2px] bg-gold" />
+                                                    حجم الاستثمار
+                                                </h4>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+                                        {RECRUITMENT_STATS.map((stat) => (
+                                            <div
+                                                key={stat.label}
+                                                className="bg-white dark:bg-slate-800 p-8 rounded-[32px] text-center shadow-lg hover:-translate-y-2 transition-transform duration-300 group"
+                                            >
+                                                <div className="bg-gold/10 dark:bg-slate-700 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-gold transition-colors duration-300">
+                                                    <span className="material-icons-round text-gold group-hover:text-white text-4xl">
+                                                        {stat.icon}
+                                                    </span>
+                                                </div>
+                                                <div className="text-4xl font-bold text-gold mb-1">
+                                                    {stat.value}
+                                                </div>
+                                                <div className="text-secondary dark:text-gold font-medium">
+                                                    {stat.label}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="flex flex-col lg:flex-row items-center justify-between gap-8 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm p-4 rounded-3xl border border-white/20">
+                                        <div className="flex flex-col items-center gap-2">
+                                            <div className="w-16 h-16 bg-gold/20 rounded-2xl flex items-center justify-center text-gold">
+                                                <span className="material-icons-round text-4xl">person</span>
+                                            </div>
+                                            <span className="font-bold text-secondary dark:text-gray-300">روائس للاستقدام</span>
+                                            <span className="text-sm text-secondary/70 dark:text-gray-400">Rawaes Recruitment</span>
+                                        </div>
+                                        <a
+                                            href="https://rec.rawaes.com"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="bg-corporate hover:bg-slate-800 text-white px-10 py-4 rounded-2xl font-bold text-lg flex items-center gap-3 transition-all duration-300 group shadow-xl"
+                                        >
+                                            <span>أعرف أكثر عن صندوق روائس للاستقدام</span>
+                                            <span className="material-icons-round transform group-hover:-translate-x-1 transition-transform">
+                                                chevron_left
+                                            </span>
+                                        </a>
+                                    </div>
+                                </>
+                            )}
+                            {activeTabId === "cars" && (
+                                <>
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start mb-16">
+                                        <div className="rounded-3xl overflow-hidden shadow-2xl transform -rotate-1 hover:rotate-0 transition-transform duration-500">
+                                            <img
+                                                alt="Rawaes car rental fleet"
+                                                className="w-full h-[400px] object-cover contrast-125 brightness-90 grayscale hover:grayscale-0 transition-all duration-700"
+                                                src={CARS_IMAGE}
+                                            />
+                                        </div>
+                                        <div className="text-secondary dark:text-white space-y-6">
+                                            <h3 className="text-3xl font-bold border-r-4 border-gold pr-4">
+                                                صندوق روائس لتأجير السيارات
+                                            </h3>
+                                            <p className="text-lg leading-relaxed text-secondary/80 dark:text-gray-300 text-justify">
+                                                نقدم لكم تشكيلة واسعة من السيارات تناسب مختلف الفئات والميزانيات، مع خدمات موثوقة ومريحة. نوفر خيارات التأمين والمساعدة على الطريق، وأسطولاً حديثاً مع صيانة دورية لضمان راحتكم وأمانكم.
+                                            </p>
+                                            <div className="pt-4">
+                                                <h4 className="text-2xl font-bold mb-6 flex items-center gap-2 text-gold">
+                                                    <span className="w-8 h-[2px] bg-gold" />
+                                                    حجم الاستثمار
+                                                </h4>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+                                        {CARS_STATS.map((stat) => (
+                                            <div
+                                                key={stat.label}
+                                                className="bg-white dark:bg-slate-800 p-8 rounded-[32px] text-center shadow-lg hover:-translate-y-2 transition-transform duration-300 group"
+                                            >
+                                                <div className="bg-gold/10 dark:bg-slate-700 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-gold transition-colors duration-300">
+                                                    <span className="material-icons-round text-gold group-hover:text-white text-4xl">
+                                                        {stat.icon}
+                                                    </span>
+                                                </div>
+                                                <div className="text-4xl font-bold text-gold mb-1">
+                                                    {stat.value}
+                                                </div>
+                                                <div className="text-secondary dark:text-gold font-medium">
+                                                    {stat.label}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="flex flex-col lg:flex-row items-center justify-between gap-8 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm p-4 rounded-3xl border border-white/20">
+                                        <div className="flex flex-col items-center gap-2">
+                                            <div className="w-16 h-16 bg-gold/20 rounded-2xl flex items-center justify-center text-gold">
+                                                <span className="material-icons-round text-4xl">directions_car</span>
+                                            </div>
+                                            <span className="font-bold text-secondary dark:text-gray-300">روائس لتأجير السيارات</span>
+                                            <span className="text-sm text-secondary/70 dark:text-gray-400">Rawaes Rent Cars</span>
+                                        </div>
+                                        <a
+                                            href="https://rent.rawaes.com"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="bg-corporate hover:bg-slate-800 text-white px-10 py-4 rounded-2xl font-bold text-lg flex items-center gap-3 transition-all duration-300 group shadow-xl"
+                                        >
+                                            <span>أعرف أكثر عن صندوق روائس لتأجير السيارات</span>
+                                            <span className="material-icons-round transform group-hover:-translate-x-1 transition-transform">
+                                                chevron_left
+                                            </span>
+                                        </a>
+                                    </div>
+                                </>
+                            )}
+                        </>
+                    )}
+                </InvestmentFundsSection>
+
+                <InvestmentHowToSection />
             </main>
 
             <Footer />
+
+            <div className="fixed bottom-8 right-8 z-50">
+                <ThemeToggle />
+            </div>
         </div>
     );
 }
