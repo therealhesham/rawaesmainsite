@@ -288,7 +288,7 @@ export default function InvestmentPage() {
                                             ))}
                                         </div>
                                         <a
-                                            href="/rawaeshotels"
+                                            href="/hospitalityfund"
                                             className="bg-corporate hover:bg-slate-800 text-white px-10 py-4 rounded-2xl font-bold text-lg flex items-center gap-3 transition-all duration-300 group shadow-xl"
                                         >
                                             <span>أعرف أكثر عن صندوق روائس للضيافة</span>
@@ -353,9 +353,7 @@ export default function InvestmentPage() {
                                             <span className="text-sm text-secondary/70 dark:text-gray-400">Rawaes Recruitment</span>
                                         </div>
                                         <a
-                                            href="https://rec.rawaes.com"
-                                            target="_blank"
-                                            rel="noopener noreferrer"
+                                            href="/recruitmentfund"
                                             className="bg-corporate hover:bg-slate-800 text-white px-10 py-4 rounded-2xl font-bold text-lg flex items-center gap-3 transition-all duration-300 group shadow-xl"
                                         >
                                             <span>أعرف أكثر عن صندوق روائس للاستقدام</span>
@@ -420,9 +418,7 @@ export default function InvestmentPage() {
                                             <span className="text-sm text-secondary/70 dark:text-gray-400">Rawaes Rent Cars</span>
                                         </div>
                                         <a
-                                            href="https://rent.rawaes.com"
-                                            target="_blank"
-                                            rel="noopener noreferrer"
+                                            href="/carrentalfund"
                                             className="bg-corporate hover:bg-slate-800 text-white px-10 py-4 rounded-2xl font-bold text-lg flex items-center gap-3 transition-all duration-300 group shadow-xl"
                                         >
                                             <span>أعرف أكثر عن صندوق روائس لتأجير السيارات</span>

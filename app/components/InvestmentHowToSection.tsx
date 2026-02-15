@@ -27,9 +27,9 @@ const HOW_TO_STEPS = [
 ];
 
 const FUND_CARDS = [
-    { title: "صندوق روائس للضيافة", href: "/rawaeshotels" },
-    { title: "صندوق روائس لتأجير السيارات", href: "https://rent.rawaes.com" },
-    { title: "صندوق روائس للاستقدام", href: "https://rec.rawaes.com" },
+    { title: "صندوق روائس للضيافة", href: "/hospitalityfund" },
+    { title: "صندوق روائس لتأجير السيارات", href: "/carrentalfund" },
+    { title: "صندوق روائس للاستقدام", href: "/carrentalfund" },
 ];
 
 const HOW_TO_IMAGE =
