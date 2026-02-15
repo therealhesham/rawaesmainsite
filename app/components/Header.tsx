@@ -43,7 +43,19 @@ export function Header() {
         { label: "روائس للتقسيط", href: "/installments" },
       ],
     },
-    { label: "استثمر معنا", href: "/invest", active: pathname === "/invest" },
+    {
+      label: "استثمر معنا",
+      href: "/invest",
+      icon: "expand_more",
+      active: pathname === "/invest",
+      children: [
+        { label: "صناديق روائس للاستثمار", href: "/investment#funds" },
+        { label: "صندوق روائس للضيافة", href: "/hospitalityfund" },
+        { label: "صندوق روائس لتأجير السيارات", href: "/carrentalfund" },
+        { label: "صندوق روائس للاستقدام", href: "/recruitmentfund" },
+        { label: "تسجيل دخول المستثمرين", href: "/login" },
+      ],
+    },
     { label: "تواصل معنا", href: "/#contact", active: pathname === "/#contact" },
   ];
 
