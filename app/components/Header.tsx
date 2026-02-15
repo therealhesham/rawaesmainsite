@@ -37,10 +37,10 @@ export function Header() {
       icon: "expand_more",
       children: [
         { label: "روائس للاستثمار", href: "/investment" },
-        { label: "روائس للضيافة", href: "" },
-        { label: "روائس لاستقدام", href: "https://rec.rawaes.com", target: "_blank" },// it should direct to new website no the same domain
-        { label: "روائس لتأجير السيارات", href: "https://rent.rawaes.com", target: "_blank" },
-        { label: "روائس للتقسيط", href: "#" },
+        { label: "روائس للضيافة", href: "/rawaeshotels" },
+        { label: "روائس لاستقدام", href: "https://rec.rawaes.com" },
+        { label: "روائس لتأجير السيارات", href: "https://rent.rawaes.com" },
+        { label: "روائس للتقسيط", href: "/installments" },
       ],
     },
     { label: "استثمر معنا", href: "/invest", active: pathname === "/invest" },

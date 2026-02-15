@@ -4,6 +4,7 @@ import React from "react";
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
 import { ContactSection } from "../components/ContactSection";
+import { BannerHeroSection } from "../components/BannerHeroSection";
 
 export default function InvestmentPage() {
     return (
@@ -23,42 +24,14 @@ export default function InvestmentPage() {
           }
         `}</style>
 
-                <section className="w-full h-[50vh] relative">
-                    <img
-                        src="/wallpaper.png"
-                        alt="Rawaes Wallpaper"
-                        className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-black/30"></div>
-                </section>
-
-                <section className="py-20 px-6" id="hero">
-                    <div className="container mx-auto grid md:grid-cols-2 gap-12 items-center">
-                        <div className="flex flex-col items-center justify-center bg-transparent">
-                            {/* //no color background */}
-                            <img
-                                alt="روائس للاستثمار"
-                                className="w-64 h-64 object-contain   "
-                                src="/investmentlogo.png"
-                            />
-
-                        </div>
-                        <div className="space-y-6">
-                            <h2 className="text-4xl font-bold text-primary leading-tight">
-                                روائس للاستثمار
-                            </h2>
-                            <p className="text-lg leading-relaxed text-slate-600 dark:text-slate-300">
-                                نوفر خدمات استثمارية شاملة تشمل إدارة المحافظ الاستثمارية،
-                                وتقييم الفرص الاستثمارية، وتقديم الاستشارات المالية. نتميز بفريق
-                                من الخبراء المتخصصين في مجالات استثمارية متعددة، يعملون بإتقان
-                                على تحقيق أهداف العملاء وتعزيز أداء استثماراتهم.
-                            </p>
-                            <div className="flex gap-4 pt-4">
-
-                            </div>
-                        </div>
-                    </div>
-                </section>
+                <BannerHeroSection
+                    bannerSrc="/wallpaper.png"
+                    bannerAlt="Rawaes Wallpaper"
+                    logoSrc="/investmentlogo.png"
+                    logoAlt="روائس للاستثمار"
+                    title="روائس للاستثمار"
+                    description="نوفر خدمات استثمارية شاملة تشمل إدارة المحافظ الاستثمارية، وتقييم الفرص الاستثمارية، وتقديم الاستشارات المالية. نتميز بفريق من الخبراء المتخصصين في مجالات استثمارية متعددة، يعملون بإتقان على تحقيق أهداف العملاء وتعزيز أداء استثماراتهم."
+                />
 
                 <section
                     className="py-20 bg-slate-50 dark:bg-brand-teal/20 relative overflow-hidden"

@@ -49,6 +49,20 @@ body {
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
+/* Rawaes Hospitality page */
+.hero-pattern {
+  background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuC2-qC2hPvLjRFozZ7lSiDafu0i7v94stgzMePoz_jBhggOtpo991he7CK0zkHolPaC4XsSWePHM8MZCv0E-ghszyYLvqzEdhUl9V8Xn_DQ0Ku_7Qbw2ITE3F9ZezxOWp4jtk-_p54cdiXc-irzPLtEZ1Tc9blY2iT6tvPE8vB-rKaePkfTPxdIaE9CQcjeyvLhqF3FlB7JTFrYY1k91GuIfJ_0jtJTfTHDowbo1op3yba6uLHj2De4YQhN9VW_yEFf4nJDCDPDJ78);
+  opacity: 0.05;
+}
+
+.gold-gradient {
+  background: linear-gradient(135deg, #d4af37 0%, #c5a065 100%);
+}
+
+.diagonal-bg {
+  clip-path: polygon(0 0, 100% 5%, 100% 100%, 0 95%);
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
