@@ -50,9 +50,9 @@ export function Header() {
       active: pathname === "/invest",
       children: [
         { label: "صناديق روائس للاستثمار", href: "/investment#funds" },
-        { label: "صندوق روائس للضيافة", href: "/hospitalityfund" },
-        { label: "صندوق روائس لتأجير السيارات", href: "/carrentalfund" },
-        { label: "صندوق روائس للاستقدام", href: "/recruitmentfund" },
+        { label: "صندوق روائس للضيافة", href: "/investment#funds" },
+        { label: "صندوق روائس لتأجير السيارات", href: "/investment#funds" },
+        { label: "صندوق روائس للاستقدام", href: "/investment#fund" },
         { label: "تسجيل دخول المستثمرين", href: "/login" },
       ],
     },

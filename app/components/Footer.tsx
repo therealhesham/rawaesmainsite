@@ -4,7 +4,26 @@ export function Footer() {
   return (
     <footer className="bg-secondary text-white border-t-8 border-primary dark:border-primary/80">
       <div className="container mx-auto px-4 py-12">
-        <div className="flex flex-col md:flex-row justify-between items-start gap-8">
+        <div className="flex flex-col md:flex-row justify-between items-start gap-32">
+          <div className="w-full md:w-1/3 flex flex-col items-end text-right">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 flex items-center justify-center">
+                <img src="/transperantlogo.svg" alt="Rawaes Group Logo" className="w-full h-full object-contain drop-shadow-sm" />
+              </div>
+              <div className="text-right">
+                <h3 className="font-bold text-lg">مجموعة روائس</h3>
+                <p className="text-primary text-sm font-bold dir-ltr">
+                  920010356
+                </p>
+              </div>
+            </div>
+            <p className="text-[10px] text-gray-400 leading-relaxed max-w-xs">
+              شركة استثمارية متخصصة في توفير حلول الاستثمار المبتكرة والمستدامة
+              لمستثمرينا الكرام. يقع مقرنا في المملكة العربية السعودية، منطقة
+              المدينة المنورة ونتميز بفريق من الخبراء ذوي الخبرة في مجالات تجارية
+              مختلفة.
+            </p>
+          </div>
           <div className="w-full md:w-1/3">
             <ul className="space-y-2 text-right">
               <li>
@@ -17,31 +36,37 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  className="text-gray-300 hover:text-white transition-colors text-xs"
-                  href="#"
+                  className="text-primary hover:text-white transition-colors text-sm font-bold  decoration-primary "
+                  href="https://rent.rawaes.com"
+                  target="_blank"
                 >
                   قطاع روائس لتأجير السيارات
                 </Link>
               </li>
               <li>
                 <Link
-                  className="text-gray-300 hover:text-white transition-colors text-xs"
-                  href="#"
+                  className="text-primary hover:text-white transition-colors text-sm font-bold  decoration-primary "
+                  href="https://rec.rawaes.com"
+                  target="_blank"
                 >
                   قطاع روائس للاستقدام
                 </Link>
               </li>
               <li>
                 <Link
-                  className="text-gray-300 hover:text-white transition-colors text-xs"
-                  href="#"
+                  // className="text-gray-300 hover:text-white transition-colors text-xs"
+                  className="text-primary hover:text-white transition-colors text-sm font-bold  decoration-primary "
+
+                  href="/rawaeshotels"
                 >
                   قطاع روائس للضيافة
                 </Link>
               </li>
               <li>
                 <Link
-                  className="text-gray-300 hover:text-white transition-colors text-xs"
+                  // className="text-gray-300 hover:text-white transition-colors text-xs"
+                  className="text-primary hover:text-white transition-colors text-sm font-bold  decoration-primary "
+
                   href="#"
                 >
                   شركة روائس للاستثمار
@@ -49,7 +74,9 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  className="text-gray-300 hover:text-white transition-colors text-xs"
+                  className="text-primary hover:text-white transition-colors text-sm font-bold  decoration-primary "
+
+                  // className="text-gray-300 hover:text-white transition-colors text-xs"
                   href="#"
                 >
                   التوظيف
@@ -57,7 +84,9 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  className="text-gray-300 hover:text-white transition-colors text-xs"
+                  className="text-primary hover:text-white transition-colors text-sm font-bold  decoration-primary "
+
+                  // className="text-gray-300 hover:text-white transition-colors text-xs"
                   href="/about-us"
                 >
                   المدونة
@@ -65,26 +94,7 @@ export function Footer() {
               </li>
             </ul>
           </div>
-          <div className="w-full md:w-1/3 flex flex-col items-end text-right">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="text-right">
-                <h3 className="font-bold text-lg">مجموعة روائس</h3>
-                <p className="text-primary text-sm font-bold dir-ltr">
-                  920010356
-                </p>
-              </div>
-              <div className="w-12 h-12 flex items-center justify-center">
 
-                <img src="/transperantlogo.svg" alt="Rawaes Group Logo" className="w-full h-full object-contain drop-shadow-sm" />
-              </div>
-            </div>
-            <p className="text-[10px] text-gray-400 leading-relaxed max-w-xs">
-              شركة استثمارية متخصصة في توفير حلول الاستثمار المبتكرة والمستدامة
-              لمستثمرينا الكرام. يقع مقرنا في المملكة العربية السعودية، منطقة
-              المدينة المنورة ونتميز بفريق من الخبراء ذوي الخبرة في مجالات تجارية
-              مختلفة.
-            </p>
-          </div>
         </div>
       </div>
       <div className="bg-primary py-3 text-center">
