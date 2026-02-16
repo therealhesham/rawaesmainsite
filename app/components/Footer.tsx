@@ -1,16 +1,60 @@
+"use client";
+
 import Link from "next/link";
+import { motion } from "framer-motion";
 
 export function Footer() {
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { duration: 0.5 },
+    },
+  };
+
+  const linkVariants = {
+    hover: {
+      scale: 1.05,
+      x: -5,
+      transition: { duration: 0.2 }
+    }
+  };
+
   return (
-    <footer className="bg-secondary text-white border-t-8 border-primary dark:border-primary/80">
+    <footer className="bg-secondary text-white border-t-8 border-primary dark:border-primary/80 overflow-hidden">
       <div className="container mx-auto px-4 py-12">
-        <div className="flex flex-col md:flex-row justify-between items-start gap-32">
-          <div className="w-full md:w-1/3 flex flex-col items-end text-right">
+        <div className="flex flex-col md:flex-row justify-between items-start">
+          {/* Logo Section */}
+          <motion.div
+            className="w-full md:w-auto flex flex-col items-start text-left"
+            initial={{ opacity: 0, x: -50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+          >
             <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 flex items-center justify-center">
-                <img src="/transperantlogo.svg" alt="Rawaes Group Logo" className="w-full h-full object-contain drop-shadow-sm" />
+                <motion.img
+                  src="/transperantlogo.svg"
+                  alt="Rawaes Group Logo"
+                  className="w-full h-full object-contain drop-shadow-sm"
+                  whileHover={{ rotate: 360, scale: 1.1 }}
+                  transition={{ duration: 0.8 }}
+                />
               </div>
-              <div className="text-right">
+              <div className="text-left">
                 <h3 className="font-bold text-lg">مجموعة روائس</h3>
                 <p className="text-primary text-sm font-bold dir-ltr">
                   920010356
@@ -23,85 +67,54 @@ export function Footer() {
               المدينة المنورة ونتميز بفريق من الخبراء ذوي الخبرة في مجالات تجارية
               مختلفة.
             </p>
-          </div>
-          <div className="w-full md:w-1/3">
+          </motion.div>
+
+          {/* Links Section */}
+          <motion.div
+            className="w-full md:w-auto"
+            initial={{ opacity: 0, x: 50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
+          >
             <ul className="space-y-2 text-right">
-              <li>
-                <Link
-                  className="text-primary hover:text-white transition-colors text-sm font-bold underline decoration-primary underline-offset-4"
-                  href="/"
-                >
-                  انتقل الى الصفحات الرئيسية
-                </Link>
-              </li>
-              <li>
-                <Link
-                  className="text-primary hover:text-white transition-colors text-sm font-bold  decoration-primary "
-                  href="https://rent.rawaes.com"
-                  target="_blank"
-                >
-                  قطاع روائس لتأجير السيارات
-                </Link>
-              </li>
-              <li>
-                <Link
-                  className="text-primary hover:text-white transition-colors text-sm font-bold  decoration-primary "
-                  href="https://rec.rawaes.com"
-                  target="_blank"
-                >
-                  قطاع روائس للاستقدام
-                </Link>
-              </li>
-              <li>
-                <Link
-                  // className="text-gray-300 hover:text-white transition-colors text-xs"
-                  className="text-primary hover:text-white transition-colors text-sm font-bold  decoration-primary "
-
-                  href="/rawaeshotels"
-                >
-                  قطاع روائس للضيافة
-                </Link>
-              </li>
-              <li>
-                <Link
-                  // className="text-gray-300 hover:text-white transition-colors text-xs"
-                  className="text-primary hover:text-white transition-colors text-sm font-bold  decoration-primary "
-
-                  href="#"
-                >
-                  شركة روائس للاستثمار
-                </Link>
-              </li>
-              <li>
-                <Link
-                  className="text-primary hover:text-white transition-colors text-sm font-bold  decoration-primary "
-
-                  // className="text-gray-300 hover:text-white transition-colors text-xs"
-                  href="#"
-                >
-                  التوظيف
-                </Link>
-              </li>
-              <li>
-                <Link
-                  className="text-primary hover:text-white transition-colors text-sm font-bold  decoration-primary "
-
-                  // className="text-gray-300 hover:text-white transition-colors text-xs"
-                  href="/about-us"
-                >
-                  المدونة
-                </Link>
-              </li>
+              {[
+                { href: "/", text: "انتقل الى الصفحات الرئيسية" },
+                { href: "https://rent.rawaes.com", text: "قطاع روائس لتأجير السيارات", target: "_blank" },
+                { href: "https://rec.rawaes.com", text: "قطاع روائس للاستقدام", target: "_blank" },
+                { href: "/rawaeshotels", text: "قطاع روائس للضيافة" },
+                { href: "#", text: "شركة روائس للاستثمار" },
+                { href: "#", text: "التوظيف" },
+                { href: "/about-us", text: "المدونة" }
+              ].map((link, index) => (
+                <motion.li key={index} variants={linkVariants} whileHover="hover">
+                  <Link
+                    className="text-primary hover:text-white transition-colors text-sm font-bold underline decoration-primary underline-offset-4"
+                    href={link.href}
+                    target={link.target}
+                  >
+                    {link.text}
+                  </Link>
+                </motion.li>
+              ))}
             </ul>
-          </div>
+          </motion.div>
 
         </div>
       </div>
-      <div className="bg-primary py-3 text-center">
+
+      {/* Footer Bottom */}
+      <motion.div
+        className="bg-primary py-3 text-center"
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ delay: 0.5 }}
+      >
         <p className="text-secondary text-xs font-bold">
           جميع الحقوق محفوظة لدى مجموعة روائس
         </p>
-      </div>
+      </motion.div>
     </footer>
   );
 }
