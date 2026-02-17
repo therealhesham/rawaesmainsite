@@ -44,8 +44,8 @@ export function Footer() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, ease: "easeOut" }}
           >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 flex items-center justify-center">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-20 h-20 flex items-center justify-center">
                 <motion.img
                   src="/transperantlogo.svg"
                   alt="Rawaes Group Logo"
@@ -55,13 +55,13 @@ export function Footer() {
                 />
               </div>
               <div className="text-left">
-                <h3 className="font-bold text-lg">مجموعة روائس</h3>
-                <p className="text-primary text-sm font-bold dir-ltr">
+                <h3 className="font-bold text-2xl">مجموعة روائس</h3>
+                <p className="text-primary text-lg font-bold dir-ltr">
                   920010356
                 </p>
               </div>
             </div>
-            <p className="text-[10px] text-gray-400 leading-relaxed max-w-xs">
+            <p className="text-sm text-gray-400 leading-relaxed max-w-xs">
               شركة استثمارية متخصصة في توفير حلول الاستثمار المبتكرة والمستدامة
               لمستثمرينا الكرام. يقع مقرنا في المملكة العربية السعودية، منطقة
               المدينة المنورة ونتميز بفريق من الخبراء ذوي الخبرة في مجالات تجارية
@@ -85,7 +85,6 @@ export function Footer() {
                 { href: "/rawaeshotels", text: "قطاع روائس للضيافة" },
                 { href: "#", text: "شركة روائس للاستثمار" },
                 { href: "#", text: "التوظيف" },
-                { href: "/about-us", text: "المدونة" }
               ].map((link, index) => (
                 <motion.li key={index} variants={linkVariants} whileHover="hover">
                   <Link

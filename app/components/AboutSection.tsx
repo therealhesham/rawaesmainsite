@@ -43,7 +43,7 @@ export function AboutSection() {
               whileHover={{ scale: 1.1, rotate: 10 }}
               whileTap={{ scale: 0.9 }}
               className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center transition-colors"
-              href="#"
+              href="https://x.com/rawaes"
               aria-label="X"
             >
               <span className="font-bold">X</span>
@@ -52,7 +52,7 @@ export function AboutSection() {
               whileHover={{ scale: 1.1, rotate: -10 }}
               whileTap={{ scale: 0.9 }}
               className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center transition-colors"
-              href="#"
+              href="https://instagram.com/rawaes_group"
               aria-label="Instagram"
             >
               <span className="material-icons">camera_alt</span>

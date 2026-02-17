@@ -9,25 +9,25 @@ const values = [
     icon: "/customer.png",
     title: "رضى العميل",
     desc: "نحن ملتزمون بتقديم أعلى مستويات الجودة والخدمة لعملائنا لضمان رضاهم التام.",
-    rotate: "rotate-3",
+    rotate: "",
   },
   {
     icon: "quality.png",
     title: "الجودة",
     desc: "نحن نضمن لك أعلى مستويات الجودة في كل منتج نقدمه، لأن رضاك يأتي في المقام الأول.",
-    rotate: "-rotate-2",
+    rotate: "",
   },
   {
     icon: "creativity.png",
     title: "الابتكار",
     desc: "نحن نسعى لتطوير منتجات وخدمات جديدة تلبي التحديات الحالية والمستقبلية.",
-    rotate: "rotate-2",
+    rotate: "",
   },
   {
     icon: "speed.png",
     title: "سرعة الإنجاز",
     desc: "سرعة التنفيذ هي علامة تميز شركتنا، حيث نسعى دائماً لإيصال حلولنا بفاعلية وسرعة لتلبية احتياجاتك.",
-    rotate: "-rotate-3",
+    rotate: "",
   },
 ];
 
@@ -88,7 +88,7 @@ export function ValuesCards() {
 
 export function ValuesSection() {
   return (
-    <section className="py-20 relative overflow-hidden">
+    <section className="pt-9 relative overflow-hidden">
       <div
         className="absolute inset-0 bg-cover bg-center opacity-30"
         style={{ backgroundImage: "url('/wallpaper.png')" }}
@@ -96,7 +96,7 @@ export function ValuesSection() {
       />
       <div className="container mx-auto px-4 text-center mb-16 relative z-10">
         <h3 className="text-primary font-bold text-lg mb-2">
-          روائس القمم لتقسيط
+          روائس القمم للتقسيط
         </h3>
         <p className="text-gray-600 dark:text-gray-400 text-md mb-6">
           مؤسسة تجارية رائدة في مجال الاستثمار والتمويل الشرعي والتقسيط

@@ -52,13 +52,18 @@ export function ContactSection() {
               <h4 className="font-bold text-secondary dark:text-primary mb-2">
                 التواصل
               </h4>
-              <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center justify-end gap-2">
+              <a
+                href="tel:920010356"
+                className="text-sm text-gray-600 dark:text-gray-400 flex items-center justify-end gap-2 hover:text-primary transition-colors"
+              >
                 9200 10 356 <span className="material-icons text-xs">phone</span>
-              </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center justify-end gap-2">
-                info@rawaes.com{" "}
-                <span className="material-icons text-xs">email</span>
-              </p>
+              </a>
+              <a
+                href="mailto:info@rawaes.com"
+                className="text-sm text-gray-600 dark:text-gray-400 flex items-center justify-end gap-2 hover:text-primary transition-colors"
+              >
+                info@rawaes.com <span className="material-icons text-xs">email</span>
+              </a>
             </div>
           </motion.div>
           <motion.div

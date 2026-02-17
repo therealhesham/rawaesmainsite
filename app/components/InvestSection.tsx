@@ -40,7 +40,7 @@ function PlantInView() {
 
 export function InvestSection() {
     return (
-        <section className="py-20 relative overflow-hidden">
+        <section className="pt-20 pb-0 relative overflow-hidden">
             <div
                 className="absolute inset-0 bg-cover bg-center opacity-30"
                 style={{ backgroundImage: "url('/wallpaper.png')" }}
@@ -61,8 +61,8 @@ export function InvestSection() {
           transform: translateY(70%) scale(0.5);
         }
       `}} />
-            <div className="container mx-auto px-4 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center relative z-10">
-                <div>
+            <div className="container mx-auto px-4 grid grid-cols-1 lg:grid-cols-2 gap-16 relative z-10">
+                <div className="self-center">
                     <div className="bg-gradient-to-b from-white to-gray-50 dark:from-card-dark dark:to-background-dark p-8 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700">
                         <h3 className="text-3xl font-bold text-secondary dark:text-white mb-4">
                             استثمر مع مجموعة روائس
@@ -81,7 +81,7 @@ export function InvestSection() {
                         </Link>
                     </div>
                 </div>
-                <div className="flex justify-center">
+                <div className="flex justify-center self-end">
                     <PlantInView />
                 </div>
             </div>
