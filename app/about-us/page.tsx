@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
+import { SectorsSection } from "../components/SectorsSection";
 
 export default function AboutUs() {
     return (
@@ -98,6 +99,7 @@ export default function AboutUs() {
                     </div>
                 </div>
             </section>
+
 
             <section className="py-24 bg-[#FDFCF7] dark:bg-[#0A191E] overflow-hidden">
                 <div className="max-w-6xl mx-auto px-6">
@@ -300,6 +302,7 @@ export default function AboutUs() {
                     </div>
                 </div>
             </section>
+            <SectorsSection />
 
             <Footer />
         </div>

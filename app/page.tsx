@@ -2,7 +2,7 @@ import { Header } from "./components/Header";
 import { Hero } from "./components/Hero";
 import { AboutSection } from "./components/AboutSection";
 import { PillSection } from "./components/PillSection";
-import { SectorsSection } from "./components/SectorsSection";
+
 import { ValuesSection } from "./components/ValuesSection";
 import { WhyUsSection } from "./components/WhyUsSection";
 import { ContactSection } from "./components/ContactSection";
@@ -16,7 +16,7 @@ export default function Home() {
         <Hero />
         <AboutSection />
         <PillSection />
-        <SectorsSection />
+
         <ValuesSection />
         <ContactSection />
       </main>
