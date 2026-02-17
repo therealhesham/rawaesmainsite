@@ -11,6 +11,10 @@ type InvestmentFundsSectionProps = {
     tabs: FundTab[];
     /** Initial active tab id (default: first tab) */
     defaultTabId?: string;
+    /** Currently active tab id (for controlled component) */
+    activeTabId?: string;
+    /** Callback when tab is changed */
+    onTabChange?: (tabId: string) => void;
     /** Content rendered inside the panel; receives current active tab id */
     children: (activeTabId: string) => React.ReactNode;
     /** Optional section id for anchor links */
@@ -19,12 +23,24 @@ type InvestmentFundsSectionProps = {
 
 export function InvestmentFundsSection({
     title,
-    tabs=[{id: "1", label: "صندوق روائس للضيافة"}, {id: "2", label: "صندوق روائس لتأجير السيارات"}, {id: "3", label: "صندوق روائس للاستقدام"}],
+    tabs = [{ id: "1", label: "صندوق روائس للضيافة" }, { id: "2", label: "صندوق روائس لتأجير السيارات" }, { id: "3", label: "صندوق روائس للاستقدام" }],
     defaultTabId,
+    activeTabId: controlledActiveTabId,
+    onTabChange,
     children,
     id = "funds",
 }: InvestmentFundsSectionProps) {
-    const [activeTab, setActiveTab] = useState(defaultTabId ?? tabs[0]?.id ?? "");
+    const [internalActiveTab, setInternalActiveTab] = useState(defaultTabId ?? tabs[0]?.id ?? "");
+
+    const activeTab = controlledActiveTabId !== undefined ? controlledActiveTabId : internalActiveTab;
+
+    const handleTabChange = (tabId: string) => {
+        if (onTabChange) {
+            onTabChange(tabId);
+        } else {
+            setInternalActiveTab(tabId);
+        }
+    };
 
     return (
         <section
@@ -43,12 +59,11 @@ export function InvestmentFundsSection({
                         <button
                             key={tab.id}
                             type="button"
-                            onClick={() => setActiveTab(tab.id)}
-                            className={`px-6 md:px-8 py-4 rounded-t-xl font-bold text-sm transition-all duration-300 border-b-0 ${
-                                activeTab === tab.id
-                                    ? "active-tab dark:bg-corporate scale-105 origin-bottom shadow-lg"
-                                    : "bg-white dark:bg-slate-800 text-secondary dark:text-gold hover:bg-gold/10"
-                            }`}
+                            onClick={() => handleTabChange(tab.id)}
+                            className={`px-6 md:px-8 py-4 rounded-t-xl font-bold text-sm transition-all duration-300 border-b-0 ${activeTab === tab.id
+                                ? "active-tab dark:bg-corporate scale-105 origin-bottom shadow-lg"
+                                : "bg-white dark:bg-slate-800 text-secondary dark:text-gold hover:bg-gold/10"
+                                }`}
                         >
                             {tab.label}
                         </button>

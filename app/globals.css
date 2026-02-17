@@ -23,7 +23,12 @@
   --color-corporate: #002B36;
   --color-admin-bg-light: #f8f7f6;
   --color-admin-bg-dark: #201d12;
+  --color-mobile-primary: #003B4D;
+  --color-mobile-secondary: #E0C086;
+  --color-mobile-bg-light: #F7EFDF;
+  --color-mobile-bg-dark: #1a202c;
   --font-manrope: var(--font-manrope), "Manrope", sans-serif;
+  --font-almarai: var(--font-almarai), "Almarai", sans-serif;
   --radius: 0.5rem;
   --radius-xl: 1rem;
   --radius-2xl: 1.5rem;
