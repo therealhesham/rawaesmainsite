@@ -55,3 +55,56 @@ model notifications {
   updatedAt DateTime @updatedAt
   linkUrl   String
 }
+
+
+// model fundsDetails {
+
+// id Int @id @default(autoincrement())
+
+
+// }
+
+model rentalcarfund {
+  id   Int    @id @default(autoincrement())
+
+
+daysRental String?
+availableServices String?
+avaiableCars String?
+branches Int
+
+createdAt DateTime @default(now()) 
+updatedAt DateTime @updatedAt
+  
+}
+
+
+
+model recruitmentFund {
+id Int @id  @default(autoincrement())
+branches Int
+contractsCount String?
+homemaidsCound String?
+
+musanadRating String 
+
+
+
+createdAt DateTime @default(now()) 
+updatedAt DateTime @updatedAt
+
+}
+
+
+model hospitalityFund {
+id Int @id  @default(autoincrement())
+branches Int
+contractsCount String?
+homemaidsCound String?
+
+musanadRating String 
+
+
+createdAt DateTime @default(now()) 
+updatedAt DateTime @updatedAt
+}

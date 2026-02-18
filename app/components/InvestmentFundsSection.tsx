@@ -21,9 +21,11 @@ type InvestmentFundsSectionProps = {
     id?: string;
 };
 
+const DEFAULT_TABS: FundTab[] = [];
+
 export function InvestmentFundsSection({
     title,
-    tabs = [{ id: "1", label: "صندوق روائس للضيافة" }, { id: "2", label: "صندوق روائس لتأجير السيارات" }, { id: "3", label: "صندوق روائس للاستقدام" }],
+    tabs = DEFAULT_TABS,
     defaultTabId,
     activeTabId: controlledActiveTabId,
     onTabChange,
