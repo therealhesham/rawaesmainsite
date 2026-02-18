@@ -56,7 +56,7 @@ export function ContactSection() {
                 href="tel:920010356"
                 className="text-sm text-gray-600 dark:text-gray-400 flex items-center justify-end gap-2 hover:text-primary transition-colors"
               >
-                9200 10 356 <span className="material-icons text-xs">phone</span>
+                920010356 <span className="material-icons text-xs">phone</span>
               </a>
               <a
                 href="mailto:info@rawaes.com"
