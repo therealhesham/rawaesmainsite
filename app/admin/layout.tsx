@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { useState } from "react";
+import { logoutAdmin } from "./login/action";
 
 export default function AdminLayout({
     children,
@@ -20,7 +21,7 @@ export default function AdminLayout({
 
     const menuItems = [
         { label: "لوحة التحكم", icon: "dashboard", href: "/admin" },
-        // Future items can be added here
+        { label: "صناديق الاستثمار", icon: "account_balance", href: "/admin/funds" },
     ];
 
     return (
@@ -75,10 +76,15 @@ export default function AdminLayout({
 
                 {/* User Profile / Logout */}
                 <div className="p-4 border-t border-white/10">
-                    <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-300 hover:bg-red-500/10 hover:text-red-200 transition-all">
-                        <span className="material-icons">logout</span>
-                        {isSidebarOpen && <span>تسجيل الخروج</span>}
-                    </button>
+                    <form action={logoutAdmin} className="w-full">
+                        <button
+                            type="submit"
+                            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-300 hover:bg-red-500/10 hover:text-red-200 transition-all"
+                        >
+                            <span className="material-icons">logout</span>
+                            {isSidebarOpen && <span>تسجيل الخروج</span>}
+                        </button>
+                    </form>
                 </div>
             </motion.aside>
 

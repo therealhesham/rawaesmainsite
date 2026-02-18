@@ -53,3 +53,9 @@ export async function loginAdmin(prevState: any, formData: FormData) {
 
     redirect("/admin");
 }
+
+export async function logoutAdmin() {
+    const cookieStore = await cookies();
+    cookieStore.delete("admin_session");
+    redirect("/admin/login");
+}

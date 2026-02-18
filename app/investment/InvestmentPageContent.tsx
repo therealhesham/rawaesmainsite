@@ -59,7 +59,7 @@ function buildHospitalityStats(fund: FundsData["hospitality"]) {
     }
     return [
         { icon: "groups", value: fund.homemaidsCound ?? "—", label: "القوة العاملة" },
-        { icon: "restaurant_menu", value: "8+", label: "المرافق المتنوعة" },
+        { icon: "restaurant_menu", value: (fund as { facilities?: string | null }).facilities ?? "8+", label: "المرافق المتنوعة" },
         { icon: "king_bed", value: fund.contractsCount ?? "—", label: "عدد الغرف" },
         { icon: "apartment", value: String(fund.branches), label: "عدد الفنادق" },
     ];
