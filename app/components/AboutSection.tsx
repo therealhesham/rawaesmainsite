@@ -4,6 +4,7 @@ import Link from "next/link";
 import { LogoSvg } from "./logosvg";
 import { motion } from "framer-motion";
 import { MotionSection } from "./MotionSection";
+import { LucideInstagram } from "lucide-react";
 
 export function AboutSection() {
   return (
@@ -55,7 +56,8 @@ export function AboutSection() {
               href="https://instagram.com/rawaes_group"
               aria-label="Instagram"
             >
-              <span className="material-icons">camera_alt</span>
+              <LucideInstagram />
+              {/* <span className="material-icons"></span> */}
             </motion.a>
           </div>
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
