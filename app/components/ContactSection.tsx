@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { MailCheck, MailIcon, PhoneCall, PhoneIcon } from "lucide-react";
 
 export function ContactSection() {
   return (
@@ -56,13 +57,13 @@ export function ContactSection() {
                 href="tel:920010356"
                 className="text-sm text-gray-600 dark:text-gray-400 flex items-center justify-end gap-2 hover:text-primary transition-colors"
               >
-                920010356 <span className="material-icons text-xs">phone</span>
+                920010356 <span className=" text-xs"><PhoneIcon /></span>
               </a>
               <a
                 href="mailto:info@rawaes.com"
                 className="text-sm text-gray-600 dark:text-gray-400 flex items-center justify-end gap-2 hover:text-primary transition-colors"
               >
-                info@rawaes.com <span className="material-icons text-xs">email</span>
+                info@rawaes.com <span className="material-icons text-xs"><MailIcon /></span>
               </a>
             </div>
           </motion.div>
