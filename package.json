@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "seed:rentalcar": "npx ts-node --project prisma/tsconfig.seed.json prisma/seed-rentalcar-reports.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.990.0",
@@ -30,6 +31,7 @@
     "eslint-config-next": "16.1.6",
     "prisma": "^5.22.0",
     "tailwindcss": "^4",
+    "ts-node": "^10.9.2",
     "typescript": "^5"
   }
 }

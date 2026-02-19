@@ -21,7 +21,7 @@ model user {
 
   password String?
   isAdmin  Boolean @default(false)
-
+  rentalcarfundReportsDetails rentalcarfundReportsDetails[]
   email        String?         @unique
   phoneNumber  String?         @unique
   notfications notifications[]
@@ -43,7 +43,27 @@ model reports {
   updatedAt   DateTime @updatedAt
   linkUrl     String
 }
+model rentalcarfundReportsDetails {
+  id Int @id @default(autoincrement())
 
+
+revenues Int?
+expenses Int?
+profit Int?
+withdrawen Int?
+afterwithdrawen Int?
+previousyear Int?
+netprofit Int?
+investorId Int
+investor user @relation(fields: [investorId], references: [id])
+CARSCount Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// model withdrawen{
+
+// }
 model notifications {
   id   Int    @id @default(autoincrement())
   type String
@@ -65,34 +85,27 @@ model notifications {
 // }
 
 model rentalcarfund {
-  id   Int    @id @default(autoincrement())
-
-
-daysRental String?
-availableServices String?
-avaiableCars String?
-branches Int
-
-createdAt DateTime @default(now()) 
-updatedAt DateTime @updatedAt
-  
+  id                Int       @id @default(autoincrement())
+  daysRental        String?
+  availableServices String?
+  avaiableCars     String?
+  branches          Int
+  imageUrl          String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 }
 
 
 
 model recruitmentFund {
-id Int @id  @default(autoincrement())
-branches Int
-contractsCount String?
-homemaidsCound String?
-
-musanadRating String 
-
-
-
-createdAt DateTime @default(now()) 
-updatedAt DateTime @updatedAt
-
+  id              Int      @id @default(autoincrement())
+  branches        Int
+  contractsCount  String?
+  homemaidsCound  String?
+  musanadRating   String
+  imageUrl        String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
 
@@ -102,7 +115,8 @@ model hospitalityFund {
   contractsCount  String?
   homemaidsCound  String?
   musanadRating   String
-  facilities      String?   // المرافق المتنوعة
+  facilities      String?
+  imageUrl        String?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 }

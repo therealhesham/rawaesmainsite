@@ -22,6 +22,10 @@ export default function AdminLayout({
     const menuItems = [
         { label: "لوحة التحكم", icon: "dashboard", href: "/admin" },
         { label: "صناديق الاستثمار", icon: "account_balance", href: "/admin/funds" },
+        { label: "مستثمرون تأجير السيارات", icon: "groups", href: "/admin/cardfundinginvestors" },
+        { label: "تأجير سيارات", icon: "directions_car", href: "/admin/funds/cars" },
+        { label: "استقدام", icon: "group_add", href: "/admin/funds/recruitment" },
+        { label: "ضيافة", icon: "hotel", href: "/admin/funds/hospitality" },
     ];
 
     return (

@@ -317,7 +317,7 @@ export function InvestmentPageContent({ tabs, funds }: InvestmentPageContentProp
                                                 <img
                                                     alt="Modern Architecture Skyscraper"
                                                     className="w-full h-[400px] object-cover contrast-125 brightness-90 grayscale hover:grayscale-0 transition-all duration-700"
-                                                    src={HOSPITALITY_IMAGE}
+                                                    src={(funds.hospitality as { imageUrl?: string | null })?.imageUrl || HOSPITALITY_IMAGE}
                                                 />
                                             </div>
                                             <div className="text-secondary dark:text-white space-y-6">
@@ -391,7 +391,7 @@ export function InvestmentPageContent({ tabs, funds }: InvestmentPageContentProp
                                                 <img
                                                     alt="International flags - global reach"
                                                     className="w-full h-[400px] object-cover contrast-125 brightness-90 grayscale hover:grayscale-0 transition-all duration-700"
-                                                    src={RECRUITMENT_IMAGE}
+                                                    src={(funds.recruitment as { imageUrl?: string | null })?.imageUrl || RECRUITMENT_IMAGE}
                                                 />
                                             </div>
                                             <div className="text-secondary dark:text-white space-y-6">
@@ -456,7 +456,7 @@ export function InvestmentPageContent({ tabs, funds }: InvestmentPageContentProp
                                                 <img
                                                     alt="Rawaes car rental fleet"
                                                     className="w-full h-[400px] object-cover contrast-125 brightness-90 grayscale hover:grayscale-0 transition-all duration-700"
-                                                    src={CARS_IMAGE}
+                                                    src={(funds.cars as { imageUrl?: string | null })?.imageUrl || CARS_IMAGE}
                                                 />
                                             </div>
                                             <div className="text-secondary dark:text-white space-y-6">

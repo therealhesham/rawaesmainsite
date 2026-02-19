@@ -1,12 +1,15 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { InvestmentFundsSection, type FundTab } from "../../components/InvestmentFundsSection";
 import type { FundsData } from "../../investment/getFunds";
 import {
     updateCarsFund,
     updateRecruitmentFund,
     updateHospitalityFund,
+    uploadFundImage,
+    type FundKind,
 } from "../funds-actions";
 
 const HOSPITALITY_IMAGE =
@@ -27,10 +30,27 @@ type Props = {
 };
 
 export function InvestmentFundsSectionEditable({ tabs, funds }: Props) {
+    const router = useRouter();
     const [activeTab, setActiveTab] = useState(tabs[0]?.id ?? "hospitality");
     const [message, setMessage] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [imageUploading, setImageUploading] = useState<FundKind | null>(null);
+    const [imageError, setImageError] = useState<string | null>(null);
+
+    async function handleImageUpload(e: React.FormEvent<HTMLFormElement>, kind: FundKind) {
+        e.preventDefault();
+        setImageError(null);
+        setImageUploading(kind);
+        const formData = new FormData(e.currentTarget);
+        const result = await uploadFundImage(kind, formData);
+        setImageUploading(null);
+        if (result.success) {
+            router.refresh();
+        } else {
+            setImageError(result.error || "تعذر رفع الصورة.");
+        }
+    }
 
     async function handleSubmit(
         e: React.FormEvent<HTMLFormElement>,
@@ -81,9 +101,14 @@ export function InvestmentFundsSectionEditable({ tabs, funds }: Props) {
                         {error}
                     </div>
                 )}
+                {imageError && (
+                    <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-800 px-4 py-3 text-amber-800 dark:text-amber-200 text-sm">
+                        {imageError}
+                    </div>
+                )}
 
                 <InvestmentFundsSection
-                    title="صناديق روائس للاستثمار"
+                    title="استثمارات الأقطاع — صناديق روائس"
                     tabs={tabs}
                     defaultTabId={tabs[0]?.id}
                     activeTabId={activeTab}
@@ -98,12 +123,20 @@ export function InvestmentFundsSectionEditable({ tabs, funds }: Props) {
                                     className="space-y-10"
                                 >
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-                                        <div className="rounded-3xl overflow-hidden shadow-2xl">
-                                            <img
-                                                alt="الضيافة"
-                                                className="w-full h-[400px] object-cover"
-                                                src={HOSPITALITY_IMAGE}
-                                            />
+                                        <div className="space-y-3">
+                                            <div className="rounded-3xl overflow-hidden shadow-2xl">
+                                                <img
+                                                    alt="الضيافة"
+                                                    className="w-full h-[400px] object-cover"
+                                                    src={(h as { imageUrl?: string | null })?.imageUrl || HOSPITALITY_IMAGE}
+                                                />
+                                            </div>
+                                            <form onSubmit={(e) => handleImageUpload(e, "hospitality")} className="flex flex-wrap items-center gap-2">
+                                                <input type="file" name="file" accept="image/*" className="text-sm text-secondary dark:text-gray-300" required />
+                                                <button type="submit" disabled={imageUploading === "hospitality"} className="px-4 py-2 rounded-xl bg-slate-700 text-white text-sm font-medium hover:bg-slate-600 disabled:opacity-50">
+                                                    {imageUploading === "hospitality" ? "جاري الرفع..." : "تغيير الصورة"}
+                                                </button>
+                                            </form>
                                         </div>
                                         <div className="text-secondary dark:text-white space-y-6">
                                             <h3 className="text-3xl font-bold border-r-4 border-gold pr-4">
@@ -177,12 +210,20 @@ export function InvestmentFundsSectionEditable({ tabs, funds }: Props) {
                                     className="space-y-10"
                                 >
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-                                        <div className="rounded-3xl overflow-hidden shadow-2xl">
-                                            <img
-                                                alt="الاستقدام"
-                                                className="w-full h-[400px] object-cover"
-                                                src={RECRUITMENT_IMAGE}
-                                            />
+                                        <div className="space-y-3">
+                                            <div className="rounded-3xl overflow-hidden shadow-2xl">
+                                                <img
+                                                    alt="الاستقدام"
+                                                    className="w-full h-[400px] object-cover"
+                                                    src={(r as { imageUrl?: string | null })?.imageUrl || RECRUITMENT_IMAGE}
+                                                />
+                                            </div>
+                                            <form onSubmit={(e) => handleImageUpload(e, "recruitment")} className="flex flex-wrap items-center gap-2">
+                                                <input type="file" name="file" accept="image/*" className="text-sm text-secondary dark:text-gray-300" required />
+                                                <button type="submit" disabled={imageUploading === "recruitment"} className="px-4 py-2 rounded-xl bg-slate-700 text-white text-sm font-medium hover:bg-slate-600 disabled:opacity-50">
+                                                    {imageUploading === "recruitment" ? "جاري الرفع..." : "تغيير الصورة"}
+                                                </button>
+                                            </form>
                                         </div>
                                         <div className="text-secondary dark:text-white space-y-6">
                                             <h3 className="text-3xl font-bold border-r-4 border-gold pr-4">
@@ -240,12 +281,20 @@ export function InvestmentFundsSectionEditable({ tabs, funds }: Props) {
                                     className="space-y-10"
                                 >
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-                                        <div className="rounded-3xl overflow-hidden shadow-2xl">
-                                            <img
-                                                alt="تأجير السيارات"
-                                                className="w-full h-[400px] object-cover"
-                                                src={CARS_IMAGE}
-                                            />
+                                        <div className="space-y-3">
+                                            <div className="rounded-3xl overflow-hidden shadow-2xl">
+                                                <img
+                                                    alt="تأجير السيارات"
+                                                    className="w-full h-[400px] object-cover"
+                                                    src={(c as { imageUrl?: string | null })?.imageUrl || CARS_IMAGE}
+                                                />
+                                            </div>
+                                            <form onSubmit={(e) => handleImageUpload(e, "cars")} className="flex flex-wrap items-center gap-2">
+                                                <input type="file" name="file" accept="image/*" className="text-sm text-secondary dark:text-gray-300" required />
+                                                <button type="submit" disabled={imageUploading === "cars"} className="px-4 py-2 rounded-xl bg-slate-700 text-white text-sm font-medium hover:bg-slate-600 disabled:opacity-50">
+                                                    {imageUploading === "cars" ? "جاري الرفع..." : "تغيير الصورة"}
+                                                </button>
+                                            </form>
                                         </div>
                                         <div className="text-secondary dark:text-white space-y-6">
                                             <h3 className="text-3xl font-bold border-r-4 border-gold pr-4">
