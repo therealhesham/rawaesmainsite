@@ -10,6 +10,7 @@ import { ThemeToggle } from "../rawaeshotels/ThemeToggle";
 import { InvestmentFundsSection } from "../components/InvestmentFundsSection";
 import { useSearchParams } from "next/navigation";
 import type { FundsData } from "./getFunds";
+import type { InvestmentRegisterBlockData } from "./getInvestmentRegisterBlock";
 
 const HOTEL_BRANDS = [
     { icon: "diamond", name: "Rest In Hotel" },
@@ -46,6 +47,7 @@ type FundTab = { id: string; label: string };
 type InvestmentPageContentProps = {
     tabs: FundTab[];
     funds: FundsData;
+    registerBlock?: InvestmentRegisterBlockData;
 };
 
 function buildHospitalityStats(fund: FundsData["hospitality"]) {
@@ -99,7 +101,7 @@ function buildCarsStats(fund: FundsData["cars"]) {
     ];
 }
 
-export function InvestmentPageContent({ tabs, funds }: InvestmentPageContentProps) {
+export function InvestmentPageContent({ tabs, funds, registerBlock }: InvestmentPageContentProps) {
     const [activeTab, setActiveTab] = React.useState(tabs[0]?.id ?? "hospitality");
     const searchParams = useSearchParams();
 
@@ -525,7 +527,7 @@ export function InvestmentPageContent({ tabs, funds }: InvestmentPageContentProp
                     viewport={{ once: true, margin: "-100px" }}
                     variants={itemVariants}
                 >
-                    <InvestmentHowToSection />
+                    <InvestmentHowToSection block={registerBlock} />
                 </motion.div>
             </main>
 

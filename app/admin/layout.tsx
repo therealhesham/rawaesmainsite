@@ -22,10 +22,11 @@ export default function AdminLayout({
     const menuItems = [
         { label: "لوحة التحكم", icon: "dashboard", href: "/admin" },
         { label: "صناديق الاستثمار", icon: "account_balance", href: "/admin/funds" },
-        { label: "مستثمرون تأجير السيارات", icon: "groups", href: "/admin/cardfundinginvestors" },
         { label: "تأجير سيارات", icon: "directions_car", href: "/admin/funds/cars" },
         { label: "استقدام", icon: "group_add", href: "/admin/funds/recruitment" },
         { label: "ضيافة", icon: "hotel", href: "/admin/funds/hospitality" },
+        { label: "اتصل بنا", icon: "contact_page", href: "/admin/contact" },
+        { label: "سجل اهتمامك / استثمر معنا", icon: "how_to_reg", href: "/admin/investment-register" },
     ];
 
     return (

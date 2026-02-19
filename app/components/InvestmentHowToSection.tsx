@@ -2,40 +2,47 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import type { InvestmentRegisterBlockData } from "@/app/investment/getInvestmentRegisterBlock";
 
-const HOW_TO_STEPS = [
-    {
-        step: "01",
-        title: "التسجيل",
-        description: "سجل معنا وانشئ طلب استثمار عبر موقعنا الإلكتروني بكل سهولة.",
-    },
-    {
-        step: "02",
-        title: "استشارة شخصية",
-        description: "نتواصل معك ونقدم لك استشارة شخصية تلبي طموحاتك المالية.",
-    },
-    {
-        step: "03",
-        title: "اختر القطاع",
-        description: "اختر القطاع المراد الاستثمار فيه وتصفح كافة معلوماته وعوائده.",
-    },
-    {
-        step: "04",
-        title: "ابدأ الاستثمار",
-        description: "ابدأ استثمارك الآن واحصل على العوائد الربحية المتوقعة بذكاء.",
-    },
+const DEFAULT_HOW_TO_STEPS = [
+    { step: "01", title: "التسجيل", description: "سجل معنا وانشئ طلب استثمار عبر موقعنا الإلكتروني بكل سهولة." },
+    { step: "02", title: "استشارة شخصية", description: "نتواصل معك ونقدم لك استشارة شخصية تلبي طموحاتك المالية." },
+    { step: "03", title: "اختر القطاع", description: "اختر القطاع المراد الاستثمار فيه وتصفح كافة معلوماته وعوائده." },
+    { step: "04", title: "ابدأ الاستثمار", description: "ابدأ استثمارك الآن واحصل على العوائد الربحية المتوقعة بذكاء." },
 ];
 
-const FUND_CARDS = [
+const DEFAULT_FUND_CARDS = [
     { title: "صندوق روائس للضيافة", href: "/hospitalityfund" },
     { title: "صندوق روائس لتأجير السيارات", href: "/carrentalfund" },
     { title: "صندوق روائس للاستقدام", href: "/carrentalfund" },
 ];
 
-const HOW_TO_IMAGE =
+const DEFAULT_HOW_TO_IMAGE =
     "https://lh3.googleusercontent.com/aida-public/AB6AXuDAfJgwgYRZXLxGtNYJjEjtBnzIFOPutaVkD4yL8Ex77GnSQS2AtMuraoDg6OhOVMePfbBMLd6cf91TLdkgDbaIM_f_vJVS0O4_92NCsT4B1QPqvbpyzNNB-1-k73VqrPgZ5UhcI7-h2ns84DOItX0eOUPl-R2Mfb1pymyYDp5YafbotAlzNDVCu-9j0WaPMgCuH3TXs0JMD81hug0PTvx252HeWLNlbGjNI9cM5x5I9ijUohVOGykKZXsQt7ipYSV6MZll2YaQ5l4";
 
-export function InvestmentHowToSection() {
+type Props = {
+    block?: InvestmentRegisterBlockData;
+};
+
+export function InvestmentHowToSection({ block }: Props) {
+    const b = block ?? null;
+    const howToTitle = b?.howToTitle ?? "كيفية البدء";
+    const howToSubtitle = b?.howToSubtitle ?? "خطوات بسيطة لتبدأ رحلتك الاستثمارية معنا في مجموعة روائس";
+    const howToImageUrl = b?.howToImageUrl ?? DEFAULT_HOW_TO_IMAGE;
+    const howToSteps = [
+        { step: "01", title: b?.step1Title ?? DEFAULT_HOW_TO_STEPS[0].title, description: b?.step1Description ?? DEFAULT_HOW_TO_STEPS[0].description },
+        { step: "02", title: b?.step2Title ?? DEFAULT_HOW_TO_STEPS[1].title, description: b?.step2Description ?? DEFAULT_HOW_TO_STEPS[1].description },
+        { step: "03", title: b?.step3Title ?? DEFAULT_HOW_TO_STEPS[2].title, description: b?.step3Description ?? DEFAULT_HOW_TO_STEPS[2].description },
+        { step: "04", title: b?.step4Title ?? DEFAULT_HOW_TO_STEPS[3].title, description: b?.step4Description ?? DEFAULT_HOW_TO_STEPS[3].description },
+    ];
+    const registerHeading = b?.registerHeading ?? "امتداد عريق بخبرة تجاوزت الثلاثة عقود";
+    const registerSubheading = b?.registerSubheading ?? "الصناديق الاستثمارية";
+    const registerFormTitle = b?.registerFormTitle ?? "سجل اهتمامك واستثمر معنا";
+    const fundCards = [
+        { title: b?.fund1Title ?? DEFAULT_FUND_CARDS[0].title, href: b?.fund1Href ?? DEFAULT_FUND_CARDS[0].href },
+        { title: b?.fund2Title ?? DEFAULT_FUND_CARDS[1].title, href: b?.fund2Href ?? DEFAULT_FUND_CARDS[1].href },
+        { title: b?.fund3Title ?? DEFAULT_FUND_CARDS[2].title, href: b?.fund3Href ?? DEFAULT_FUND_CARDS[2].href },
+    ];
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -55,20 +62,20 @@ export function InvestmentHowToSection() {
                             <img
                                 alt="Financial Growth Illustration"
                                 className="w-full h-auto max-w-md mix-blend-multiply opacity-80 dark:opacity-40 filter grayscale hover:grayscale-0 transition duration-500"
-                                src={HOW_TO_IMAGE}
+                                src={howToImageUrl}
                             />
                         </div>
                         <div className="md:w-1/2 text-right order-1 md:order-2">
                             <h2 className="text-4xl md:text-5xl font-bold text-gold mb-4 leading-tight">
-                                كيفية البدء
+                                {howToTitle}
                             </h2>
                             <p className="text-gray-600 dark:text-gray-400 text-lg">
-                                خطوات بسيطة لتبدأ رحلتك الاستثمارية معنا في مجموعة روائس
+                                {howToSubtitle}
                             </p>
                         </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-right">
-                        {HOW_TO_STEPS.map((item) => (
+                        {howToSteps.map((item) => (
                             <div
                                 key={item.step}
                                 className="group border-r-2 border-gold/20 pr-6 hover:border-gold transition-colors"
@@ -94,14 +101,14 @@ export function InvestmentHowToSection() {
                 <div className="container mx-auto max-w-5xl">
                     <div className="text-center mb-12">
                         <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 drop-shadow-lg">
-                            امتداد عريق بخبرة تجاوزت الثلاثة عقود
+                            {registerHeading}
                         </h2>
                         <h3 className="text-2xl md:text-3xl font-bold text-gold drop-shadow-md">
-                            الصناديق الاستثمارية
+                            {registerSubheading}
                         </h3>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
-                        {FUND_CARDS.map((card) => (
+                        {fundCards.map((card) => (
                             <div
                                 key={card.title}
                                 className="bg-corporate/90 rounded-xl p-6 text-center border-b-4 border-gold shadow-xl transform hover:-translate-y-2 transition duration-300"
@@ -120,7 +127,7 @@ export function InvestmentHowToSection() {
                     </div>
                     <div className="glass-panel rounded-xl p-8 md:p-12">
                         <div className="bg-corporate py-3 px-8 rounded-full w-fit mx-auto mb-10 -mt-16 shadow-lg">
-                            <h4 className="text-white font-bold">سجل اهتمامك واستثمر معنا</h4>
+                            <h4 className="text-white font-bold">{registerFormTitle}</h4>
                         </div>
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
