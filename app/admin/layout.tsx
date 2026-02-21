@@ -26,7 +26,7 @@ export default function AdminLayout({
         { label: "استقدام", icon: "group_add", href: "/admin/funds/recruitment" },
         { label: "ضيافة", icon: "hotel", href: "/admin/funds/hospitality" },
         { label: "اتصل بنا", icon: "contact_page", href: "/admin/contact" },
-        { label: "سجل اهتمامك / استثمر معنا", icon: "how_to_reg", href: "/admin/investment-register" },
+        { label: "سجل اهتمامك ", icon: "how_to_reg", href: "/admin/investment-register" },
     ];
 
     return (
