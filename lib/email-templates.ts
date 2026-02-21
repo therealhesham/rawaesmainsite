@@ -1,35 +1,8 @@
 /**
  * HTML email templates for contact and investment forms.
  * Inline-safe styles for broad client support (Gmail, Outlook, Apple Mail).
- * الشعارات: إن وُجد logoUrl (من الأدمن / DigitalOcean) يُستخدم، وإلا من public.
+ * الشعارات: من الأدمن فقط (رابط Digital Ocean). لا نضمّن base64 لتفادي رفض الخوادم أو السبام.
  */
-
-import path from "path";
-import fs from "fs";
-
-const publicDir = path.join(process.cwd(), "public");
-
-/** شعار الموقع من public/logo.png — يُستخدم في بريد تواصل معنا */
-const PUBLIC_LOGO_DATA_URL = (() => {
-  try {
-    const p = path.join(publicDir, "logo.png");
-    if (!fs.existsSync(p)) return null;
-    return "data:image/png;base64," + fs.readFileSync(p).toString("base64");
-  } catch {
-    return null;
-  }
-})();
-
-/** شعار روائس للاستثمار من public/investmentlogo.png — يُستخدم في بريد الاستثمار */
-const INVESTMENT_LOGO_DATA_URL = (() => {
-  try {
-    const p = path.join(publicDir, "investmentlogo.png");
-    if (!fs.existsSync(p)) return null;
-    return "data:image/png;base64," + fs.readFileSync(p).toString("base64");
-  } catch {
-    return null;
-  }
-})();
 
 const BASE_STYLES = {
   wrapper: "margin:0; padding:0; background-color:#f5f5f5; font-family:'Segoe UI',Tahoma,Arial,sans-serif; -webkit-font-smoothing:antialiased;",
@@ -79,7 +52,7 @@ export function buildContactEmail(
   options?: ContactEmailOptions
 ): { text: string; html: string } {
   const fullName = `${data.firstName} ${data.lastName}`.trim();
-  const logoUrl = options?.logoUrl ?? PUBLIC_LOGO_DATA_URL;
+  const logoUrl = options?.logoUrl ?? null;
   const text = [
     `رسالة جديدة من نموذج «تواصل معنا»`,
     ``,
@@ -133,6 +106,15 @@ export function buildContactEmail(
   return { text, html };
 }
 
+/** تهريب الرابط للاستخدام داخل خاصية HTML (مثلاً src) لتجنب كسر الهيكل أو رفض الخوادم */
+function escAttr(url: string): string {
+  return url
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
 function buildFooter(options: {
   note: string;
   logoUrl?: string;
@@ -140,9 +122,10 @@ function buildFooter(options: {
   tagline?: string;
 }): string {
   const { note, logoUrl, brandName = "مجموعة روائس", tagline = "شركة استثمارية متخصصة في حلول الاستثمار المبتكرة والمستدامة" } = options;
+  const safeLogoUrl = logoUrl ? escAttr(logoUrl) : "";
   return `
       <div style="${BASE_STYLES.footer}">
-        ${logoUrl ? `<img src="${logoUrl}" alt="${esc(brandName)}" style="${BASE_STYLES.footerLogo}" />` : ""}
+        ${safeLogoUrl ? `<img src="${safeLogoUrl}" alt="${esc(brandName)}" style="${BASE_STYLES.footerLogo}" />` : ""}
         ${brandName ? `<p style="${BASE_STYLES.footerBrand}">${esc(brandName)}</p>` : ""}
         ${tagline ? `<p style="${BASE_STYLES.footerTagline}">${esc(tagline)}</p>` : ""}
         <div style="${BASE_STYLES.footerDivider}"></div>
@@ -171,7 +154,7 @@ export function buildInvestmentInterestEmail(
   options?: InvestmentEmailOptions
 ): { text: string; html: string } {
   const fullName = `${data.firstName} ${data.lastName}`.trim();
-  const logoUrl = options?.logoUrl ?? INVESTMENT_LOGO_DATA_URL;
+  const logoUrl = options?.logoUrl ?? null;
   const text = [
     `طلب جديد من نموذج «سجل اهتمامك»`,
     ``,
@@ -194,7 +177,7 @@ export function buildInvestmentInterestEmail(
   <div style="${BASE_STYLES.container}">
     <div style="${BASE_STYLES.card}">
       <div style="${BASE_STYLES.header}">
-        ${logoUrl ? `<img src="${logoUrl}" alt="روائس للاستثمار" style="${BASE_STYLES.headerLogo}" />` : ""}
+        ${logoUrl ? `<img src="${escAttr(logoUrl)}" alt="روائس للاستثمار" style="${BASE_STYLES.headerLogo}" />` : ""}
         <h1 style="${BASE_STYLES.headerTitle}">طلب جديد — سجل الاهتمام بالاستثمار</h1>
         <p style="${BASE_STYLES.headerSub}">نموذج سجل اهتمامك</p>
       </div>

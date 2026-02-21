@@ -26,7 +26,7 @@ function getTransporter(auth?: { user: string; pass: string }): ReturnType<typeo
   return nodemailer.createTransport({
     host,
     port: portNum,
-    secure,
+    secure:true,
     auth: { user, pass },
     debug: process.env.MAIL_DEBUG === "true",
     logger: process.env.MAIL_DEBUG === "true",
