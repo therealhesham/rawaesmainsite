@@ -30,7 +30,7 @@ export function InvestmentHowToSection({ block }: Props) {
     const b = block ?? null;
     const howToTitle = b?.howToTitle ?? "كيفية البدء";
     const howToSubtitle = b?.howToSubtitle ?? "خطوات بسيطة لتبدأ رحلتك الاستثمارية معنا في مجموعة روائس";
-    const howToImageUrl = b?.howToImageUrl ?? DEFAULT_HOW_TO_IMAGE;
+    const howToImageUrl = b?.howToImageUrlDisplay ?? b?.howToImageUrl ?? DEFAULT_HOW_TO_IMAGE;
     const howToSteps = [
         { step: "01", title: b?.step1Title ?? DEFAULT_HOW_TO_STEPS[0].title, description: b?.step1Description ?? DEFAULT_HOW_TO_STEPS[0].description },
         { step: "02", title: b?.step2Title ?? DEFAULT_HOW_TO_STEPS[1].title, description: b?.step2Description ?? DEFAULT_HOW_TO_STEPS[1].description },

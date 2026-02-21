@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { InvestmentRegisterBlockData } from "@/app/investment/getInvestmentRegisterBlock";
-import { updateInvestmentRegisterBlock } from "../investment-register-actions";
+import { updateInvestmentRegisterBlock, uploadInvestmentRegisterHowToImage } from "../investment-register-actions";
 
 const DEFAULT_HOW_TO_STEPS = [
     { step: "01", title: "Ø§Ù„ØªØ³Ø¬ÙŠÙ„", description: "Ø³Ø¬Ù„ Ù…Ø¹Ù†Ø§ ÙˆØ§Ù†Ø´Ø¦ Ø·Ù„Ø¨ Ø§Ø³ØªØ«Ù…Ø§Ø± Ø¹Ø¨Ø± Ù…ÙˆÙ‚Ø¹Ù†Ø§ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ Ø¨ÙƒÙ„ Ø³Ù‡ÙˆÙ„Ø©." },
@@ -17,22 +18,41 @@ const DEFAULT_FUND_CARDS = [
     { title: "صندوق رواد للاستقدام", href: "/carrentalfund" },
 ];
 
+/** صورة افتراضية عند عدم وجود رفع */
 const DEFAULT_HOW_TO_IMAGE =
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuDAfJgwgYRZXLxGtNYJjEjtBnzIFOPutaVkD4yL8Ex77GnSQS2AtMuraoDg6OhOVMePfbBMLd6cf91TLdkgDbaIM_f_vJVS0O4_92NCsT4B1QPqvbpyzNNB-1-k73VqrPgZ5UhcI7-h2ns84DOItX0eOUPl-R2Mfb1pymyYDp5YafbotAlzNDVCu-9j0WaPMgCuH3TXs0JMD81hug0PTvx252HeWLNlbGjNI9cM5x5I9ijUohVOGykKZXsQt7ipYSV6MZll2YaQ5l4";
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect fill='%23f0f0f0' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' fill='%23999' text-anchor='middle' dy='.3em'%3Eصورة%3C/text%3E%3C/svg%3E";
 
 type Props = {
     block: InvestmentRegisterBlockData | null;
 };
 
 export function InvestmentRegisterEditable({ block }: Props) {
+    const router = useRouter();
     const [message, setMessage] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [imageUploading, setImageUploading] = useState(false);
+    const [imageError, setImageError] = useState<string | null>(null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const b = block ?? null;
     const howToTitle = b?.howToTitle ?? "كيفية البدء";
     const howToSubtitle = b?.howToSubtitle ?? "خطوات بسيطة لتبدأ رحلتك الاستثمارية معنا في مجموعة رواس";
-    const howToImageUrl = b?.howToImageUrl ?? DEFAULT_HOW_TO_IMAGE;
+    const howToImageUrl = b?.howToImageUrlDisplay ?? b?.howToImageUrl ?? DEFAULT_HOW_TO_IMAGE;
+    const displayImageUrl = previewUrl ?? howToImageUrl;
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (previewUrl) URL.revokeObjectURL(previewUrl);
+        setPreviewUrl(file ? URL.createObjectURL(file) : null);
+    };
+
+    useEffect(() => {
+        return () => {
+            if (previewUrl) URL.revokeObjectURL(previewUrl);
+        };
+    }, [previewUrl]);
     const howToSteps = [
         { step: "01", title: b?.step1Title ?? "التسجيل", description: b?.step1Description ?? "سجل معنا وانهي اجراءات التسجيل بكل سهولة عبر موقعنا الالكتروني" },
         { step: "02", title: b?.step2Title ?? "الاستشارة الشخصية", description: b?.step2Description ?? "سنتواصل معك ونقدم لك استشارة شخصية تلبي طموحاتك المالية" },
@@ -145,18 +165,60 @@ export function InvestmentRegisterEditable({ block }: Props) {
                 <div className="container mx-auto px-6 max-w-6xl">
                     <div className="flex flex-col md:flex-row items-center justify-between mb-16 gap-8">
                         <div className="md:w-1/2 order-2 md:order-1 space-y-3">
-                            <img
-                                alt="Financial Growth Illustration"
-                                className="w-full h-auto max-w-md mix-blend-multiply opacity-80 dark:opacity-40 filter grayscale"
-                                src={howToImageUrl}
-                            />
-                            <div className="space-y-2 text-right">
-                                <label className="block text-sm font-bold text-secondary dark:text-gray-200">رابط الصورة</label>
-                                <input
-                                    name="howToImageUrl"
-                                    defaultValue={howToImageUrl}
-                                    className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm"
+                            <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800/50 p-3">
+                                <p className="text-sm font-bold text-secondary dark:text-gray-200 mb-2 text-right">
+                                    {previewUrl ? "معاينة قبل الرفع" : "معاينة الصورة"}
+                                </p>
+                                <img
+                                    alt="معاينة صورة كيفية البدء"
+                                    className="w-full h-auto max-w-md max-h-64 object-contain mx-auto rounded-lg mix-blend-multiply opacity-80 dark:opacity-40 filter grayscale"
+                                    src={displayImageUrl}
                                 />
+                            </div>
+                            <input type="hidden" name="howToImageUrl" value={b?.howToImageUrl ?? ""} />
+                            <div className="space-y-2 text-right">
+                                <label className="block text-sm font-bold text-secondary dark:text-gray-200">صورة «كيفية البدء»</label>
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        name="file"
+                                        accept="image/*"
+                                        onChange={handleFileChange}
+                                        className="text-sm text-secondary dark:text-gray-300 file:mr-2 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-primary file:text-white file:font-medium"
+                                    />
+                                    <button
+                                        type="button"
+                                        disabled={imageUploading}
+                                        onClick={async () => {
+                                            const file = fileInputRef.current?.files?.[0];
+                                            if (!file) return;
+                                            setImageError(null);
+                                            setImageUploading(true);
+                                            const formData = new FormData();
+                                            formData.set("file", file);
+                                            const result = await uploadInvestmentRegisterHowToImage(formData);
+                                            setImageUploading(false);
+                                            if (result.success) {
+                                                if (previewUrl) URL.revokeObjectURL(previewUrl);
+                                                setPreviewUrl(null);
+                                                if (fileInputRef.current) fileInputRef.current.value = "";
+                                                router.refresh();
+                                            } else {
+                                                setImageError(result.error ?? "تعذر رفع الصورة.");
+                                            }
+                                        }}
+                                        className="px-4 py-2 rounded-xl bg-slate-700 text-white text-sm font-medium hover:bg-slate-600 disabled:opacity-50"
+                                    >
+                                        {imageUploading ? "جاري الرفع..." : "رفع الصورة"}
+                                    </button>
+                                </div>
+                                {imageError && (
+                                    <p className="text-red-600 dark:text-red-400 text-sm">{imageError}</p>
+                                )}
+                                <p className="text-gray-500 dark:text-gray-400 text-xs">
+                                    تُخزَّن الصورة في DigitalOcean كمفتاح قصير (بدون روابط طويلة).
+                                </p>
                             </div>
                         </div>
                         <div className="md:w-1/2 text-right order-1 md:order-2 space-y-4">
