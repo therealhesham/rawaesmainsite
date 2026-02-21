@@ -1,14 +1,25 @@
 /**
  * HTML email templates for contact and investment forms.
  * Inline-safe styles for broad client support (Gmail, Outlook, Apple Mail).
+ * الشعارات تُقرأ مباشرة من مجلد public وتُضمّن في البريد (base64).
  */
 
-/** Base URL for logo images in emails (must be absolute). */
-function getBaseUrl(): string {
-  const url = process.env.NEXT_PUBLIC_APP_URL ?? process.env.VERCEL_URL ?? "";
-  if (url.startsWith("http")) return url.replace(/\/$/, "");
-  if (url) return `https://${url}`.replace(/\/$/, "");
-  return "https://rawaes.com";
+import path from "path";
+import fs from "fs";
+
+/** قراءة ملف من public وإرجاع data URL للاستخدام في img src */
+function getPublicLogoDataUrl(publicPath: string): string | null {
+  try {
+    const fullPath = path.join(process.cwd(), "public", publicPath.replace(/^\//, ""));
+    if (!fs.existsSync(fullPath)) return null;
+    const buf = fs.readFileSync(fullPath);
+    const base64 = buf.toString("base64");
+    const ext = path.extname(publicPath).toLowerCase();
+    const mime = ext === ".svg" ? "image/svg+xml" : ext === ".png" ? "image/png" : "image/png";
+    return `data:${mime};base64,${base64}`;
+  } catch {
+    return null;
+  }
 }
 
 const BASE_STYLES = {
@@ -92,7 +103,7 @@ export function buildContactEmail(data: ContactEmailData): { text: string; html:
       </div>
       ${buildFooter({
         note: "تم الإرسال من نموذج التواصل في الموقع · يمكنك الرد مباشرة على هذا البريد",
-        logoUrl: `${getBaseUrl()}/logo.png`,
+        logoUrl: getPublicLogoDataUrl("logo.png") ?? undefined,
         brandName: "مجموعة روائس",
         tagline: "شركة استثمارية متخصصة في حلول الاستثمار المبتكرة والمستدامة",
       })}
@@ -147,8 +158,7 @@ export function buildInvestmentInterestEmail(data: InvestmentEmailData): {
     `نطاق الاستثمار: ${data.amountLabel}`,
   ].join("\n");
 
-  const baseUrl = getBaseUrl();
-  const investmentLogoUrl = `${baseUrl}/investmentlogo.png`;
+  const investmentLogoDataUrl = getPublicLogoDataUrl("investmentlogo.png");
 
   const html = `
 <!DOCTYPE html>
@@ -162,7 +172,7 @@ export function buildInvestmentInterestEmail(data: InvestmentEmailData): {
   <div style="${BASE_STYLES.container}">
     <div style="${BASE_STYLES.card}">
       <div style="${BASE_STYLES.header}">
-        <img src="${investmentLogoUrl}" alt="روائس للاستثمار" style="${BASE_STYLES.headerLogo}" />
+        ${investmentLogoDataUrl ? `<img src="${investmentLogoDataUrl}" alt="روائس للاستثمار" style="${BASE_STYLES.headerLogo}" />` : ""}
         <h1 style="${BASE_STYLES.headerTitle}">طلب جديد — سجل الاهتمام بالاستثمار</h1>
         <p style="${BASE_STYLES.headerSub}">نموذج سجل اهتمامك</p>
       </div>
@@ -181,7 +191,7 @@ export function buildInvestmentInterestEmail(data: InvestmentEmailData): {
       </div>
       ${buildFooter({
         note: "تم الإرسال من صفحة الاستثمار · يمكنك الرد مباشرة على هذا البريد",
-        logoUrl: investmentLogoUrl,
+        logoUrl: investmentLogoDataUrl ?? undefined,
         brandName: "روائس للاستثمار",
         tagline: "فرص استثمارية متنوعة في صناديق الضيافة والاستقدام والمركبات",
       })}

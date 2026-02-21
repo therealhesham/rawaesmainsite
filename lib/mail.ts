@@ -4,7 +4,7 @@ import nodemailer from "nodemailer";
  * إعداد البريد من .env أو من لوحة التحكم (smtpUser/smtpPass).
  * للبورت 465 استخدم MAIL_SECURE=true. من (from) يجب أن يطابق حساب المصادقة.
  */
-function getTransporter(auth?: { user: string; pass: string }): nodemailer.Transporter | null {
+function getTransporter(auth?: { user: string; pass: string }): ReturnType<typeof nodemailer.createTransport> | null {
   const host = process.env.MAIL_HOST;
   const port = process.env.MAIL_PORT;
   const secureEnv = process.env.MAIL_SECURE === "true";
