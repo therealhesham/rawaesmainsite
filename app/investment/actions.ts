@@ -2,6 +2,7 @@
 
 import { PrismaClient } from "@prisma/client";
 import { sendMail } from "@/lib/mail";
+import { buildInvestmentInterestEmail } from "@/lib/email-templates";
 
 const prisma = new PrismaClient();
 
@@ -57,19 +58,21 @@ export async function submitInvestmentInterest(
     if (toEmail) {
       const fundLabel = fund ? FUND_LABELS[fund] ?? fund : "—";
       const amountLabel = amount ? AMOUNT_LABELS[amount] ?? amount : "—";
-      const text = [
-        `طلب جديد من نموذج «سجل اهتمامك»`,
-        ``,
-        `الاسم: ${firstName} ${lastName}`,
-        `البريد: ${email}`,
-        `الجوال: ${phone}`,
-        `الصندوق: ${fundLabel}`,
-        `نطاق الاستثمار: ${amountLabel}`,
-      ].join("\n");
+      const { text, html } = buildInvestmentInterestEmail({
+        firstName,
+        lastName,
+        email,
+        phone,
+        fund,
+        amount,
+        fundLabel,
+        amountLabel,
+      });
       await sendMail({
         to: toEmail,
         subject: `طلب سجل اهتمام — ${firstName} ${lastName}`,
         text,
+        html,
         replyTo: email,
         smtpUser: block?.mailSenderEmail ?? undefined,
         smtpPass: block?.mailSenderPassword ?? undefined,

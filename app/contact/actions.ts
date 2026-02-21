@@ -2,6 +2,7 @@
 
 import { PrismaClient } from "@prisma/client";
 import { sendMail } from "@/lib/mail";
+import { buildContactEmail } from "@/lib/email-templates";
 
 const prisma = new PrismaClient();
 
@@ -42,20 +43,18 @@ export async function submitContactForm(
       console.warn("[Contact] لا يوجد بريد مستلم — اضبط «البريد المستلم» من لوحة التحكم / اتصل بنا");
     }
     if (toEmail) {
-      const text = [
-        `رسالة جديدة من نموذج «تواصل معنا»`,
-        ``,
-        `الاسم: ${firstName} ${lastName}`,
-        `البريد: ${email}`,
-        `الجوال: ${phone ?? "—"}`,
-        ``,
-        `الرسالة:`,
-        message ?? "—",
-      ].join("\n");
+      const { text, html } = buildContactEmail({
+        firstName,
+        lastName,
+        email,
+        phone,
+        message,
+      });
       await sendMail({
         to: toEmail,
         subject: `رسالة تواصل — ${firstName} ${lastName}`,
         text,
+        html,
         replyTo: email,
         smtpUser: contactConfig?.mailSenderEmail ?? undefined,
         smtpPass: contactConfig?.mailSenderPassword ?? undefined,
