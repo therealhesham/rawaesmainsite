@@ -16,13 +16,7 @@ const s3Client = new S3Client({
   forcePathStyle: false,
 });
 
-/** يبني رابط العرض من مفتاح الملف في DigitalOcean (بدون تخزين الرابط الطويل في DB) */
-function getDoPublicUrl(key: string): string {
-  const endpoint = process.env.DO_SPACES_ENDPOINT || "";
-  const bucket = process.env.DO_SPACES_BUCKET || "";
-  const u = new URL(endpoint);
-  return `${u.protocol}//${bucket}.${u.host}/${key}`;
-}
+import { getDoPublicUrl } from "@/lib/do-spaces";
 
 type ActionResult =
   | { success: true }
@@ -72,9 +66,15 @@ export async function getInvestmentRegisterBlockForAdmin() {
         : block.howToImageUrl
           ? getDoPublicUrl(block.howToImageUrl)
           : null;
+    const emailLogoUrlDisplay = block.emailLogoUrl
+      ? block.emailLogoUrl.startsWith("http")
+        ? block.emailLogoUrl
+        : getDoPublicUrl(block.emailLogoUrl)
+      : null;
     return {
       ...block,
       howToImageUrlDisplay: howToImageUrlDisplay ?? block.howToImageUrl ?? null,
+      emailLogoUrlDisplay: emailLogoUrlDisplay ?? null,
     };
   } catch (error) {
     console.error("Failed to load investment register block:", error);
@@ -180,5 +180,54 @@ export async function uploadInvestmentRegisterHowToImage(
   } catch (error) {
     console.error("Failed to upload investment register image:", error);
     return { success: false, error: "تعذر رفع الصورة. تحقق من إعدادات DigitalOcean." };
+  }
+}
+
+/** رفع شعار البريد الإلكتروني (روائس للاستثمار) إلى DigitalOcean */
+export async function uploadInvestmentEmailLogo(
+  formData: FormData
+): Promise<ActionResult> {
+  try {
+    const file = formData.get("file") as File | null;
+    if (!file || file.size === 0) {
+      return { success: false, error: "يرجى اختيار صورة." };
+    }
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const timestamp = Date.now();
+    const safeName = file.name.replace(/\s+/g, "-").replace(/[^a-zA-Z0-9.-]/g, "") || "logo.png";
+    const key = `email-logos/investment-${timestamp}-${safeName}`;
+
+    await s3Client.send(
+      new PutObjectCommand({
+        Bucket: process.env.DO_SPACES_BUCKET,
+        Key: key,
+        Body: buffer,
+        ACL: "public-read",
+        ContentType: file.type || "image/png",
+      })
+    );
+
+    const existing = await prisma.investmentRegisterBlock.findFirst({
+      orderBy: { id: "desc" },
+    });
+
+    if (existing) {
+      await prisma.investmentRegisterBlock.update({
+        where: { id: existing.id },
+        data: { emailLogoUrl: key },
+      });
+    } else {
+      await prisma.investmentRegisterBlock.create({
+        data: { emailLogoUrl: key },
+      });
+    }
+
+    revalidatePath("/investment");
+    revalidatePath("/admin/investment-register");
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to upload investment email logo:", error);
+    return { success: false, error: "تعذر رفع الشعار. تحقق من إعدادات DigitalOcean." };
   }
 }

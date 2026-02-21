@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { InvestmentRegisterBlockData } from "@/app/investment/getInvestmentRegisterBlock";
-import { updateInvestmentRegisterBlock, uploadInvestmentRegisterHowToImage } from "../investment-register-actions";
+import { updateInvestmentRegisterBlock, uploadInvestmentRegisterHowToImage, uploadInvestmentEmailLogo } from "../investment-register-actions";
 
 const DEFAULT_HOW_TO_STEPS = [
     { step: "01", title: "Ø§Ù„ØªØ³Ø¬ÙŠÙ„", description: "Ø³Ø¬Ù„ Ù…Ø¹Ù†Ø§ ÙˆØ§Ù†Ø´Ø¦ Ø·Ù„Ø¨ Ø§Ø³ØªØ«Ù…Ø§Ø± Ø¹Ø¨Ø± Ù…ÙˆÙ‚Ø¹Ù†Ø§ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ Ø¨ÙƒÙ„ Ø³Ù‡ÙˆÙ„Ø©." },
@@ -35,6 +35,10 @@ export function InvestmentRegisterEditable({ block }: Props) {
     const [imageError, setImageError] = useState<string | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [emailLogoUploading, setEmailLogoUploading] = useState(false);
+    const [emailLogoError, setEmailLogoError] = useState<string | null>(null);
+    const [emailLogoPreview, setEmailLogoPreview] = useState<string | null>(null);
+    const emailLogoInputRef = useRef<HTMLInputElement>(null);
 
     const b = block ?? null;
     const howToTitle = b?.howToTitle ?? "كيفية البدء";
@@ -63,6 +67,7 @@ export function InvestmentRegisterEditable({ block }: Props) {
     const registerSubheading = b?.registerSubheading ?? "الصناديق الاستثمارية";
     const registerFormTitle = b?.registerFormTitle ?? "سجل اهتمامك واستثمر معنا";
     const formRecipientEmail = b?.formRecipientEmail ?? "";
+    const emailLogoUrlDisplay = (block as { emailLogoUrlDisplay?: string | null } | null)?.emailLogoUrlDisplay ?? null;
     const fundCards = [
         { title: b?.fund1Title ?? DEFAULT_FUND_CARDS[0].title, href: b?.fund1Href ?? DEFAULT_FUND_CARDS[0].href },
         { title: b?.fund2Title ?? DEFAULT_FUND_CARDS[1].title, href: b?.fund2Href ?? DEFAULT_FUND_CARDS[1].href },
@@ -159,6 +164,76 @@ export function InvestmentRegisterEditable({ block }: Props) {
                         />
                     </div>
                 </div>
+            </section>
+
+            <section className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-6">
+                <h2 className="text-lg font-bold text-secondary dark:text-white mb-4 flex items-center gap-2">
+                    <span className="material-icons text-primary">image</span>
+                    شعار البريد الإلكتروني (روائس للاستثمار)
+                </h2>
+                <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
+                    يظهر في هيدر وفوتر بريد طلبات «سجل اهتمامك». يُرفع إلى Digital Ocean.
+                </p>
+                <div className="flex flex-wrap items-center gap-4">
+                    {(emailLogoPreview ?? emailLogoUrlDisplay) && (
+                        <img
+                            src={emailLogoPreview ?? emailLogoUrlDisplay ?? ""}
+                            alt="شعار روائس للاستثمار"
+                            className="h-14 w-auto object-contain rounded border border-gray-200 dark:border-gray-600"
+                        />
+                    )}
+                    <input
+                        ref={emailLogoInputRef}
+                        type="file"
+                        accept="image/png,image/jpeg,image/svg+xml"
+                        className="hidden"
+                        onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (emailLogoPreview) URL.revokeObjectURL(emailLogoPreview);
+                            setEmailLogoPreview(file ? URL.createObjectURL(file) : null);
+                            setEmailLogoError(null);
+                        }}
+                    />
+                    <button
+                        type="button"
+                        onClick={() => emailLogoInputRef.current?.click()}
+                        className="px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-secondary dark:text-gray-200 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700"
+                    >
+                        اختر صورة
+                    </button>
+                    <button
+                        type="button"
+                        disabled={emailLogoUploading}
+                        onClick={async () => {
+                            const file = emailLogoInputRef.current?.files?.[0];
+                            if (!file) {
+                                setEmailLogoError("اختر صورة أولاً.");
+                                return;
+                            }
+                            setEmailLogoError(null);
+                            setEmailLogoUploading(true);
+                            const formData = new FormData();
+                            formData.set("file", file);
+                            const result = await uploadInvestmentEmailLogo(formData);
+                            setEmailLogoUploading(false);
+                            if (result.success) {
+                                setMessage("تم رفع شعار البريد بنجاح.");
+                                if (emailLogoPreview) URL.revokeObjectURL(emailLogoPreview);
+                                setEmailLogoPreview(null);
+                                if (emailLogoInputRef.current) emailLogoInputRef.current.value = "";
+                                router.refresh();
+                            } else {
+                                setEmailLogoError(result.error ?? "تعذر الرفع.");
+                            }
+                        }}
+                        className="px-4 py-2 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary/90 disabled:opacity-50"
+                    >
+                        {emailLogoUploading ? "جاري الرفع..." : "رفع إلى Digital Ocean"}
+                    </button>
+                </div>
+                {emailLogoError && (
+                    <p className="mt-2 text-sm text-red-600 dark:text-red-400">{emailLogoError}</p>
+                )}
             </section>
 
             <section className="relative bg-white dark:bg-background-dark pt-16 pb-32 rounded-3xl overflow-hidden border border-gray-100 dark:border-gray-800">

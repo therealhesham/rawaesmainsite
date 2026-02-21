@@ -1,26 +1,35 @@
 /**
  * HTML email templates for contact and investment forms.
  * Inline-safe styles for broad client support (Gmail, Outlook, Apple Mail).
- * الشعارات تُقرأ مباشرة من مجلد public وتُضمّن في البريد (base64).
+ * الشعارات: إن وُجد logoUrl (من الأدمن / DigitalOcean) يُستخدم، وإلا من public.
  */
 
 import path from "path";
 import fs from "fs";
 
-/** قراءة ملف من public وإرجاع data URL للاستخدام في img src */
-function getPublicLogoDataUrl(publicPath: string): string | null {
+const publicDir = path.join(process.cwd(), "public");
+
+/** شعار الموقع من public/logo.png — يُستخدم في بريد تواصل معنا */
+const PUBLIC_LOGO_DATA_URL = (() => {
   try {
-    const fullPath = path.join(process.cwd(), "public", publicPath.replace(/^\//, ""));
-    if (!fs.existsSync(fullPath)) return null;
-    const buf = fs.readFileSync(fullPath);
-    const base64 = buf.toString("base64");
-    const ext = path.extname(publicPath).toLowerCase();
-    const mime = ext === ".svg" ? "image/svg+xml" : ext === ".png" ? "image/png" : "image/png";
-    return `data:${mime};base64,${base64}`;
+    const p = path.join(publicDir, "logo.png");
+    if (!fs.existsSync(p)) return null;
+    return "data:image/png;base64," + fs.readFileSync(p).toString("base64");
   } catch {
     return null;
   }
-}
+})();
+
+/** شعار روائس للاستثمار من public/investmentlogo.png — يُستخدم في بريد الاستثمار */
+const INVESTMENT_LOGO_DATA_URL = (() => {
+  try {
+    const p = path.join(publicDir, "investmentlogo.png");
+    if (!fs.existsSync(p)) return null;
+    return "data:image/png;base64," + fs.readFileSync(p).toString("base64");
+  } catch {
+    return null;
+  }
+})();
 
 const BASE_STYLES = {
   wrapper: "margin:0; padding:0; background-color:#f5f5f5; font-family:'Segoe UI',Tahoma,Arial,sans-serif; -webkit-font-smoothing:antialiased;",
@@ -60,8 +69,17 @@ export type ContactEmailData = {
   message: string | null;
 };
 
-export function buildContactEmail(data: ContactEmailData): { text: string; html: string } {
+export type ContactEmailOptions = {
+  /** رابط الشعار من الأدمن (DigitalOcean) — إن وُجد يُستخدم بدل شعار public */
+  logoUrl?: string | null;
+};
+
+export function buildContactEmail(
+  data: ContactEmailData,
+  options?: ContactEmailOptions
+): { text: string; html: string } {
   const fullName = `${data.firstName} ${data.lastName}`.trim();
+  const logoUrl = options?.logoUrl ?? PUBLIC_LOGO_DATA_URL;
   const text = [
     `رسالة جديدة من نموذج «تواصل معنا»`,
     ``,
@@ -103,7 +121,7 @@ export function buildContactEmail(data: ContactEmailData): { text: string; html:
       </div>
       ${buildFooter({
         note: "تم الإرسال من نموذج التواصل في الموقع · يمكنك الرد مباشرة على هذا البريد",
-        logoUrl: getPublicLogoDataUrl("logo.png") ?? undefined,
+        logoUrl: logoUrl ?? undefined,
         brandName: "مجموعة روائس",
         tagline: "شركة استثمارية متخصصة في حلول الاستثمار المبتكرة والمستدامة",
       })}
@@ -143,11 +161,17 @@ export type InvestmentEmailData = {
   amountLabel: string;
 };
 
-export function buildInvestmentInterestEmail(data: InvestmentEmailData): {
-  text: string;
-  html: string;
-} {
+export type InvestmentEmailOptions = {
+  /** رابط شعار روائس للاستثمار من الأدمن (DigitalOcean) — إن وُجد يُستخدم بدل شعار public */
+  logoUrl?: string | null;
+};
+
+export function buildInvestmentInterestEmail(
+  data: InvestmentEmailData,
+  options?: InvestmentEmailOptions
+): { text: string; html: string } {
   const fullName = `${data.firstName} ${data.lastName}`.trim();
+  const logoUrl = options?.logoUrl ?? INVESTMENT_LOGO_DATA_URL;
   const text = [
     `طلب جديد من نموذج «سجل اهتمامك»`,
     ``,
@@ -157,8 +181,6 @@ export function buildInvestmentInterestEmail(data: InvestmentEmailData): {
     `الصندوق: ${data.fundLabel}`,
     `نطاق الاستثمار: ${data.amountLabel}`,
   ].join("\n");
-
-  const investmentLogoDataUrl = getPublicLogoDataUrl("investmentlogo.png");
 
   const html = `
 <!DOCTYPE html>
@@ -172,7 +194,7 @@ export function buildInvestmentInterestEmail(data: InvestmentEmailData): {
   <div style="${BASE_STYLES.container}">
     <div style="${BASE_STYLES.card}">
       <div style="${BASE_STYLES.header}">
-        ${investmentLogoDataUrl ? `<img src="${investmentLogoDataUrl}" alt="روائس للاستثمار" style="${BASE_STYLES.headerLogo}" />` : ""}
+        ${logoUrl ? `<img src="${logoUrl}" alt="روائس للاستثمار" style="${BASE_STYLES.headerLogo}" />` : ""}
         <h1 style="${BASE_STYLES.headerTitle}">طلب جديد — سجل الاهتمام بالاستثمار</h1>
         <p style="${BASE_STYLES.headerSub}">نموذج سجل اهتمامك</p>
       </div>
@@ -191,7 +213,7 @@ export function buildInvestmentInterestEmail(data: InvestmentEmailData): {
       </div>
       ${buildFooter({
         note: "تم الإرسال من صفحة الاستثمار · يمكنك الرد مباشرة على هذا البريد",
-        logoUrl: investmentLogoDataUrl ?? undefined,
+        logoUrl: logoUrl ?? undefined,
         brandName: "روائس للاستثمار",
         tagline: "فرص استثمارية متنوعة في صناديق الضيافة والاستقدام والمركبات",
       })}

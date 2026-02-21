@@ -136,6 +136,7 @@ model ContactUs {
   formRecipientEmail  String?  // البريد المستلم لرسائل النموذج
   mailSenderEmail     String?  // بريد الإرسال (SMTP)
   mailSenderPassword  String?  // كلمة مرور بريد الإرسال
+  emailLogoUrl        String?  // شعار البريد (مفتاح أو رابط من DigitalOcean)
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 }
@@ -171,6 +172,7 @@ model InvestmentRegisterBlock {
   formRecipientEmail   String?  // البريد المستلم لطلبات سجل الاهتمام
   mailSenderEmail      String?  // بريد الإرسال (SMTP)
   mailSenderPassword   String?  // كلمة مرور بريد الإرسال
+  emailLogoUrl         String?  // شعار روائس للاستثمار في البريد (مفتاح أو رابط من DigitalOcean)
   fund1Title           String?
   fund1Href             String?
   fund2Title            String?

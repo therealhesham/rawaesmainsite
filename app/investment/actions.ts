@@ -3,6 +3,7 @@
 import { PrismaClient } from "@prisma/client";
 import { sendMail } from "@/lib/mail";
 import { buildInvestmentInterestEmail } from "@/lib/email-templates";
+import { resolveLogoUrl } from "@/lib/do-spaces";
 
 const prisma = new PrismaClient();
 
@@ -49,6 +50,7 @@ export async function submitInvestmentInterest(
         formRecipientEmail: true,
         mailSenderEmail: true,
         mailSenderPassword: true,
+        emailLogoUrl: true,
       },
     });
     const toEmail = block?.formRecipientEmail?.trim();
@@ -58,16 +60,11 @@ export async function submitInvestmentInterest(
     if (toEmail) {
       const fundLabel = fund ? FUND_LABELS[fund] ?? fund : "—";
       const amountLabel = amount ? AMOUNT_LABELS[amount] ?? amount : "—";
-      const { text, html } = buildInvestmentInterestEmail({
-        firstName,
-        lastName,
-        email,
-        phone,
-        fund,
-        amount,
-        fundLabel,
-        amountLabel,
-      });
+      const logoUrl = resolveLogoUrl(block?.emailLogoUrl);
+      const { text, html } = buildInvestmentInterestEmail(
+        { firstName, lastName, email, phone, fund, amount, fundLabel, amountLabel },
+        { logoUrl }
+      );
       await sendMail({
         to: toEmail,
         subject: `طلب سجل اهتمام — ${firstName} ${lastName}`,
