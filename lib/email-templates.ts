@@ -3,11 +3,20 @@
  * Inline-safe styles for broad client support (Gmail, Outlook, Apple Mail).
  */
 
+/** Base URL for logo images in emails (must be absolute). */
+function getBaseUrl(): string {
+  const url = process.env.NEXT_PUBLIC_APP_URL ?? process.env.VERCEL_URL ?? "";
+  if (url.startsWith("http")) return url.replace(/\/$/, "");
+  if (url) return `https://${url}`.replace(/\/$/, "");
+  return "https://rawaes.com";
+}
+
 const BASE_STYLES = {
   wrapper: "margin:0; padding:0; background-color:#f5f5f5; font-family:'Segoe UI',Tahoma,Arial,sans-serif; -webkit-font-smoothing:antialiased;",
   container: "max-width:560px; margin:0 auto; padding:24px 16px;",
   card: "background:#ffffff; border-radius:12px; overflow:hidden; box-shadow:0 4px 24px rgba(0,0,0,0.06);",
   header: "background:linear-gradient(135deg, #002a3a 0%, #003d52 100%); padding:24px 28px; text-align:center;",
+  headerLogo: "display:block; margin:0 auto 14px auto; height:48px; width:auto; max-width:180px;",
   headerTitle: "color:#ffffff; font-size:20px; font-weight:700; margin:0; letter-spacing:0.02em;",
   headerSub: "color:rgba(255,255,255,0.85); font-size:13px; margin:8px 0 0 0;",
   body: "padding:28px 28px 32px; direction:rtl; text-align:right;",
@@ -16,8 +25,12 @@ const BASE_STYLES = {
   valueLast: "color:#374151; font-size:15px; line-height:1.6; margin:0;",
   divider: "height:1px; background:#e5e7eb; margin:20px 0;",
   messageBox: "background:#f8fafc; border-right:4px solid #d4af79; padding:14px 16px; border-radius:0 8px 8px 0; margin:8px 0 0 0;",
-  footer: "padding:16px 28px; background:#f8fafc; border-top:1px solid #e5e7eb; text-align:center; direction:rtl;",
-  footerText: "color:#6b7280; font-size:12px; margin:0;",
+  footer: "padding:24px 28px; background:linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%); border-top:3px solid #d4af79; text-align:center; direction:rtl;",
+  footerLogo: "display:block; margin:0 auto 12px auto; height:40px; width:auto; max-width:140px; opacity:0.9;",
+  footerBrand: "color:#002a3a; font-size:15px; font-weight:700; margin:0 0 4px 0;",
+  footerTagline: "color:#64748b; font-size:12px; margin:0 0 14px 0; line-height:1.5;",
+  footerDivider: "height:1px; background:#e2e8f0; margin:14px 0; max-width:200px; margin-left:auto; margin-right:auto;",
+  footerNote: "color:#64748b; font-size:11px; margin:0; line-height:1.6;",
 };
 
 function esc(s: string): string {
@@ -77,15 +90,35 @@ export function buildContactEmail(data: ContactEmailData): { text: string; html:
           <p style="${BASE_STYLES.valueLast}">${data.message ? esc(data.message).replace(/\n/g, "<br>") : "—"}</p>
         </div>
       </div>
-      <div style="${BASE_STYLES.footer}">
-        <p style="${BASE_STYLES.footerText}">تم الإرسال من نموذج التواصل في الموقع · يمكنك الرد مباشرة على هذا البريد</p>
-      </div>
+      ${buildFooter({
+        note: "تم الإرسال من نموذج التواصل في الموقع · يمكنك الرد مباشرة على هذا البريد",
+        logoUrl: `${getBaseUrl()}/logo.png`,
+        brandName: "مجموعة روائس",
+        tagline: "شركة استثمارية متخصصة في حلول الاستثمار المبتكرة والمستدامة",
+      })}
     </div>
   </div>
 </body>
 </html>`.trim();
 
   return { text, html };
+}
+
+function buildFooter(options: {
+  note: string;
+  logoUrl?: string;
+  brandName?: string;
+  tagline?: string;
+}): string {
+  const { note, logoUrl, brandName = "مجموعة روائس", tagline = "شركة استثمارية متخصصة في حلول الاستثمار المبتكرة والمستدامة" } = options;
+  return `
+      <div style="${BASE_STYLES.footer}">
+        ${logoUrl ? `<img src="${logoUrl}" alt="${esc(brandName)}" style="${BASE_STYLES.footerLogo}" />` : ""}
+        ${brandName ? `<p style="${BASE_STYLES.footerBrand}">${esc(brandName)}</p>` : ""}
+        ${tagline ? `<p style="${BASE_STYLES.footerTagline}">${esc(tagline)}</p>` : ""}
+        <div style="${BASE_STYLES.footerDivider}"></div>
+        <p style="${BASE_STYLES.footerNote}">${esc(note)}</p>
+      </div>`.trim();
 }
 
 export type InvestmentEmailData = {
@@ -114,6 +147,9 @@ export function buildInvestmentInterestEmail(data: InvestmentEmailData): {
     `نطاق الاستثمار: ${data.amountLabel}`,
   ].join("\n");
 
+  const baseUrl = getBaseUrl();
+  const investmentLogoUrl = `${baseUrl}/investmentlogo.png`;
+
   const html = `
 <!DOCTYPE html>
 <html dir="rtl" lang="ar">
@@ -126,6 +162,7 @@ export function buildInvestmentInterestEmail(data: InvestmentEmailData): {
   <div style="${BASE_STYLES.container}">
     <div style="${BASE_STYLES.card}">
       <div style="${BASE_STYLES.header}">
+        <img src="${investmentLogoUrl}" alt="روائس للاستثمار" style="${BASE_STYLES.headerLogo}" />
         <h1 style="${BASE_STYLES.headerTitle}">طلب جديد — سجل الاهتمام بالاستثمار</h1>
         <p style="${BASE_STYLES.headerSub}">نموذج سجل اهتمامك</p>
       </div>
@@ -142,9 +179,12 @@ export function buildInvestmentInterestEmail(data: InvestmentEmailData): {
         <p style="${BASE_STYLES.label}">نطاق الاستثمار</p>
         <p style="${BASE_STYLES.valueLast}">${esc(data.amountLabel)}</p>
       </div>
-      <div style="${BASE_STYLES.footer}">
-        <p style="${BASE_STYLES.footerText}">تم الإرسال من صفحة الاستثمار · يمكنك الرد مباشرة على هذا البريد</p>
-      </div>
+      ${buildFooter({
+        note: "تم الإرسال من صفحة الاستثمار · يمكنك الرد مباشرة على هذا البريد",
+        logoUrl: investmentLogoUrl,
+        brandName: "روائس للاستثمار",
+        tagline: "فرص استثمارية متنوعة في صناديق الضيافة والاستقدام والمركبات",
+      })}
     </div>
   </div>
 </body>
