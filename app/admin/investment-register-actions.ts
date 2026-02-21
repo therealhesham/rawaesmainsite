@@ -31,6 +31,8 @@ const FIELDS = [
   "registerHeading",
   "registerSubheading",
   "registerFormTitle",
+  "formRecipientEmail",
+  "mailSenderEmail",
   "fund1Title",
   "fund1Href",
   "fund2Title",
@@ -50,6 +52,18 @@ export async function getInvestmentRegisterBlockForAdmin() {
   }
 }
 
+/** قائمة طلبات «سجل اهتمامك» من صفحة الاستثمار */
+export async function getInvestmentInterestSubmissions() {
+  try {
+    return await prisma.investmentInterestSubmission.findMany({
+      orderBy: { createdAt: "desc" },
+    });
+  } catch (error) {
+    console.error("Failed to load investment interest submissions:", error);
+    return [];
+  }
+}
+
 export async function updateInvestmentRegisterBlock(
   formData: FormData
 ): Promise<ActionResult> {
@@ -62,6 +76,15 @@ export async function updateInvestmentRegisterBlock(
     const existing = await prisma.investmentRegisterBlock.findFirst({
       orderBy: { id: "desc" },
     });
+
+    const passwordRaw = getString(formData, "mailSenderPassword");
+    if (passwordRaw != null && passwordRaw !== "") {
+      data.mailSenderPassword = passwordRaw;
+    } else if (existing?.mailSenderPassword != null) {
+      data.mailSenderPassword = existing.mailSenderPassword;
+    } else {
+      data.mailSenderPassword = null;
+    }
 
     if (existing) {
       await prisma.investmentRegisterBlock.update({

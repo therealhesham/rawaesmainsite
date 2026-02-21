@@ -62,8 +62,58 @@ export function ContactUsForm({ contact }: Props) {
         )}
       </div>
 
-      {/* القسم نفسه كما يظهر للزائر، مع حقول قابلة للتعديل */}
+      {/* إعدادات الإشعارات — البريد المستلم لرسائل النموذج */}
       <form onSubmit={handleSubmit}>
+        <div className="max-w-6xl mx-auto px-4 py-6">
+          <section className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-card-dark p-6 mb-8">
+            <h2 className="text-lg font-bold text-secondary dark:text-white mb-2 flex items-center gap-2">
+              <span className="material-icons text-primary">mail</span>
+              إعدادات الإشعارات
+            </h2>
+            <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
+              البريد المستلم + حساب الإرسال (بريد وكلمة مرور). يمكن أن يكون بريد شركة أو Gmail.
+            </p>
+            <div className="max-w-md space-y-4 text-right">
+              <div className="space-y-2">
+                <label className="block text-sm font-bold text-secondary dark:text-gray-200">
+                  البريد المستلم لرسائل تواصل معنا
+                </label>
+                <input
+                  name="formRecipientEmail"
+                  type="email"
+                  defaultValue={contact?.formRecipientEmail ?? ""}
+                  placeholder="info@company.com"
+                  className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="block text-sm font-bold text-secondary dark:text-gray-200">
+                  بريد الإرسال (SMTP)
+                </label>
+                <input
+                  name="mailSenderEmail"
+                  type="email"
+                  defaultValue={contact?.mailSenderEmail ?? ""}
+                  placeholder="noreply@company.com أو xxx@gmail.com"
+                  className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="block text-sm font-bold text-secondary dark:text-gray-200">
+                  كلمة مرور بريد الإرسال
+                </label>
+                <input
+                  name="mailSenderPassword"
+                  type="password"
+                  autoComplete="new-password"
+                  placeholder="اتركه فارغاً للإبقاء على الحالي"
+                  className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm"
+                />
+              </div>
+            </div>
+          </section>
+        </div>
+        {/* القسم نفسه كما يظهر للزائر، مع حقول قابلة للتعديل */}
         <ContactSection contact={contact} editMode />
         <div className="max-w-6xl mx-auto px-4 py-8 flex justify-end">
           <button

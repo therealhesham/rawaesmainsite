@@ -123,25 +123,40 @@ model hospitalityFund {
   updatedAt       DateTime  @updatedAt
 }
 
+// محتوى قسم «تواصل معنا» (العنوان، أوقات العمل، هاتف، بريد) — يُعرض في ContactSection
 model ContactUs {
-  id            Int      @id @default(autoincrement())
-  sectionTitle  String?  // تواصل معنا
-  addressLine1  String?
-  addressLine2  String?
-  workingDays   String?
-  workingHours  String?
-  phone         String?
-  email         String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id                 Int      @id @default(autoincrement())
+  sectionTitle       String?  // تواصل معنا
+  addressLine1       String?
+  addressLine2       String?
+  workingDays        String?
+  workingHours       String?
+  phone              String?
+  email              String?
+  formRecipientEmail  String?  // البريد المستلم لرسائل النموذج
+  mailSenderEmail     String?  // بريد الإرسال (SMTP)
+  mailSenderPassword  String?  // كلمة مرور بريد الإرسال
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 }
 
-// محتوى صفحة الاستثمار: كيفية البدء + سجل اهتمامك واستثمر معنا
+// رسائل الزوار من نموذج «تواصل معنا» (الاسم، البريد، الجوال، الرسالة)
+model ContactFormSubmission {
+  id        Int      @id @default(autoincrement())
+  firstName String
+  lastName  String
+  email     String
+  phone     String?
+  message   String?  @db.Text
+  createdAt DateTime @default(now())
+}
+
+// محتوى بلوك «سجل اهتمامك» في صفحة الاستثمار (كيفية البدء + النص + روابط الصناديق)
 model InvestmentRegisterBlock {
   id                    Int      @id @default(autoincrement())
   howToTitle            String?
   howToSubtitle         String?
-  howToImageUrl         String?
+  howToImageUrl         String? 
   step1Title            String?
   step1Description      String?
   step2Title            String?
@@ -153,7 +168,10 @@ model InvestmentRegisterBlock {
   registerHeading       String?  // امتداد عريق بخبرة تجاوزت الثلاثة عقود
   registerSubheading    String?  // الصناديق الاستثمارية
   registerFormTitle     String?  // سجل اهتمامك واستثمر معنا
-  fund1Title            String?
+  formRecipientEmail   String?  // البريد المستلم لطلبات سجل الاهتمام
+  mailSenderEmail      String?  // بريد الإرسال (SMTP)
+  mailSenderPassword   String?  // كلمة مرور بريد الإرسال
+  fund1Title           String?
   fund1Href             String?
   fund2Title            String?
   fund2Href             String?
@@ -161,4 +179,16 @@ model InvestmentRegisterBlock {
   fund3Href             String?
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
+}
+
+// طلبات «سجل اهتمامك» من صفحة الاستثمار (الاسم، البريد، الجوال، الصندوق، المبلغ)
+model InvestmentInterestSubmission {
+  id        Int      @id @default(autoincrement())
+  firstName String
+  lastName  String
+  email     String
+  phone     String
+  fund      String?  // hospitality | cars | recruitment
+  amount    String?  // 50-100 | 100-500 | 500+
+  createdAt DateTime @default(now())
 }

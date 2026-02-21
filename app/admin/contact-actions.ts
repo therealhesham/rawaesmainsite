@@ -27,6 +27,18 @@ export async function getContactUsForAdmin() {
   }
 }
 
+/** قائمة رسائل نموذج «تواصل معنا» للوحة التحكم */
+export async function getContactFormSubmissions() {
+  try {
+    return await prisma.contactFormSubmission.findMany({
+      orderBy: { createdAt: "desc" },
+    });
+  } catch (error) {
+    console.error("Failed to load contact form submissions:", error);
+    return [];
+  }
+}
+
 export async function updateContactUs(formData: FormData): Promise<ActionResult> {
   try {
     const sectionTitle = getString(formData, "sectionTitle");
@@ -36,12 +48,19 @@ export async function updateContactUs(formData: FormData): Promise<ActionResult>
     const workingHours = getString(formData, "workingHours");
     const phone = getString(formData, "phone");
     const email = getString(formData, "email");
+    const formRecipientEmail = getString(formData, "formRecipientEmail");
+    const mailSenderEmail = getString(formData, "mailSenderEmail");
+    const mailSenderPasswordRaw = formData.get("mailSenderPassword");
+    const mailSenderPassword =
+      mailSenderPasswordRaw != null && String(mailSenderPasswordRaw).trim() !== ""
+        ? String(mailSenderPasswordRaw).trim()
+        : null;
 
     const existing = await prisma.contactUs.findFirst({
       orderBy: { id: "desc" },
     });
 
-    const data = {
+    const data: Record<string, string | null> = {
       sectionTitle,
       addressLine1,
       addressLine2,
@@ -49,7 +68,11 @@ export async function updateContactUs(formData: FormData): Promise<ActionResult>
       workingHours,
       phone,
       email,
+      formRecipientEmail,
+      mailSenderEmail,
     };
+    if (mailSenderPassword !== null) data.mailSenderPassword = mailSenderPassword;
+    else if (existing?.mailSenderPassword != null) data.mailSenderPassword = existing.mailSenderPassword;
 
     if (existing) {
       await prisma.contactUs.update({
@@ -57,9 +80,7 @@ export async function updateContactUs(formData: FormData): Promise<ActionResult>
         data,
       });
     } else {
-      await prisma.contactUs.create({
-        data,
-      });
+      await prisma.contactUs.create({ data });
     }
 
     revalidatePath("/");

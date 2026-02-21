@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useActionState } from "react";
 import Link from "next/link";
 import type { InvestmentRegisterBlockData } from "@/app/investment/getInvestmentRegisterBlock";
+import { submitInvestmentInterest, type InvestmentInterestFormState } from "@/app/investment/actions";
 
 const DEFAULT_HOW_TO_STEPS = [
     { step: "01", title: "التسجيل", description: "سجل معنا وانشئ طلب استثمار عبر موقعنا الإلكتروني بكل سهولة." },
@@ -43,14 +45,15 @@ export function InvestmentHowToSection({ block }: Props) {
         { title: b?.fund2Title ?? DEFAULT_FUND_CARDS[1].title, href: b?.fund2Href ?? DEFAULT_FUND_CARDS[1].href },
         { title: b?.fund3Title ?? DEFAULT_FUND_CARDS[2].title, href: b?.fund3Href ?? DEFAULT_FUND_CARDS[2].href },
     ];
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [state, formAction, isPending] = useActionState<InvestmentInterestFormState, FormData>(
+        submitInvestmentInterest,
+        null
+    );
+    const [formKey, setFormKey] = useState(0);
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        setIsSubmitting(true);
-        // TODO: wire to API or form backend
-        setTimeout(() => setIsSubmitting(false), 1000);
-    };
+    useEffect(() => {
+        if (state?.success) setFormKey((k) => k + 1);
+    }, [state?.success]);
 
     return (
         <>
@@ -129,7 +132,15 @@ export function InvestmentHowToSection({ block }: Props) {
                         <div className="bg-corporate py-3 px-8 rounded-full w-fit mx-auto mb-10 -mt-16 shadow-lg">
                             <h4 className="text-white font-bold">{registerFormTitle}</h4>
                         </div>
-                        <form onSubmit={handleSubmit} className="space-y-6">
+                        {state?.success && (
+                            <p className="text-center text-green-300 font-medium mb-4">
+                                تم إرسال طلبك بنجاح. سنتواصل معك قريباً.
+                            </p>
+                        )}
+                        {state && !state.success && state.error && (
+                            <p className="text-center text-red-300 font-medium mb-4">{state.error}</p>
+                        )}
+                        <form key={formKey} action={formAction} className="space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2 text-right">
                                     <label className="block text-white text-sm font-bold pr-2">الاسم</label>
@@ -200,10 +211,10 @@ export function InvestmentHowToSection({ block }: Props) {
                             <div className="text-center pt-6">
                                 <button
                                     type="submit"
-                                    disabled={isSubmitting}
+                                    disabled={isPending}
                                     className="bg-gold hover:bg-[#d8ae6d] text-secondary font-bold px-12 py-3 rounded-full shadow-lg transition duration-300 transform hover:scale-105 disabled:opacity-70"
                                 >
-                                    {isSubmitting ? "جاري الإرسال..." : "ارسال"}
+                                    {isPending ? "جاري الإرسال..." : "ارسال"}
                                 </button>
                             </div>
                         </form>

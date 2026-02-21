@@ -1,8 +1,10 @@
 "use client";
 
+import { useActionState, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { MailIcon, PhoneIcon } from "lucide-react";
 import type { ContactUsData } from "@/app/contact/getContactUs";
+import { submitContactForm, type ContactFormState } from "@/app/contact/actions";
 
 const DEFAULT_CONTACT = {
   sectionTitle: "تواصل معنا",
@@ -24,6 +26,18 @@ type Props = {
 };
 
 export function ContactSection({ contact, editMode }: Props) {
+  const [state, formAction, isPending] = useActionState<ContactFormState, FormData>(
+    submitContactForm,
+    null
+  );
+  const [formKey, setFormKey] = useState(0);
+
+  useEffect(() => {
+    if (state?.success) {
+      setFormKey((k) => k + 1);
+    }
+  }, [state?.success]);
+
   const c = contact ?? null;
   const title = c?.sectionTitle ?? DEFAULT_CONTACT.sectionTitle;
   const addressLine1 = c?.addressLine1 ?? DEFAULT_CONTACT.addressLine1;
@@ -233,16 +247,29 @@ export function ContactSection({ contact, editMode }: Props) {
               </div>
             ) : (
               <form
+                key={formKey}
+                action={formAction}
                 className="grid grid-cols-1 md:grid-cols-2 gap-4"
-                onSubmit={(e) => e.preventDefault()}
               >
+                {state?.success && (
+                  <p className="md:col-span-2 text-center text-green-600 dark:text-green-400 text-sm font-medium">
+                    تم إرسال رسالتك بنجاح. سنتواصل معك قريباً.
+                  </p>
+                )}
+                {state && !state.success && state.error && (
+                  <p className="md:col-span-2 text-center text-red-600 dark:text-red-400 text-sm font-medium">
+                    {state.error}
+                  </p>
+                )}
                 <div className="flex flex-col">
                   <label className="text-xs text-secondary dark:text-gray-300 font-bold mb-1">
                     الاسم الأول
                   </label>
                   <input
+                    name="firstName"
                     className="border border-gray-300 dark:border-gray-600 rounded p-2 bg-white dark:bg-card-dark focus:ring-primary focus:border-primary text-right"
                     type="text"
+                    required
                   />
                 </div>
                 <div className="flex flex-col">
@@ -250,8 +277,10 @@ export function ContactSection({ contact, editMode }: Props) {
                     الاسم الأخير
                   </label>
                   <input
+                    name="lastName"
                     className="border border-gray-300 dark:border-gray-600 rounded p-2 bg-white dark:bg-card-dark focus:ring-primary focus:border-primary text-right"
                     type="text"
+                    required
                   />
                 </div>
                 <div className="flex flex-col">
@@ -259,8 +288,10 @@ export function ContactSection({ contact, editMode }: Props) {
                     البريد الإلكتروني <span className="text-red-500">*</span>
                   </label>
                   <input
+                    name="email"
                     className="border border-gray-300 dark:border-gray-600 rounded p-2 bg-white dark:bg-card-dark focus:ring-primary focus:border-primary text-right"
                     type="email"
+                    required
                   />
                 </div>
                 <div className="flex flex-col">
@@ -268,6 +299,7 @@ export function ContactSection({ contact, editMode }: Props) {
                     رقم الجوال
                   </label>
                   <input
+                    name="phone"
                     className="border border-gray-300 dark:border-gray-600 rounded p-2 bg-white dark:bg-card-dark focus:ring-primary focus:border-primary text-right"
                     dir="rtl"
                     placeholder="05xxxxxxxx"
@@ -279,6 +311,7 @@ export function ContactSection({ contact, editMode }: Props) {
                     الرسالة
                   </label>
                   <textarea
+                    name="message"
                     className="border border-gray-300 dark:border-gray-600 rounded p-2 bg-white dark:bg-card-dark focus:ring-primary focus:border-primary text-right"
                     rows={4}
                   />
@@ -286,12 +319,13 @@ export function ContactSection({ contact, editMode }: Props) {
                 <div className="md:col-span-2" />
                 <div className="md:col-span-2 flex justify-end mt-4">
                   <motion.button
-                    className="bg-primary hover:bg-[#c49b60] text-white font-bold py-2 px-12 rounded shadow transition-colors"
+                    className="bg-primary hover:bg-[#c49b60] text-white font-bold py-2 px-12 rounded shadow transition-colors disabled:opacity-60"
                     type="submit"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    disabled={isPending}
+                    whileHover={!isPending ? { scale: 1.05 } : undefined}
+                    whileTap={!isPending ? { scale: 0.95 } : undefined}
                   >
-                    إرسال
+                    {isPending ? "جاري الإرسال..." : "إرسال"}
                   </motion.button>
                 </div>
               </form>

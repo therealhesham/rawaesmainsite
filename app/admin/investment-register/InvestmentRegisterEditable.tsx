@@ -42,6 +42,7 @@ export function InvestmentRegisterEditable({ block }: Props) {
     const registerHeading = b?.registerHeading ?? "امتداد عريق بخبرة تجاوزت الثلاثة عقود";
     const registerSubheading = b?.registerSubheading ?? "الصناديق الاستثمارية";
     const registerFormTitle = b?.registerFormTitle ?? "سجل اهتمامك واستثمر معنا";
+    const formRecipientEmail = b?.formRecipientEmail ?? "";
     const fundCards = [
         { title: b?.fund1Title ?? DEFAULT_FUND_CARDS[0].title, href: b?.fund1Href ?? DEFAULT_FUND_CARDS[0].href },
         { title: b?.fund2Title ?? DEFAULT_FUND_CARDS[1].title, href: b?.fund2Href ?? DEFAULT_FUND_CARDS[1].href },
@@ -91,6 +92,54 @@ export function InvestmentRegisterEditable({ block }: Props) {
                     {error}
                 </div>
             )}
+
+            <section className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-6">
+                <h2 className="text-lg font-bold text-secondary dark:text-white mb-4 flex items-center gap-2">
+                    <span className="material-icons text-primary">mail</span>
+                    إعدادات الإشعارات
+                </h2>
+                <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
+                    البريد المستلم + حساب الإرسال (بريد وكلمة مرور). يمكن أن يكون بريد شركة أو Gmail.
+                </p>
+                <div className="max-w-md space-y-4 text-right">
+                    <div className="space-y-2">
+                        <label className="block text-sm font-bold text-secondary dark:text-gray-200">
+                            البريد المستلم لطلبات سجل الاهتمام
+                        </label>
+                        <input
+                            name="formRecipientEmail"
+                            type="email"
+                            defaultValue={formRecipientEmail}
+                            placeholder="info@company.com"
+                            className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm"
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="block text-sm font-bold text-secondary dark:text-gray-200">
+                            بريد الإرسال (SMTP)
+                        </label>
+                        <input
+                            name="mailSenderEmail"
+                            type="email"
+                            defaultValue={b?.mailSenderEmail ?? ""}
+                            placeholder="noreply@company.com أو xxx@gmail.com"
+                            className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm"
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="block text-sm font-bold text-secondary dark:text-gray-200">
+                            كلمة مرور بريد الإرسال
+                        </label>
+                        <input
+                            name="mailSenderPassword"
+                            type="password"
+                            autoComplete="new-password"
+                            placeholder="اتركه فارغاً للإبقاء على الحالي"
+                            className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm"
+                        />
+                    </div>
+                </div>
+            </section>
 
             <section className="relative bg-white dark:bg-background-dark pt-16 pb-32 rounded-3xl overflow-hidden border border-gray-100 dark:border-gray-800">
                 <div className="container mx-auto px-6 max-w-6xl">
