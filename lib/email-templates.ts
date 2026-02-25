@@ -4,8 +4,10 @@
  * الشعارات: من الأدمن فقط (رابط Digital Ocean). لا نضمّن base64 لتفادي رفض الخوادم أو السبام.
  */
 
+const FONT_FAMILY = "'Tajawal', 'Segoe UI', Tahoma, Arial, sans-serif";
+
 const BASE_STYLES = {
-  wrapper: "margin:0; padding:0; background-color:#f5f5f5; font-family:'Segoe UI',Tahoma,Arial,sans-serif; -webkit-font-smoothing:antialiased;",
+  wrapper: `margin:0; padding:0; background-color:#f5f5f5; font-family:${FONT_FAMILY}; -webkit-font-smoothing:antialiased;`,
   container: "max-width:560px; margin:0 auto; padding:24px 16px;",
   card: "background:#ffffff; border-radius:12px; overflow:hidden; box-shadow:0 4px 24px rgba(0,0,0,0.06);",
   header: "background:linear-gradient(135deg, #002a3a 0%, #003d52 100%); padding:24px 28px; text-align:center;",
@@ -71,6 +73,9 @@ export function buildContactEmail(
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>رسالة تواصل</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
 </head>
 <body style="${BASE_STYLES.wrapper}">
   <div style="${BASE_STYLES.container}">
@@ -172,6 +177,9 @@ export function buildInvestmentInterestEmail(
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>طلب سجل اهتمام</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
 </head>
 <body style="${BASE_STYLES.wrapper}">
   <div style="${BASE_STYLES.container}">
