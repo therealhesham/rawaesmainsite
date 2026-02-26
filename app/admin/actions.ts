@@ -214,6 +214,50 @@ export async function createInvestor(formData: FormData) {
     }
 }
 
+/** Helper function to download a file from URL and upload to DigitalOcean Spaces */
+async function uploadFileUrlToSpaces(fileUrl: string, userId: number, fileName: string): Promise<string | null> {
+    console.log(`[DO_UPLOAD] Starting to process file from: ${fileUrl}`);
+    try {
+        // Add timeout to prevent hanging
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 seconds timeout
+
+        console.log(`[DO_UPLOAD] Fetching file...`);
+        const response = await fetch(fileUrl, { signal: controller.signal });
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            console.error(`[DO_UPLOAD] Failed to fetch file from ${fileUrl}: ${response.statusText}`);
+            return null;
+        }
+
+        console.log(`[DO_UPLOAD] Downloaded successfully, buffering...`);
+        const arrayBuffer = await response.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        const timestamp = Date.now();
+        const safeFileName = fileName.replace(/\s+/g, '-');
+        const storageKey = `reports/${userId}/${timestamp}-${safeFileName}`;
+
+        console.log(`[DO_UPLOAD] Uploading ${buffer.length} bytes to DO Spaces (${storageKey})...`);
+        await s3Client.send(new PutObjectCommand({
+            Bucket: process.env.DO_SPACES_BUCKET,
+            Key: storageKey,
+            Body: buffer,
+            ACL: "public-read",
+            ContentType: "application/pdf",
+        }));
+        console.log(`[DO_UPLOAD] Upload to DO Spaces completed for: ${storageKey}`);
+
+        const endpoint = process.env.DO_SPACES_ENDPOINT || "";
+        const bucket = process.env.DO_SPACES_BUCKET || "";
+        const endpointUrl = new URL(endpoint);
+        return `${endpointUrl.protocol}//${bucket}.${endpointUrl.host}/${storageKey}`;
+    } catch (error) {
+        console.error(`Error uploading file from URL ${fileUrl} to DO Spaces:`, error);
+        return null;
+    }
+}
+
 /** حفظ روابط PDF لمستثمر واحد في جدول reports (بعد اختيار المستثمر من النظام) */
 export async function saveInvestorReports(
     userId: number,
@@ -229,11 +273,16 @@ export async function saveInvestorReports(
         for (const linkUrl of urls) {
             if (!linkUrl || typeof linkUrl !== "string") continue;
             const fileName = decodeURIComponent(linkUrl.split("/").pop() || "report.pdf");
+
+            // Upload the extracted file to DigitalOcean Spaces first
+            const doSpacesUrl = await uploadFileUrlToSpaces(linkUrl, userId, fileName);
+            if (!doSpacesUrl) continue; // Skip if upload fails
+
             await prisma.reports.create({
                 data: {
                     userId,
                     type: reportType,
-                    linkUrl,
+                    linkUrl: doSpacesUrl,
                     fileName,
                     isPublished: false,
                     releaseDate: new Date(),
@@ -286,11 +335,18 @@ export async function saveExtractedReports(
                 if (!linkUrl || typeof linkUrl !== "string") continue;
                 const fileName = decodeURIComponent(linkUrl.split("/").pop() || "report.pdf");
                 try {
+                    // Upload the extracted file to DigitalOcean Spaces first
+                    const doSpacesUrl = await uploadFileUrlToSpaces(linkUrl, user.id, fileName);
+                    if (!doSpacesUrl) {
+                        errors.push(`Upload Failed: ${investorName} - ${linkUrl}`);
+                        continue;
+                    }
+
                     await prisma.reports.create({
                         data: {
                             userId: user.id,
                             type: reportType,
-                            linkUrl,
+                            linkUrl: doSpacesUrl,
                             fileName,
                             isPublished: false,
                             releaseDate: new Date(),
