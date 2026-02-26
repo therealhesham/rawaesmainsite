@@ -29,6 +29,7 @@ export default function AdminLayout({
         { label: "رسائل تواصل", icon: "mail", href: "/admin/contact/messages" },
         { label: "سجل اهتمامك ", icon: "how_to_reg", href: "/admin/investment-register" },
         { label: "طلبات سجل الاهتمام", icon: "assignment", href: "/admin/investment-register/submissions" },
+        { label: "استخراج تقارير من Excel", icon: "table_chart", href: "/admin/extract-reports" },
     ];
 
     return (

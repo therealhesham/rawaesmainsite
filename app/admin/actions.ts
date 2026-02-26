@@ -213,3 +213,106 @@ export async function createInvestor(formData: FormData) {
         return { error: "Failed to create investor" };
     }
 }
+
+/** حفظ روابط PDF لمستثمر واحد في جدول reports (بعد اختيار المستثمر من النظام) */
+export async function saveInvestorReports(
+    userId: number,
+    urls: string[],
+    reportType: string = "lease"
+) {
+    try {
+        if (!userId || !Array.isArray(urls) || urls.length === 0) {
+            return { error: "بيانات غير صالحة." };
+        }
+
+        let created = 0;
+        for (const linkUrl of urls) {
+            if (!linkUrl || typeof linkUrl !== "string") continue;
+            const fileName = decodeURIComponent(linkUrl.split("/").pop() || "report.pdf");
+            await prisma.reports.create({
+                data: {
+                    userId,
+                    type: reportType,
+                    linkUrl,
+                    fileName,
+                    isPublished: true,
+                    releaseDate: new Date(),
+                },
+            });
+            created++;
+        }
+
+        revalidatePath("/admin");
+        revalidatePath("/admin/extract-reports");
+        revalidatePath(`/admin/investors/${userId}`);
+        return { success: true, created };
+    } catch (error) {
+        console.error("Failed to save investor reports:", error);
+        return { error: "فشل حفظ التقارير." };
+    }
+}
+
+/** حفظ روابط PDF المستخرجة من Excel في جدول reports (ربط كل مستثمر بالملفات حسب الاسم) */
+export async function saveExtractedReports(
+    investorsFiles: Record<string, string[]>,
+    reportType: string = "lease"
+) {
+    try {
+        if (!investorsFiles || typeof investorsFiles !== "object") {
+            return { error: "بيانات الملفات غير صالحة." };
+        }
+
+        let created = 0;
+        const notFound: string[] = [];
+        const errors: string[] = [];
+
+        for (const [investorName, urls] of Object.entries(investorsFiles)) {
+            if (!Array.isArray(urls) || urls.length === 0) continue;
+
+            const nameTrim = String(investorName || "").trim();
+            const user = await prisma.user.findFirst({
+                where: {
+                    name: { equals: nameTrim },
+                    isAdmin: false,
+                },
+            });
+
+            if (!user) {
+                notFound.push(nameTrim);
+                continue;
+            }
+
+            for (const linkUrl of urls) {
+                if (!linkUrl || typeof linkUrl !== "string") continue;
+                const fileName = decodeURIComponent(linkUrl.split("/").pop() || "report.pdf");
+                try {
+                    await prisma.reports.create({
+                        data: {
+                            userId: user.id,
+                            type: reportType,
+                            linkUrl,
+                            fileName,
+                            isPublished: true,
+                            releaseDate: new Date(),
+                        },
+                    });
+                    created++;
+                } catch (e) {
+                    errors.push(`${investorName}: ${linkUrl}`);
+                }
+            }
+        }
+
+        revalidatePath("/admin");
+        revalidatePath("/admin/extract-reports");
+        return {
+            success: true,
+            created,
+            notFound,
+            errors: errors.length > 0 ? errors : undefined,
+        };
+    } catch (error) {
+        console.error("Failed to save extracted reports:", error);
+        return { error: "فشل حفظ التقارير في الجدول." };
+    }
+}

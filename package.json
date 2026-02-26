@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "seed:rentalcar": "npx ts-node --project prisma/tsconfig.seed.json prisma/seed-rentalcar-reports.ts"
+    "seed:rentalcar": "npx ts-node --project prisma/tsconfig.seed.json prisma/seed-rentalcar-reports.ts",
+    "seed:investors": "npx ts-node --project prisma/tsconfig.seed.json prisma/seed-investors.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.990.0",
@@ -24,6 +25,7 @@
     "zustand": "^5.0.11"
   },
   "devDependencies": {
+    "csv-parse": "^5.6.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20.19.33",
     "@types/react": "^19",

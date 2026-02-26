@@ -7,5 +7,5 @@
     "skipLibCheck": true,
     "outDir": "../.seed-out"
   },
-  "include": ["seed-rentalcar-reports.ts"]
+  "include": ["seed-rentalcar-reports.ts", "seed-investors.ts"]
 }
