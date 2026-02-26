@@ -1,9 +1,9 @@
 FROM node:20-alpine AS base
+# Install OpenSSL 1.1 compat (required by Prisma on Alpine 3.18+)
+RUN apk add --no-cache libc6-compat openssl
 
 # Install dependencies only when needed
 FROM base AS deps
-# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
-RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 
 # Install dependencies based on the preferred package manager
@@ -22,7 +22,6 @@ COPY . .
 
 # Environment variables must be present at build time if they are used to generate static pages.
 # You can bypass this by passing dummy values if needed, or injecting them inside Docker run.
-# RUN npx prisma generate (already done in deps)
 RUN npm run build
 
 # Production image, copy all the files and run next
@@ -46,6 +45,9 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
+# Copy Prisma engines into the standalone output (needed at runtime)
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
 
 USER nextjs
 
