@@ -14,6 +14,10 @@ export default function AdminLayout({
     const pathname = usePathname();
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
+    const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({
+        content: false, // Default closed
+    });
+
     // Skip layout for login page
     if (pathname === "/admin/login") {
         return <>{children}</>;
@@ -21,16 +25,38 @@ export default function AdminLayout({
 
     const menuItems = [
         { label: "لوحة التحكم", icon: "dashboard", href: "/admin" },
-        { label: "صناديق الاستثمار", icon: "account_balance", href: "/admin/funds" },
-        // { label: "تأجير سيارات", icon: "directions_car", href: "/admin/funds/cars" },
-        // { label: "استقدام", icon: "group_add", href: "/admin/funds/recruitment" },
-        // { label: "ضيافة", icon: "hotel", href: "/admin/funds/hospitality" },
-        { label: "اتصل بنا", icon: "contact_page", href: "/admin/contact" },
-        { label: "رسائل تواصل", icon: "mail", href: "/admin/contact/messages" },
-        { label: "سجل اهتمامك ", icon: "how_to_reg", href: "/admin/investment-register" },
-        { label: "طلبات سجل الاهتمام", icon: "assignment", href: "/admin/investment-register/submissions" },
-        { label: "استخراج تقارير من Excel", icon: "table_chart", href: "/admin/extract-reports" },
+        {
+            label: "إدارة المحتوى",
+            icon: "view_list",
+            id: "content",
+            children: [
+                { label: "صناديق الاستثمار", icon: "account_balance", href: "/admin/funds" },
+                { label: "اتصل بنا", icon: "contact_page", href: "/admin/contact", exact: true },
+                { label: "سجل اهتمامك", icon: "how_to_reg", href: "/admin/investment-register", exact: true },
+
+            ]
+        },
+
+        {
+            label: "البريد",
+            icon: "view_list",
+            id: "mails",
+            children: [
+                { label: "رسائل التواصل", icon: "mail", href: "/admin/contact/messages" },
+                { label: "طلبات سجل اهتمامك", icon: "assignment", href: "/admin/investment-register/submissions", exact: true },
+
+            ]
+        },
+
+        { label: "استخراج التقارير", icon: "table_chart", href: "/admin/extract-reports" },
     ];
+
+    const toggleMenu = (id: string) => {
+        setOpenMenus(prev => ({ ...prev, [id]: !prev[id] }));
+        if (!isSidebarOpen) {
+            setIsSidebarOpen(true);
+        }
+    };
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-background-dark flex" dir="rtl">
@@ -59,16 +85,80 @@ export default function AdminLayout({
                 </div>
 
                 {/* Navigation */}
-                <nav className="flex-1 py-6 px-3 space-y-2">
+                <nav className="flex-1 py-6 px-3 space-y-2 overflow-y-auto overflow-x-hidden" css-scroll="sidebar">
                     {menuItems.map((item) => {
+                        if (item.children) {
+                            const isOpen = openMenus[item.id!];
+                            const isChildActive = item.children.some(child =>
+                                child.exact ? pathname === child.href : (pathname === child.href || pathname.startsWith(child.href + '/'))
+                            );
+                            return (
+                                <div key={item.id} className="space-y-1">
+                                    <button
+                                        onClick={() => toggleMenu(item.id!)}
+                                        className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300 group ${isChildActive && !isOpen
+                                            ? "bg-primary/20 text-white"
+                                            : "text-gray-300 hover:bg-white/5 hover:text-white"
+                                            }`}
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <span className={`material-icons ${isChildActive ? "text-primary" : "group-hover:text-primary transition-colors"}`}>
+                                                {item.icon}
+                                            </span>
+                                            {isSidebarOpen && (
+                                                <span className={`font-medium whitespace-nowrap ${isChildActive ? "text-white" : ""}`}>{item.label}</span>
+                                            )}
+                                        </div>
+                                        {isSidebarOpen && (
+                                            <span className={`material-icons text-sm transition-transform duration-300 ${isOpen ? "rotate-90" : "rotate-180"}`}>
+                                                arrow_back_ios_new
+                                            </span>
+                                        )}
+                                    </button>
+
+                                    {/* Collapsible Children */}
+                                    {(isOpen && isSidebarOpen) && (
+                                        <motion.div
+                                            initial={{ opacity: 0, height: 0 }}
+                                            animate={{ opacity: 1, height: "auto" }}
+                                            exit={{ opacity: 0, height: 0 }}
+                                            className="overflow-hidden flex flex-col gap-1 pr-10 pl-2 border-r-2 border-white/10 ml-2 mr-6 my-2"
+                                        >
+                                            {item.children.map((child: any) => {
+                                                const isActive = child.exact
+                                                    ? pathname === child.href
+                                                    : (pathname === child.href || pathname.startsWith(child.href + '/'));
+
+                                                return (
+                                                    <Link
+                                                        key={child.href}
+                                                        href={child.href}
+                                                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 ${isActive
+                                                            ? "bg-primary text-white shadow-md shadow-primary/20"
+                                                            : "text-gray-400 hover:bg-white/10 hover:text-white"
+                                                            }`}
+                                                    >
+                                                        <span className="material-icons text-[18px]">
+                                                            {isActive ? "fiber_manual_record" : "radio_button_unchecked"}
+                                                        </span>
+                                                        <span className="font-medium text-sm whitespace-nowrap">{child.label}</span>
+                                                    </Link>
+                                                );
+                                            })}
+                                        </motion.div>
+                                    )}
+                                </div>
+                            );
+                        }
+
                         const isActive = pathname === item.href;
                         return (
                             <Link
-                                key={item.href}
-                                href={item.href}
+                                key={item.href!}
+                                href={item.href!}
                                 className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 group ${isActive
-                                        ? "bg-primary text-white shadow-lg shadow-primary/20"
-                                        : "text-gray-300 hover:bg-white/5 hover:text-white"
+                                    ? "bg-primary text-white shadow-lg shadow-primary/20"
+                                    : "text-gray-300 hover:bg-white/5 hover:text-white"
                                     }`}
                             >
                                 <span className={`material-icons ${isActive ? "" : "group-hover:text-primary transition-colors"}`}>
