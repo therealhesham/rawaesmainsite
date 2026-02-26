@@ -143,7 +143,7 @@ export async function uploadReport(formData: FormData) {
                 type,
                 linkUrl: publicUrl,
                 fileName: displayFileName,
-                isPublished: true,
+                isPublished: false,
                 releaseDate: new Date(),
             }
         });
@@ -235,7 +235,7 @@ export async function saveInvestorReports(
                     type: reportType,
                     linkUrl,
                     fileName,
-                    isPublished: true,
+                    isPublished: false,
                     releaseDate: new Date(),
                 },
             });
@@ -292,7 +292,7 @@ export async function saveExtractedReports(
                             type: reportType,
                             linkUrl,
                             fileName,
-                            isPublished: true,
+                            isPublished: false,
                             releaseDate: new Date(),
                         },
                     });
