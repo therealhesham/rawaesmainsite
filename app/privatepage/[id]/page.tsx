@@ -23,6 +23,7 @@ async function getInvestorData(id: string) {
     where: { id: userId },
     include: {
       reports: {
+        where: { isPublished: true },
         orderBy: { createdAt: "desc" },
       },
     },
