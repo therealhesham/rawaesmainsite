@@ -8,6 +8,9 @@ import { ContactSection } from "./components/ContactSection";
 import { Footer } from "./components/Footer";
 import { getContactUs } from "./contact/getContactUs";
 
+// لا تُبنى الصفحة أثناء Docker build (لا يوجد DB) — تُعرض عند الطلب
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   const contact = await getContactUs();
   return (
