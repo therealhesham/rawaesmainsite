@@ -1,8 +1,19 @@
 import { Header } from "../../components/Header";
 import { PrismaClient } from "@prisma/client";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { cookies } from "next/headers";
+import { jwtVerify } from "jose";
+import { logoutInvestor } from "../../login/actions";
 
 const prisma = new PrismaClient();
+
+const getSecretKey = () => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error("JWT_SECRET environment variable is not set");
+  }
+  return new TextEncoder().encode(secret);
+};
 
 async function getInvestorData(id: string) {
   const userId = parseInt(id);
@@ -26,6 +37,30 @@ export default async function PrivateInvestorPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+
+  // -- Auth Start --
+  const cookieStore = await cookies();
+  const token = cookieStore.get("investor_session")?.value;
+
+  if (!token) {
+    redirect("/login");
+  }
+
+  let decodedUserId: number | undefined;
+
+  try {
+    const { payload } = await jwtVerify(token, getSecretKey());
+    decodedUserId = payload.userId as number;
+  } catch (error) {
+    // Token is invalid/tampered/expired
+    redirect("/login");
+  }
+
+  if (decodedUserId && decodedUserId.toString() !== id) {
+    redirect(`/privatepage/${decodedUserId}`);
+  }
+  // -- Auth End --
+
   const investor = await getInvestorData(id);
 
   if (!investor) {
@@ -67,13 +102,14 @@ export default async function PrivateInvestorPage({
                   </span>
                   <span className="break-words">اشعارات مجموعة روائس</span>
                 </h2>
-                {/* Logout button could be a link to api/auth/signout or similar, for now keeping visual */}
-                <button className="bg-[#003B46] hover:bg-[#002830] text-white text-sm px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" height="18" viewBox="0 -960 960 960" width="18" fill="white">
-                    <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h280v80H200Zm440-160-55-58 102-102H360v-80h327L585-622l55-58 200 200-200 200Z" />
-                  </svg>
-                  تسجيل الخروج
-                </button>
+                <form action={logoutInvestor}>
+                  <button type="submit" className="bg-[#003B46] hover:bg-[#002830] text-white text-sm px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" height="18" viewBox="0 -960 960 960" width="18" fill="white">
+                      <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h280v80H200Zm440-160-55-58 102-102H360v-80h327L585-622l55-58 200 200-200 200Z" />
+                    </svg>
+                    تسجيل الخروج
+                  </button>
+                </form>
               </div>
               <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 mb-6 border-r-4 border-gold text-sm text-gray-600 dark:text-gray-300">
                 تم تفعيل استعراض ملفات الاستثمارات من خلال الموقع الرسمي لدى
