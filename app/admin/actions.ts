@@ -54,6 +54,55 @@ export async function getInvestors(search?: string) {
     }
 }
 
+/** بحث عن مستثمر بالاسم — exact أولاً، ثم fuzzy بالكلمات */
+export async function searchInvestorByName(excelName: string) {
+    try {
+        const trimmed = excelName.trim();
+        if (!trimmed) return { exact: null, suggestions: [] };
+
+        // 1) Exact match
+        const exact = await prisma.user.findFirst({
+            where: { name: trimmed },
+            select: { id: true, name: true },
+        });
+        if (exact) return { exact, suggestions: [] };
+
+        // 2) Fuzzy: جيب كل المستثمرين وقارن بالكلمات
+        const allUsers = await prisma.user.findMany({
+            where: { isAdmin: false },
+            select: { id: true, name: true },
+        });
+
+        const words = trimmed.split(/\s+/).filter(w => w.length > 1);
+        if (words.length === 0) return { exact: null, suggestions: [] };
+
+        const scored = allUsers.map(u => {
+            const nameLower = u.name;
+            let matchCount = 0;
+            for (const w of words) {
+                if (nameLower.includes(w)) matchCount++;
+            }
+            // Also check reverse: words in the DB name that appear in the search
+            const dbWords = u.name.split(/\s+/).filter(w => w.length > 1);
+            for (const dw of dbWords) {
+                if (trimmed.includes(dw) && !words.some(w => w === dw)) matchCount += 0.5;
+            }
+            return { id: u.id, name: u.name, score: matchCount };
+        });
+
+        const suggestions = scored
+            .filter(u => u.score >= 1)
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 20)
+            .map(({ id, name }) => ({ id, name }));
+
+        return { exact: null, suggestions };
+    } catch (error) {
+        console.error("searchInvestorByName error:", error);
+        return { exact: null, suggestions: [] };
+    }
+}
+
 export async function getInvestor(id: number) {
     try {
         if (!id || isNaN(id)) return null;

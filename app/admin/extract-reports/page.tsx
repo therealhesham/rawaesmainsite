@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
-import { getInvestors, getInvestor, saveInvestorReports } from "../actions";
+import { getInvestors, getInvestor, saveInvestorReports, searchInvestorByName } from "../actions";
 
 type ExtractResult = {
     status: string;
@@ -39,6 +39,9 @@ export default function ExtractReportsPage() {
     /** تقارير المستثمر المختار (للعرض في المودال) */
     const [existingReports, setExistingReports] = useState<{ id: number; fileName: string | null; linkUrl: string; type: string; createdAt: Date }[]>([]);
     const [loadingReports, setLoadingReports] = useState(false);
+    const [isSearching, setIsSearching] = useState(false);
+    const [searchResults, setSearchResults] = useState<{ id: number; name: string }[]>([]);
+    const [autoMatchedExact, setAutoMatchedExact] = useState(false);
 
     const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault();
@@ -88,13 +91,32 @@ export default function ExtractReportsPage() {
 
     useEffect(() => {
         if (saveModal) {
+            setSelectedUserId("");
+            setInvestorSearch(saveModal.excelName);
+            setSaveSuccess(null);
+            setExistingReports([]);
+            setAutoMatchedExact(false);
+            setSearchResults([]);
+
+            // Auto-search the DB with the Excel name
+            setIsSearching(true);
+            searchInvestorByName(saveModal.excelName).then((res) => {
+                if (res.exact) {
+                    // Exact match found — auto-select
+                    setSelectedUserId(String(res.exact.id));
+                    setInvestorSearch(res.exact.name);
+                    setAutoMatchedExact(true);
+                    setShowInvestorDropdown(false);
+                } else {
+                    setSearchResults(res.suggestions);
+                    setShowInvestorDropdown(res.suggestions.length > 0);
+                }
+            }).finally(() => setIsSearching(false));
+
+            // Also load all investors for manual search fallback
             getInvestors("").then((list) => {
                 setInvestors(list.map((u: { id: number; name: string }) => ({ id: u.id, name: u.name })));
             });
-            setSelectedUserId("");
-            setInvestorSearch("");
-            setSaveSuccess(null);
-            setExistingReports([]);
         }
     }, [saveModal]);
 
@@ -109,9 +131,36 @@ export default function ExtractReportsPage() {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const filteredInvestors = investors.filter((u) =>
-        u.name.toLowerCase().includes(investorSearch.toLowerCase())
-    );
+    // When typing manually, do server-side search
+    const handleInvestorSearchChange = async (value: string) => {
+        setInvestorSearch(value);
+        setAutoMatchedExact(false);
+        if (!value.trim()) {
+            setSelectedUserId("");
+            setSearchResults([]);
+            setShowInvestorDropdown(false);
+            return;
+        }
+        setIsSearching(true);
+        const res = await searchInvestorByName(value);
+        if (res.exact) {
+            setSearchResults([res.exact]);
+        } else {
+            setSearchResults(res.suggestions);
+        }
+        setShowInvestorDropdown(true);
+        setIsSearching(false);
+    };
+
+    // Combine search results — DB results first, then client-side fallback
+    const filteredInvestors = (() => {
+        if (searchResults.length > 0) return searchResults;
+        if (!investorSearch.trim()) return investors;
+        // Client-side fallback
+        return investors.filter(u =>
+            u.name.toLowerCase().includes(investorSearch.toLowerCase())
+        );
+    })();
 
     useEffect(() => {
         if (!selectedUserId) {
@@ -401,9 +450,26 @@ export default function ExtractReportsPage() {
                                                     <p className="text-sm text-gray-500 mb-1">
                                                         الاسم في Excel: <strong className="text-gray-700 dark:text-gray-300">{saveModal.excelName}</strong>
                                                     </p>
-                                                    <p className="text-sm text-gray-500">
-                                                        {saveModal.urls.length} ملف PDF — اختر المستثمر في النظام لربط التقارير به.
-                                                    </p>
+                                                    {autoMatchedExact ? (
+                                                        <p className="text-sm text-green-600 dark:text-green-400 flex items-center gap-1">
+                                                            <span className="material-icons text-sm">check_circle</span>
+                                                            تم العثور على المستثمر تلقائياً!
+                                                        </p>
+                                                    ) : isSearching ? (
+                                                        <p className="text-sm text-primary flex items-center gap-1">
+                                                            <span className="w-3 h-3 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                                                            جاري البحث عن المستثمر...
+                                                        </p>
+                                                    ) : searchResults.length > 0 && !selectedUserId ? (
+                                                        <p className="text-sm text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                                                            <span className="material-icons text-sm">info</span>
+                                                            لم يتم العثور على تطابق تام — اختر من الأسماء المقاربة أدناه
+                                                        </p>
+                                                    ) : (
+                                                        <p className="text-sm text-gray-500">
+                                                            {saveModal.urls.length} ملف PDF — اختر المستثمر في النظام لربط التقارير به.
+                                                        </p>
+                                                    )}
                                                 </div>
                                                 <form onSubmit={handleSaveOneInvestor} className="space-y-4" id="save-investor-form">
                                                     <div ref={autocompleteRef} className={`relative ${showInvestorDropdown ? 'pb-56' : ''}`}>
@@ -414,20 +480,20 @@ export default function ExtractReportsPage() {
                                                             <input
                                                                 type="text"
                                                                 value={investorSearch}
-                                                                onChange={(e) => {
-                                                                    setInvestorSearch(e.target.value);
-                                                                    setShowInvestorDropdown(true);
-                                                                    if (!e.target.value) {
-                                                                        setSelectedUserId("");
-                                                                    }
+                                                                onChange={(e) => handleInvestorSearchChange(e.target.value)}
+                                                                onFocus={() => {
+                                                                    if (filteredInvestors.length > 0) setShowInvestorDropdown(true);
                                                                 }}
-                                                                onFocus={() => setShowInvestorDropdown(true)}
                                                                 placeholder="ابحث عن اسم المستثمر..."
                                                                 className={`w-full p-2.5 pe-10 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors ${selectedUserId ? 'ps-9' : ''}`}
                                                                 autoComplete="off"
                                                             />
                                                             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                                                                <span className="material-icons text-xl">search</span>
+                                                                {isSearching ? (
+                                                                    <span className="w-4 h-4 border-2 border-gray-300 border-t-primary rounded-full animate-spin block" />
+                                                                ) : (
+                                                                    <span className="material-icons text-xl">search</span>
+                                                                )}
                                                             </span>
                                                             {selectedUserId && (
                                                                 <button
