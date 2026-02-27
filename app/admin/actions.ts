@@ -421,3 +421,34 @@ export async function saveExtractedReports(
         return { error: "فشل حفظ التقارير في الجدول." };
     }
 }
+
+/** جلب التقارير الغير منشورة (isPublished = false) */
+export async function getUnpublishedReports() {
+    try {
+        const reports = await prisma.reports.findMany({
+            where: { isPublished: false },
+            include: { user: { select: { id: true, name: true } } },
+            orderBy: { createdAt: 'desc' },
+        });
+        return reports;
+    } catch (error) {
+        console.error("Failed to fetch unpublished reports:", error);
+        return [];
+    }
+}
+
+/** تغيير حالة النشر لتقرير */
+export async function toggleReportPublish(reportId: number, publish: boolean) {
+    try {
+        await prisma.reports.update({
+            where: { id: reportId },
+            data: { isPublished: publish },
+        });
+        revalidatePath('/admin/review');
+        revalidatePath('/admin');
+        return { success: true };
+    } catch (error) {
+        console.error(`Failed to toggle publish for report ${reportId}:`, error);
+        return { error: "فشل تحديث حالة النشر" };
+    }
+}

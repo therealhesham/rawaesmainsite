@@ -49,6 +49,7 @@ export default function AdminLayout({
         },
 
         { label: "استخراج التقارير", icon: "table_chart", href: "/admin/extract-reports" },
+        { label: "مراجعة التقارير", icon: "rate_review", href: "/admin/review" },
     ];
 
     const toggleMenu = (id: string) => {
