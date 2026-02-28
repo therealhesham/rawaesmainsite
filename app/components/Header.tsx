@@ -60,107 +60,109 @@ export function Header() {
   ];
 
   return (
-    <motion.header
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      transition={{ type: "spring", stiffness: 120, damping: 20 }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-out ${scrolled
-        ? "backdrop-blur-xl shadow-[0_1px_24px_rgba(0,42,58,0.08)]"
-        : "bg-transparent"
-        }`}
-    >
-      <div className="container mx-auto px-6 flex justify-between items-center h-20">
-        {/* Logo */}
-        <Link href="/" className="group relative flex items-center">
-          <motion.div
-            whileHover={{ scale: 1.06, rotate: -2 }}
-            transition={{ type: "spring", stiffness: 300, damping: 15 }}
-            className="w-14 h-14 relative"
-          >
-            <img
-              src="/logo.png"
-              alt="Rawaes Group Logo"
-              className="w-full h-full object-contain drop-shadow-sm"
-            />
-          </motion.div>
-        </Link>
-
-        {/* Desktop Nav */}
-        <nav className="hidden lg:flex items-center gap-1 bg-gradient-to-l from-[#ecc383]/90 to-[#d4af79]/80 backdrop-blur-md border border-[#d4af79]/30 rounded-full px-1.5 py-1.5 shadow-[0_2px_16px_rgba(212,175,121,0.2)]">
-          {navItems.map((item) => (
-            <div
-              key={item.label}
-              className="relative"
-              onMouseEnter={() => setHoveredItem(item.label)}
-              onMouseLeave={() => setHoveredItem(null)}
+    <>
+      <motion.header
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        transition={{ type: "spring", stiffness: 120, damping: 20 }}
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-out ${scrolled
+          ? "backdrop-blur-xl shadow-[0_1px_24px_rgba(0,42,58,0.08)]"
+          : "bg-transparent"
+          }`}
+      >
+        <div className="container mx-auto px-6 flex justify-between items-center h-20">
+          {/* Logo */}
+          <Link href="/" className="group relative flex items-center">
+            <motion.div
+              whileHover={{ scale: 1.06, rotate: -2 }}
+              transition={{ type: "spring", stiffness: 300, damping: 15 }}
+              className="w-14 h-14 relative"
             >
-              <Link
-                href={item.href}
-                className={`relative px-6 py-2 text-[0.92rem] font-semibold rounded-full transition-all duration-300 flex items-center gap-1 ${item.active
-                  ? "bg-[#003749] text-white shadow-lg shadow-[#003749]/25"
-                  : "text-[#003749]/85 hover:text-[#003749] hover:bg-white/50"
-                  }`}
+              <img
+                src="/logo.png"
+                alt="Rawaes Group Logo"
+                className="w-full h-full object-contain drop-shadow-sm"
+              />
+            </motion.div>
+          </Link>
+
+          {/* Desktop Nav */}
+          <nav className="hidden lg:flex items-center gap-1 bg-gradient-to-l from-[#ecc383]/90 to-[#d4af79]/80 backdrop-blur-md border border-[#d4af79]/30 rounded-full px-1.5 py-1.5 shadow-[0_2px_16px_rgba(212,175,121,0.2)]">
+            {navItems.map((item) => (
+              <div
+                key={item.label}
+                className="relative"
+                onMouseEnter={() => setHoveredItem(item.label)}
+                onMouseLeave={() => setHoveredItem(null)}
               >
-                {item.active && (
-                  <motion.span
-                    layoutId="activeNav"
-                    className="absolute inset-0 bg-[#003749] rounded-full -z-10"
-                    transition={{ type: "spring", stiffness: 350, damping: 30 }}
-                  />
-                )}
-                {item.label}
-                {item.icon && (
-                  <motion.span
-                    className="opacity-60"
-                    animate={{ rotate: item.children && hoveredItem === item.label ? 180 : 0 }}
-                    transition={{ type: "spring", stiffness: 300 }}
-                  >
-                    {item.icon}
-                  </motion.span>
-                )}
-              </Link>
+                <Link
+                  href={item.href}
+                  className={`relative px-6 py-2 text-[0.92rem] font-semibold rounded-full transition-all duration-300 flex items-center gap-1 ${item.active
+                    ? "bg-[#003749] text-white shadow-lg shadow-[#003749]/25"
+                    : "text-[#003749]/85 hover:text-[#003749] hover:bg-white/50"
+                    }`}
+                >
+                  {item.active && (
+                    <motion.span
+                      layoutId="activeNav"
+                      className="absolute inset-0 bg-[#003749] rounded-full -z-10"
+                      transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                    />
+                  )}
+                  {item.label}
+                  {item.icon && (
+                    <motion.span
+                      className="opacity-60"
+                      animate={{ rotate: item.children && hoveredItem === item.label ? 180 : 0 }}
+                      transition={{ type: "spring", stiffness: 300 }}
+                    >
+                      {item.icon}
+                    </motion.span>
+                  )}
+                </Link>
 
-              {/* Desktop Dropdown */}
-              <AnimatePresence>
-                {item.children && hoveredItem === item.label && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                    transition={{ duration: 0.2 }}
-                    className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-56 bg-[#d4af79] rounded-2xl shadow-xl border border-[#d4af79]/20 overflow-hidden z-50 py-2"
-                  >
-                    {item.children.map((child, idx) => (
-                      <Link
-                        key={idx}
-                        href={child.href}
-                        className="block px-4 py-2.5 text-[0.9rem] text-[#003749]/85 hover:bg-[#d4af79]/10 hover:text-[#003749]/50 transition-colors font-medium text-right"
-                      >
-                        {child.label}
-                      </Link>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          ))}
-        </nav>
+                {/* Desktop Dropdown */}
+                <AnimatePresence>
+                  {item.children && hoveredItem === item.label && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-56 bg-[#d4af79] rounded-2xl shadow-xl border border-[#d4af79]/20 overflow-hidden z-50 py-2"
+                    >
+                      {item.children.map((child, idx) => (
+                        <Link
+                          key={idx}
+                          href={child.href}
+                          className="block px-4 py-2.5 text-[0.9rem] text-[#003749]/85 hover:bg-[#d4af79]/10 hover:text-[#003749]/50 transition-colors font-medium text-right"
+                        >
+                          {child.label}
+                        </Link>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ))}
+          </nav>
 
-        {/* Mobile Hamburger */}
-        <motion.button
-          type="button"
-          whileTap={{ scale: 0.9 }}
-          onClick={() => setMobileOpen(!mobileOpen)}
-          className="lg:hidden relative w-10 h-10 flex items-center justify-center rounded-xl bg-[#d4af79]/20 text-[#003749] dark:text-white"
-          aria-label="القائمة"
-        >
-          <span className="text-2xl flex items-center justify-center">
-            {mobileOpen ? <X className="w-7 h-7" /> : <Menu className="w-7 h-7" />}
-          </span>
-        </motion.button>
-      </div>
+          {/* Mobile Hamburger */}
+          <motion.button
+            type="button"
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className="lg:hidden relative w-10 h-10 flex items-center justify-center rounded-xl bg-[#d4af79]/20 text-[#003749] dark:text-white"
+            aria-label="القائمة"
+          >
+            <span className="text-2xl flex items-center justify-center">
+              {mobileOpen ? <X className="w-7 h-7" /> : <Menu className="w-7 h-7" />}
+            </span>
+          </motion.button>
+        </div>
+      </motion.header>
 
-      {/* Mobile Menu Overlay */}
+      {/* Mobile Menu Overlay — outside header to avoid transform containment */}
       <AnimatePresence>
         {mobileOpen && (
           <>
@@ -178,7 +180,7 @@ export function Header() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 h-full w-[80%] max-w-sm bg-[#003B4D] text-white z-[70] shadow-2xl flex flex-col font-display"
+              className="fixed inset-y-0 right-0 w-[80%] max-w-sm bg-[#003B4D] text-white z-[70] shadow-2xl flex flex-col font-display"
             >
               <div className="flex justify-between items-center p-6 border-b border-white/10">
                 <span className="text-lg font-bold">الرئيسية</span>
@@ -267,6 +269,6 @@ export function Header() {
           </>
         )}
       </AnimatePresence>
-    </motion.header>
+    </>
   );
 }
