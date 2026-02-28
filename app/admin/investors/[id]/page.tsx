@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { ArrowRight, Phone, IdCard, Calendar, Plus, FolderOpen, FolderX, FileText, Settings, X, UploadCloud, CheckCircle2, Trash2, FileOutput } from "lucide-react";
+import { ArrowRight, Phone, IdCard, Calendar, Plus, FolderOpen, FolderX, FileText, Settings, X, UploadCloud, CheckCircle2, Trash2, FileOutput, AlertCircle, Loader2 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { getInvestor, uploadReport, deleteReport, toggleReportPublish, updateReportApproval } from "../../actions";
@@ -142,7 +142,7 @@ export default function InvestorDetails() {
         if (result && !("error" in result)) {
             const data = await getInvestor(investorId);
             setInvestor(data);
-            if (selectedReport?.id === reportId) handleSelectReport(data.reports.find((r: any) => r.id === reportId) || selectedReport);
+            if (selectedReport?.id === reportId && data) handleSelectReport(data.reports.find((r: any) => r.id === reportId) || selectedReport);
         }
         setUpdatingReportId(null);
     };
@@ -153,7 +153,7 @@ export default function InvestorDetails() {
         if (result && !("error" in result)) {
             const data = await getInvestor(investorId);
             setInvestor(data);
-            if (selectedReport?.id === reportId) handleSelectReport(data.reports.find((r: any) => r.id === reportId) || selectedReport);
+            if (selectedReport?.id === reportId && data) handleSelectReport(data.reports.find((r: any) => r.id === reportId) || selectedReport);
         }
         setUpdatingReportId(null);
     };
