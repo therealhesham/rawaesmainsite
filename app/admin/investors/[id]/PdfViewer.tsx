@@ -56,14 +56,16 @@ export default function PdfViewer({ url, fileName, reportType, fitToView = false
         setNumPages(0);
     }, [url]);
 
-    // Fit-to-view scale calculation
+    // Fit-to-view scale calculation (Fit to Width)
     useEffect(() => {
         if (!fitToView || !scrollRef.current) return;
         const el = scrollRef.current;
         const updateFit = () => {
-            const h = el.clientHeight - 32;
-            if (h > 0) {
-                const s = Math.max(0.3, Math.min(h / PDF_PAGE_HEIGHT, 2));
+            // Calculate scale based on full width
+            const w = el.clientWidth;
+            if (w > 0) {
+                // Max scale 2.5 to avoid getting overly massive on huge screens
+                const s = Math.max(0.3, Math.min(w / PDF_PAGE_WIDTH, 2.5));
                 setFitScale(s);
                 setScale(s);
             }
@@ -367,8 +369,8 @@ export default function PdfViewer({ url, fileName, reportType, fitToView = false
                 </AnimatePresence>
 
                 {/* Main document area */}
-                <div ref={scrollRef} className="flex-1 overflow-auto bg-[#3a3d40] dark:bg-gray-950" style={{ minHeight: 0 }}>
-                    <div className="flex flex-col items-center gap-4 py-4 px-2">
+                <div ref={scrollRef} className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-900/30" style={{ minHeight: 0 }}>
+                    <div className="flex flex-col items-center w-full">
                         <Document
                             file={url}
                             onLoadSuccess={onDocumentLoadSuccess}
@@ -389,7 +391,7 @@ export default function PdfViewer({ url, fileName, reportType, fitToView = false
                                 <div
                                     key={`page_${index}`}
                                     ref={(el: HTMLDivElement | null) => { pageRefs.current[index] = el; }}
-                                    className="shadow-2xl bg-white rounded-sm overflow-hidden transition-shadow duration-300 hover:shadow-[0_20px_60px_rgba(0,0,0,0.4)]"
+                                    className="bg-white overflow-hidden border-b border-gray-200 dark:border-gray-800 last:border-b-0"
                                 >
                                     <Page
                                         pageNumber={index + 1}
