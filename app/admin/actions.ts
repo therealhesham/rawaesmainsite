@@ -453,17 +453,49 @@ export async function getPublishedReports() {
 }
 
 /** تغيير حالة النشر لتقرير */
-export async function toggleReportPublish(reportId: number, publish: boolean) {
+export async function toggleReportPublish(reportId: number, publish: boolean, userId?: number) {
     try {
+        if (publish) {
+            const report = await prisma.reports.findUnique({ where: { id: reportId } });
+            if (!report?.isApproved) {
+                return { error: "لا يمكن نشر التقرير قبل اعتماده" };
+            }
+        }
+
         await prisma.reports.update({
             where: { id: reportId },
             data: { isPublished: publish },
         });
         revalidatePath('/admin/review');
         revalidatePath('/admin');
+        if (userId) revalidatePath(`/admin/investors/${userId}`);
         return { success: true };
     } catch (error) {
         console.error(`Failed to toggle publish for report ${reportId}:`, error);
         return { error: "فشل تحديث حالة النشر" };
+    }
+}
+
+/** اعتماد التقرير (isApproved) */
+export async function updateReportApproval(reportId: number, isApproved: boolean, userId?: number) {
+    try {
+        const updateData: any = { isApproved };
+
+        // If revoking approval, also revoke publishing
+        if (!isApproved) {
+            updateData.isPublished = false;
+        }
+
+        await prisma.reports.update({
+            where: { id: reportId },
+            data: updateData,
+        });
+        revalidatePath('/admin/review');
+        revalidatePath('/admin');
+        if (userId) revalidatePath(`/admin/investors/${userId}`);
+        return { success: true };
+    } catch (error) {
+        console.error(`Failed to update approval for report ${reportId}:`, error);
+        return { error: "فشل تحديث الاعتماد" };
     }
 }

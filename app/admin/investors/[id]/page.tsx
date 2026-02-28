@@ -2,15 +2,17 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
-import { getInvestor, uploadReport, deleteReport } from "../../actions";
+import { useEffect, useState, useRef } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { getInvestor, uploadReport, deleteReport, toggleReportPublish, updateReportApproval } from "../../actions";
 import dynamic from "next/dynamic";
 
 const PdfViewer = dynamic(() => import("./PdfViewer"), { ssr: false });
 
 export default function InvestorDetails() {
     const params = useParams();
+    const router = useRouter();
+    const searchParams = useSearchParams();
     const investorId = parseInt(params.id as string);
     const [investor, setInvestor] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -22,6 +24,19 @@ export default function InvestorDetails() {
     const [selectedReport, setSelectedReport] = useState<any>(null);
     const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
     const [uploadError, setUploadError] = useState<string>("");
+    const [updatingReportId, setUpdatingReportId] = useState<number | null>(null);
+    const [openMenuReportId, setOpenMenuReportId] = useState<number | null>(null);
+    const menuRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+                setOpenMenuReportId(null);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault();
@@ -47,9 +62,30 @@ export default function InvestorDetails() {
             const data = await getInvestor(investorId);
             setInvestor(data);
             setIsLoading(false);
+
+            // Check URL for report ID and select it if available
+            const reportIdParam = searchParams.get('report');
+            if (reportIdParam && data && data.reports) {
+                const reportToSelect = data.reports.find((r: any) => r.id.toString() === reportIdParam);
+                if (reportToSelect) {
+                    setSelectedReport(reportToSelect);
+                }
+            }
         }
         fetchInvestor();
-    }, [investorId]);
+    }, [investorId, searchParams]);
+
+    // Handle report selection and update URL
+    const handleSelectReport = (report: any | null) => {
+        setSelectedReport(report);
+        const newSearchParams = new URLSearchParams(searchParams.toString());
+        if (report) {
+            newSearchParams.set('report', report.id.toString());
+        } else {
+            newSearchParams.delete('report');
+        }
+        router.push(`?${newSearchParams.toString()}`, { scroll: false });
+    };
 
     const handleUpload = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -94,9 +130,31 @@ export default function InvestorDetails() {
         setInvestor(data);
         // Clear preview if the deleted report was selected
         if (selectedReport?.id === confirmDelete) {
-            setSelectedReport(null);
+            handleSelectReport(null);
         }
         setConfirmDelete(null);
+    };
+
+    const handleApprove = async (reportId: number, isApproved: boolean) => {
+        setUpdatingReportId(reportId);
+        const result = await updateReportApproval(reportId, isApproved, investorId);
+        if (result && !("error" in result)) {
+            const data = await getInvestor(investorId);
+            setInvestor(data);
+            if (selectedReport?.id === reportId) handleSelectReport(data.reports.find((r: any) => r.id === reportId) || selectedReport);
+        }
+        setUpdatingReportId(null);
+    };
+
+    const handlePublish = async (reportId: number, publish: boolean) => {
+        setUpdatingReportId(reportId);
+        const result = await toggleReportPublish(reportId, publish, investorId);
+        if (result && !("error" in result)) {
+            const data = await getInvestor(investorId);
+            setInvestor(data);
+            if (selectedReport?.id === reportId) handleSelectReport(data.reports.find((r: any) => r.id === reportId) || selectedReport);
+        }
+        setUpdatingReportId(null);
     };
 
     if (isLoading) return <div className="p-8 text-center">Loading...</div>;
@@ -111,144 +169,166 @@ export default function InvestorDetails() {
     ];
 
     return (
-        <div className="space-y-8 max-w-[1600px] mx-auto">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                    <Link href="/admin" className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
-                        <span className="material-icons">arrow_forward</span>
-                    </Link>
-                    <div>
-                        <h1 className="text-2xl font-bold text-secondary dark:text-white">{investor.name}</h1>
-                        <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
-                            <span className="flex items-center gap-1">
-                                <span className="material-icons text-sm">phone</span>
-                                <span dir="ltr">{investor.phoneNumber}</span>
-                            </span>
-                            {investor.nationalId && (
+        <>
+            <div className="space-y-8 max-w-[1600px] mx-auto">
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <Link href="/admin" className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+                            <span className="material-icons">arrow_forward</span>
+                        </Link>
+                        <div>
+                            <h1 className="text-2xl font-bold text-secondary dark:text-white">{investor.name}</h1>
+                            <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
                                 <span className="flex items-center gap-1">
-                                    <span className="material-icons text-sm">badge</span>
-                                    <span>{investor.nationalId}</span>
+                                    <span className="material-icons text-sm">phone</span>
+                                    <span dir="ltr">{investor.phoneNumber}</span>
                                 </span>
-                            )}
-                            <span className="flex items-center gap-1">
-                                <span className="material-icons text-sm">calendar_today</span>
-                                <span>{new Date(investor.createdAt).toLocaleDateString('ar-EG')}</span>
-                            </span>
+                                {investor.nationalId && (
+                                    <span className="flex items-center gap-1">
+                                        <span className="material-icons text-sm">badge</span>
+                                        <span>{investor.nationalId}</span>
+                                    </span>
+                                )}
+                                <span className="flex items-center gap-1">
+                                    <span className="material-icons text-sm">calendar_today</span>
+                                    <span>{new Date(investor.createdAt).toLocaleDateString('ar-EG')}</span>
+                                </span>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <button
-                    onClick={() => setShowAddModal(true)}
-                    className="px-4 py-2.5 bg-primary hover:bg-primary/90 text-white font-medium rounded-xl flex items-center justify-center transition-colors shadow-sm gap-2"
-                    title="إضافة تقرير جديد"
-                >
-                    <span className="material-icons text-xl">add</span>
-                    إضافة تقرير
-                </button>
-            </div>
-
-            <div className="flex flex-col lg:flex-row gap-6">
-                {/* Reports List - Right Column in RTL */}
-                <div className="w-full lg:w-1/3  ">
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-lg font-bold text-secondary dark:text-white flex items-center gap-2">
-                            <span className="material-icons text-primary">folder_open</span>
-                            التقارير ({investor.reports.length})
-                        </h2>
-                    </div>
-
-                    {investor.reports.length === 0 ? (
-                        <div className="text-center py-12 bg-white dark:bg-card-dark rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
-                            <span className="material-icons text-4xl text-gray-300 mb-2">folder_off</span>
-                            <p className="text-gray-500">لا توجد تقارير لهذا المستثمر</p>
-                        </div>
-                    ) : (
-                        <div className="grid gap-2">
-                            {investor.reports.map((report: any) => (
-                                <motion.div
-                                    key={report.id}
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    onClick={() => setSelectedReport(report)}
-                                    className={`flex items-center gap-2 px-2.5 py-2 rounded-xl border cursor-pointer transition-all ${selectedReport?.id === report.id
-                                        ? 'border-primary bg-primary/5 shadow-sm ring-1 ring-primary/20'
-                                        : 'border-gray-100 dark:border-gray-800 bg-white dark:bg-card-dark hover:border-primary/30 hover:bg-gray-50 dark:hover:bg-gray-800/50'
-                                        }`}
-                                >
-                                    <div className="w-7 h-7 rounded-md bg-red-50 dark:bg-red-500/10 text-red-500 flex items-center justify-center shrink-0">
-                                        <span className="material-icons text-sm">picture_as_pdf</span>
-                                    </div>
-                                    <div className="min-w-0 flex-1">
-                                        <div className="font-medium text-secondary dark:text-gray-200 text-xs truncate">
-                                            {report.fileName || reportTypes.find((t: any) => t.id === report.type)?.label || report.type}
-                                        </div>
-                                        <div className="text-[10px] text-gray-400 truncate">
-                                            {reportTypes.find((t: any) => t.id === report.type)?.label} · {new Date(report.createdAt).toLocaleDateString('ar-EG')}
-                                        </div>
-                                    </div>
-                                    <button
-                                        onClick={(e) => { e.stopPropagation(); handleDelete(report.id); }}
-                                        className="p-1 text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors shrink-0"
-                                        title="حذف"
-                                    >
-                                        <span className="material-icons text-base">delete_outline</span>
-                                    </button>
-                                </motion.div>
-                            ))}
-                        </div>
-                    )}
+                    <button
+                        onClick={() => setShowAddModal(true)}
+                        className="px-4 py-2.5 bg-primary hover:bg-primary/90 text-white font-medium rounded-xl flex items-center justify-center transition-colors shadow-sm gap-2"
+                        title="إضافة تقرير جديد"
+                    >
+                        <span className="material-icons text-xl">add</span>
+                        إضافة تقرير
+                    </button>
                 </div>
 
-                {/* PDF Preview - Left Column in RTL */}
-                <div className="w-full lg:flex-1 min-w-0">
-                    <div className="bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden sticky top-24" style={{ height: 'calc(100vh - 180px)' }}>
-                        {selectedReport ? (
-                            <div className="flex flex-col h-full">
-                                {/* Preview Header */}
-                                <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-800 shrink-0">
-                                    <div className="flex items-center gap-3 min-w-0">
-                                        <div className="w-9 h-9 rounded-lg bg-red-50 dark:bg-red-500/10 text-red-500 flex items-center justify-center shrink-0">
-                                            <span className="material-icons">picture_as_pdf</span>
-                                        </div>
-                                        <div className="min-w-0">
-                                            <h3 className="font-bold text-secondary dark:text-white text-sm truncate">
-                                                {selectedReport.fileName || reportTypes.find((t: any) => t.id === selectedReport.type)?.label || selectedReport.type}
-                                            </h3>
-                                            <p className="text-xs text-gray-400">
-                                                {reportTypes.find((t: any) => t.id === selectedReport.type)?.label} — {new Date(selectedReport.createdAt).toLocaleDateString('ar-EG')}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-2 shrink-0">
+                <div className="flex flex-col lg:flex-row gap-6">
+                    {/* قائمة التقارير - عمود جانبي */}
+                    <div className="w-full lg:w-80 shrink-0">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-lg font-bold text-secondary dark:text-white flex items-center gap-2">
+                                <span className="material-icons text-primary">folder_open</span>
+                                التقارير ({investor.reports.length})
+                            </h2>
+                        </div>
 
-                                        <div className="w-px h-6 bg-gray-200 dark:bg-gray-700 mx-1"></div>
-                                        <button
-                                            onClick={() => setSelectedReport(null)}
-                                            className="p-2 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-                                            title="إغلاق التقرير"
-                                        >
-                                            <span className="material-icons">close</span>
-                                        </button>
-                                    </div>
-                                </div>
-                                {/* Custom PDF Viewer */}
-                                <div className="flex-1" style={{ minHeight: 0 }}>
-                                    <PdfViewer
-                                        url={selectedReport.linkUrl}
-                                        fileName={selectedReport.fileName || selectedReport.type}
-                                    />
-                                </div>
+                        {investor.reports.length === 0 ? (
+                            <div className="text-center py-12 bg-white dark:bg-card-dark rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
+                                <span className="material-icons text-4xl text-gray-300 mb-2">folder_off</span>
+                                <p className="text-gray-500">لا توجد تقارير لهذا المستثمر</p>
                             </div>
                         ) : (
-                            <div className="flex flex-col items-center justify-center text-center p-12 h-full">
-                                <div className="w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
-                                    <span className="material-icons text-4xl text-gray-300 dark:text-gray-600">description</span>
-                                </div>
-                                <h3 className="text-lg font-bold text-gray-400 dark:text-gray-500 mb-1">اختر تقريراً لعرضه</h3>
-                                <p className="text-sm text-gray-400 dark:text-gray-600">اضغط على أي تقرير من القائمة لعرضه هنا</p>
+                            <div className="grid gap-2">
+                                {investor.reports.map((report: any) => (
+                                    <motion.div
+                                        key={report.id}
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        onClick={() => handleSelectReport(report)}
+                                        className={`flex items-center gap-2 px-2.5 py-2 rounded-xl border cursor-pointer transition-all ${selectedReport?.id === report.id
+                                            ? 'border-primary bg-primary/5 shadow-sm ring-1 ring-primary/20'
+                                            : 'border-gray-100 dark:border-gray-800 bg-white dark:bg-card-dark hover:border-primary/30 hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                                            }`}
+                                    >
+                                        <div className="w-7 h-7 rounded-md bg-red-50 dark:bg-red-500/10 text-red-500 flex items-center justify-center shrink-0">
+                                            <span className="material-icons text-sm">picture_as_pdf</span>
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <div className="font-medium text-secondary dark:text-gray-200 text-xs truncate">
+                                                {report.fileName || reportTypes.find((t: any) => t.id === report.type)?.label || report.type}
+                                            </div>
+                                            <div className="text-[10px] text-gray-400 truncate">
+                                                {reportTypes.find((t: any) => t.id === report.type)?.label} · {new Date(report.createdAt).toLocaleDateString('ar-EG')}
+                                            </div>
+                                        </div>
+                                        <div className="relative shrink-0" ref={openMenuReportId === report.id ? menuRef : undefined} onClick={(e) => e.stopPropagation()}>
+                                            <button
+                                                type="button"
+                                                onClick={() => setOpenMenuReportId(openMenuReportId === report.id ? null : report.id)}
+                                                className="p-1.5 rounded-lg text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                                                title="خيارات"
+                                            >
+                                                <span className="material-icons text-base">settings</span>
+                                            </button>
+                                            <AnimatePresence>
+                                                {openMenuReportId === report.id && (
+                                                    <motion.div
+                                                        initial={{ opacity: 0, y: -4 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        exit={{ opacity: 0, y: -4 }}
+                                                        className="absolute right-0 top-full mt-1 min-w-[140px] py-1 rounded-xl bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-700 shadow-lg z-50"
+                                                    >
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => { handleApprove(report.id, !report.isApproved); setOpenMenuReportId(null); }}
+                                                            disabled={updatingReportId === report.id}
+                                                            className={`w-full px-3 py-2 text-right text-sm font-medium transition-colors disabled:opacity-50 ${report.isApproved ? 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-500/10' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+                                                        >
+                                                            {report.isApproved ? 'إلغاء الاعتماد' : 'اعتماد'}
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => { handlePublish(report.id, true); setOpenMenuReportId(null); }}
+                                                            disabled={updatingReportId === report.id || report.isPublished || !report.isApproved}
+                                                            title={!report.isApproved ? 'يجب اعتماد التقرير أولاً قبل النشر' : ''}
+                                                            className="w-full px-3 py-2 text-right text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors disabled:opacity-50"
+                                                        >
+                                                            نشر
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => { handlePublish(report.id, false); setOpenMenuReportId(null); }}
+                                                            disabled={updatingReportId === report.id || !report.isPublished}
+                                                            className="w-full px-3 py-2 text-right text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors disabled:opacity-50"
+                                                        >
+                                                            إلغاء النشر
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => { handleDelete(report.id); setOpenMenuReportId(null); }}
+                                                            className="w-full px-3 py-2 text-right text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+                                                        >
+                                                            حذف
+                                                        </button>
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
+                                        </div>
+                                    </motion.div>
+                                ))}
                             </div>
                         )}
+                    </div>
+
+                    {/* المستعرض على الجنب - الصفحة كاملة مرة واحدة */}
+                    <div className="flex-1 min-w-0">
+                        <div className="bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden sticky top-20 flex flex-col" style={{ height: "calc(100vh - 7rem)" }}>
+                            {selectedReport ? (
+                                <>
+                                    <div className="flex-1 min-h-0 flex flex-col pt-1">
+                                        <PdfViewer
+                                            url={selectedReport.linkUrl}
+                                            fileName={selectedReport.fileName || selectedReport.type}
+                                            reportType={reportTypes.find((t: any) => t.id === selectedReport.type)?.label}
+                                            fitToView
+                                        />
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
+                                    <div className="w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
+                                        <span className="material-icons text-4xl text-gray-300 dark:text-gray-600">description</span>
+                                    </div>
+                                    <h3 className="text-lg font-bold text-gray-400 dark:text-gray-500 mb-1">اختر تقريراً لعرضه</h3>
+                                    <p className="text-sm text-gray-400 dark:text-gray-600">اضغط على أي تقرير من القائمة</p>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -426,6 +506,6 @@ export default function InvestorDetails() {
                     </motion.div>
                 )}
             </AnimatePresence>
-        </div>
+        </>
     );
 }

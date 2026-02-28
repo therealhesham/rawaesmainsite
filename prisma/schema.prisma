@@ -36,7 +36,7 @@ model reports {
   type        String
   isPublished Boolean @default(false)
   userId      Int
-
+  isApproved Boolean @default(false)
   fileName    String?
   releaseDate DateTime
   user        user     @relation(fields: [userId], references: [id])
