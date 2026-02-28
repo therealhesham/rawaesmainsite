@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { ArrowRight, Phone, IdCard, Calendar, Plus, FolderOpen, FolderX, FileText, Settings, X, UploadCloud, CheckCircle2, Trash2, FileOutput } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { getInvestor, uploadReport, deleteReport, toggleReportPublish, updateReportApproval } from "../../actions";
@@ -174,24 +175,24 @@ export default function InvestorDetails() {
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <Link href="/admin" className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
-                            <span className="material-icons">arrow_forward</span>
+                        <Link href="/admin" className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors flex items-center justify-center">
+                            <ArrowRight className="w-6 h-6" />
                         </Link>
                         <div>
                             <h1 className="text-2xl font-bold text-secondary dark:text-white">{investor.name}</h1>
                             <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
                                 <span className="flex items-center gap-1">
-                                    <span className="material-icons text-sm">phone</span>
+                                    <Phone className="w-4 h-4" />
                                     <span dir="ltr">{investor.phoneNumber}</span>
                                 </span>
                                 {investor.nationalId && (
                                     <span className="flex items-center gap-1">
-                                        <span className="material-icons text-sm">badge</span>
+                                        <IdCard className="w-4 h-4" />
                                         <span>{investor.nationalId}</span>
                                     </span>
                                 )}
                                 <span className="flex items-center gap-1">
-                                    <span className="material-icons text-sm">calendar_today</span>
+                                    <Calendar className="w-4 h-4" />
                                     <span>{new Date(investor.createdAt).toLocaleDateString('ar-EG')}</span>
                                 </span>
                             </div>
@@ -202,7 +203,7 @@ export default function InvestorDetails() {
                         className="px-4 py-2.5 bg-primary hover:bg-primary/90 text-white font-medium rounded-xl flex items-center justify-center transition-colors shadow-sm gap-2"
                         title="إضافة تقرير جديد"
                     >
-                        <span className="material-icons text-xl">add</span>
+                        <Plus className="w-5 h-5" />
                         إضافة تقرير
                     </button>
                 </div>
@@ -212,14 +213,14 @@ export default function InvestorDetails() {
                     <div className="w-full lg:w-80 shrink-0">
                         <div className="flex items-center justify-between">
                             <h2 className="text-lg font-bold text-secondary dark:text-white flex items-center gap-2">
-                                <span className="material-icons text-primary">folder_open</span>
+                                <FolderOpen className="w-5 h-5 text-primary" />
                                 التقارير ({investor.reports.length})
                             </h2>
                         </div>
 
                         {investor.reports.length === 0 ? (
                             <div className="text-center py-12 bg-white dark:bg-card-dark rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
-                                <span className="material-icons text-4xl text-gray-300 mb-2">folder_off</span>
+                                <FolderX className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                                 <p className="text-gray-500">لا توجد تقارير لهذا المستثمر</p>
                             </div>
                         ) : (
@@ -235,8 +236,8 @@ export default function InvestorDetails() {
                                             : 'border-gray-100 dark:border-gray-800 bg-white dark:bg-card-dark hover:border-primary/30 hover:bg-gray-50 dark:hover:bg-gray-800/50'
                                             }`}
                                     >
-                                        <div className="w-7 h-7 rounded-md bg-red-50 dark:bg-red-500/10 text-red-500 flex items-center justify-center shrink-0">
-                                            <span className="material-icons text-sm">picture_as_pdf</span>
+                                        <div className="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-500/10 text-red-500 flex items-center justify-center shrink-0">
+                                            <FileOutput className="w-4 h-4" />
                                         </div>
                                         <div className="min-w-0 flex-1">
                                             <div className="font-medium text-secondary dark:text-gray-200 text-xs truncate">
@@ -253,7 +254,7 @@ export default function InvestorDetails() {
                                                 className="p-1.5 rounded-lg text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                                                 title="خيارات"
                                             >
-                                                <span className="material-icons text-base">settings</span>
+                                                <Settings className="w-4 h-4" />
                                             </button>
                                             <AnimatePresence>
                                                 {openMenuReportId === report.id && (
@@ -321,8 +322,8 @@ export default function InvestorDetails() {
                                 </>
                             ) : (
                                 <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
-                                    <div className="w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
-                                        <span className="material-icons text-4xl text-gray-300 dark:text-gray-600">description</span>
+                                    <div className="w-20 h-20 rounded-full bg-gray-50 dark:bg-gray-800 flex items-center justify-center mb-5">
+                                        <FileText className="w-8 h-8 text-gray-300 dark:text-gray-600" />
                                     </div>
                                     <h3 className="text-lg font-bold text-gray-400 dark:text-gray-500 mb-1">اختر تقريراً لعرضه</h3>
                                     <p className="text-sm text-gray-400 dark:text-gray-600">اضغط على أي تقرير من القائمة</p>
@@ -358,15 +359,15 @@ export default function InvestorDetails() {
                             {/* Modal Header */}
                             <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-800">
                                 <h3 className="text-lg font-bold text-secondary dark:text-white flex items-center gap-2">
-                                    <span className="material-icons text-primary">upload_file</span>
+                                    <UploadCloud className="w-5 h-5 text-primary" />
                                     إضافة تقرير جديد
                                 </h3>
                                 <button
                                     type="button"
                                     onClick={() => !isUploading && setShowAddModal(false)}
-                                    className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                                    className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                                 >
-                                    <span className="material-icons">close</span>
+                                    <X className="w-5 h-5" />
                                 </button>
                             </div>
 
@@ -415,9 +416,7 @@ export default function InvestorDetails() {
                                         <div className="flex flex-col items-center gap-3 pointer-events-none">
                                             <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${file ? 'bg-green-100 text-green-600' : 'bg-primary/10 text-primary'
                                                 }`}>
-                                                <span className="material-icons text-2xl">
-                                                    {file ? 'check' : 'cloud_upload'}
-                                                </span>
+                                                {file ? <CheckCircle2 className="w-6 h-6" /> : <UploadCloud className="w-6 h-6" />}
                                             </div>
                                             <div className="space-y-1">
                                                 <p className="font-medium text-gray-900 dark:text-white text-sm">
@@ -433,7 +432,7 @@ export default function InvestorDetails() {
 
                                 {uploadError && (
                                     <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 rounded-xl text-sm">
-                                        <span className="material-icons text-base">error_outline</span>
+                                        <AlertCircle className="w-4 h-4 shrink-0" />
                                         {uploadError}
                                     </div>
                                 )}
@@ -445,12 +444,12 @@ export default function InvestorDetails() {
                                 >
                                     {isUploading ? (
                                         <>
-                                            <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            <Loader2 className="w-4 h-4 animate-spin" />
                                             <span>جاري الرفع...</span>
                                         </>
                                     ) : (
                                         <>
-                                            <span className="material-icons text-sm">cloud_upload</span>
+                                            <UploadCloud className="w-4 h-4" />
                                             <span>رفع التقرير</span>
                                         </>
                                     )}
@@ -483,8 +482,8 @@ export default function InvestorDetails() {
                             className="relative w-full max-w-sm rounded-2xl bg-white dark:bg-card-dark shadow-xl border border-gray-200 dark:border-gray-700 p-6 text-center"
                             dir="rtl"
                         >
-                            <div className="w-14 h-14 rounded-full bg-red-100 dark:bg-red-500/20 text-red-500 flex items-center justify-center mx-auto mb-4">
-                                <span className="material-icons text-3xl">delete_outline</span>
+                            <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-500/10 text-red-500 flex items-center justify-center mx-auto mb-4">
+                                <Trash2 className="w-8 h-8" />
                             </div>
                             <h3 className="text-lg font-bold text-secondary dark:text-white mb-1">حذف التقرير</h3>
                             <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">هل أنت متأكد من حذف هذا التقرير؟ لا يمكن التراجع عن هذا الإجراء.</p>

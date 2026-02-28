@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { AlertCircle, FileText, Loader2, Sidebar, ChevronRight, ChevronLeft, ZoomOut, ZoomIn, Printer, Download, Maximize, Minimize } from "lucide-react";
 
 const PDF_PAGE_HEIGHT = 842;
 const PDF_PAGE_WIDTH = 595;
@@ -22,6 +23,7 @@ export default function PdfViewer({ url, fileName, reportType, fitToView = false
     const [error, setError] = useState<string>("");
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [showThumbnails, setShowThumbnails] = useState(true);
+    const [isDownloading, setIsDownloading] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
     const pageRefs = useRef<(HTMLDivElement | null)[]>([]);
     const thumbnailRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -146,6 +148,31 @@ export default function PdfViewer({ url, fileName, reportType, fitToView = false
         }
     };
 
+    // Force Download
+    const handleDownload = async () => {
+        if (!url || isDownloading) return;
+        try {
+            setIsDownloading(true);
+            const response = await fetch(url);
+            const blob = await response.blob();
+            const blobUrl = window.URL.createObjectURL(blob);
+
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = fileName || 'report.pdf';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(blobUrl);
+        } catch (err) {
+            console.error("Failed to download file:", err);
+            // Fallback to opening in new tab if fetch fails (e.g., severe CORS issues)
+            window.open(url, '_blank');
+        } finally {
+            setIsDownloading(false);
+        }
+    };
+
     // Keep thumbnail active page in view
     useEffect(() => {
         if (showThumbnails && thumbnailRefs.current[currentPage - 1]) {
@@ -157,7 +184,7 @@ export default function PdfViewer({ url, fileName, reportType, fitToView = false
         return (
             <div className="flex flex-col items-center justify-center h-full gap-3 p-8">
                 <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-500/10 flex items-center justify-center">
-                    <span className="material-icons text-3xl text-red-500">error_outline</span>
+                    <AlertCircle className="w-8 h-8 text-red-500" />
                 </div>
                 <p className="text-sm text-red-500 text-center">فشل تحميل مكتبة العرض: {error}</p>
             </div>
@@ -167,7 +194,7 @@ export default function PdfViewer({ url, fileName, reportType, fitToView = false
     if (!pdfLib) {
         return (
             <div className="flex flex-col items-center justify-center py-20 gap-3 h-full">
-                <div className="w-12 h-12 border-4 border-gray-200 dark:border-gray-700 border-t-primary rounded-full animate-spin" />
+                <Loader2 className="w-12 h-12 text-primary animate-spin" />
                 <span className="text-sm text-gray-500 dark:text-gray-400">جاري تحميل قارئ الـ PDF...</span>
             </div>
         );
@@ -190,7 +217,7 @@ export default function PdfViewer({ url, fileName, reportType, fitToView = false
                             }`}
                         title="الصفحات المصغّرة"
                     >
-                        <span className="material-icons text-lg">view_sidebar</span>
+                        <Sidebar className="w-5 h-5" />
                     </button>
 
                     {/* File info */}
@@ -213,7 +240,7 @@ export default function PdfViewer({ url, fileName, reportType, fitToView = false
                         className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                         title="الصفحة السابقة"
                     >
-                        <span className="material-icons text-lg">chevron_right</span>
+                        <ChevronRight className="w-5 h-5" />
                     </button>
 
                     <div className="flex items-center gap-1 px-1">
@@ -238,7 +265,7 @@ export default function PdfViewer({ url, fileName, reportType, fitToView = false
                         className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                         title="الصفحة التالية"
                     >
-                        <span className="material-icons text-lg">chevron_left</span>
+                        <ChevronLeft className="w-5 h-5" />
                     </button>
                 </div>
 
@@ -246,7 +273,7 @@ export default function PdfViewer({ url, fileName, reportType, fitToView = false
                 <div className="flex items-center gap-1">
                     {/* Zoom controls */}
                     <button onClick={zoomOut} className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="تصغير">
-                        <span className="material-icons text-lg">remove</span>
+                        <ZoomOut className="w-5 h-5" />
                     </button>
                     <button
                         onClick={resetZoom}
@@ -256,7 +283,7 @@ export default function PdfViewer({ url, fileName, reportType, fitToView = false
                         {Math.round(scale * 100)}%
                     </button>
                     <button onClick={zoomIn} className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="تكبير">
-                        <span className="material-icons text-lg">add</span>
+                        <ZoomIn className="w-5 h-5" />
                     </button>
 
                     {/* Separator */}
@@ -264,13 +291,18 @@ export default function PdfViewer({ url, fileName, reportType, fitToView = false
 
                     {/* Print */}
                     <button onClick={handlePrint} className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="طباعة">
-                        <span className="material-icons text-lg">print</span>
+                        <Printer className="w-5 h-5" />
                     </button>
 
                     {/* Download */}
-                    <a href={url} download={fileName} target="_blank" rel="noopener noreferrer" className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="تحميل">
-                        <span className="material-icons text-lg">download</span>
-                    </a>
+                    <button
+                        onClick={handleDownload}
+                        disabled={isDownloading}
+                        className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors disabled:opacity-50"
+                        title={isDownloading ? "جاري التحميل..." : "تحميل"}
+                    >
+                        {isDownloading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
+                    </button>
 
                     {/* Fullscreen toggle */}
                     <button
@@ -281,7 +313,7 @@ export default function PdfViewer({ url, fileName, reportType, fitToView = false
                             }`}
                         title={isFullscreen ? "إغلاق ملء الشاشة" : "ملء الشاشة"}
                     >
-                        <span className="material-icons text-lg">{isFullscreen ? "fullscreen_exit" : "fullscreen"}</span>
+                        {isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
                     </button>
                 </div>
             </div>
@@ -342,13 +374,13 @@ export default function PdfViewer({ url, fileName, reportType, fitToView = false
                             onLoadSuccess={onDocumentLoadSuccess}
                             loading={
                                 <div className="flex flex-col items-center justify-center py-20 gap-3">
-                                    <div className="w-10 h-10 border-4 border-gray-600 border-t-primary rounded-full animate-spin" />
+                                    <Loader2 className="w-10 h-10 text-primary animate-spin" />
                                     <span className="text-sm text-gray-400">جاري تحميل الملف...</span>
                                 </div>
                             }
                             error={
                                 <div className="flex flex-col items-center justify-center py-20 gap-3 text-red-400">
-                                    <span className="material-icons text-4xl">error_outline</span>
+                                    <AlertCircle className="w-10 h-10" />
                                     <span className="text-sm">فشل تحميل الملف</span>
                                 </div>
                             }
@@ -387,12 +419,12 @@ export default function PdfViewer({ url, fileName, reportType, fitToView = false
         return (
             <>
                 {/* Non-fullscreen placeholder so layout doesn't collapse */}
-                <div className="flex flex-col h-full items-center justify-center bg-gray-100 dark:bg-gray-900">
-                    <span className="material-icons text-3xl text-gray-300 dark:text-gray-600">fullscreen</span>
-                    <p className="text-sm text-gray-400 mt-2">المستند في وضع ملء الشاشة</p>
+                <div className="flex flex-col h-full items-center justify-center bg-gray-100 dark:bg-gray-900 rounded-2xl">
+                    <Maximize className="w-10 h-10 text-gray-300 dark:text-gray-600 mb-2 opacity-50" />
+                    <p className="text-sm text-gray-500 mt-2">المستند معروض في وضع ملء الشاشة</p>
                     <button
                         onClick={() => setIsFullscreen(false)}
-                        className="mt-3 px-4 py-2 text-sm bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors font-medium"
+                        className="mt-4 px-5 py-2.5 text-sm bg-primary/10 text-primary rounded-xl hover:bg-primary/20 transition-colors font-semibold"
                     >
                         إغلاق ملء الشاشة
                     </button>
