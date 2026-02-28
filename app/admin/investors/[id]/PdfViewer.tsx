@@ -389,7 +389,7 @@ export default function PdfViewer({ url, fileName, reportType, fitToView = false
                                 <div
                                     key={`page_${index}`}
                                     ref={(el: HTMLDivElement | null) => { pageRefs.current[index] = el; }}
-                                    className="bg-white overflow-hidden border-b border-gray-200 dark:border-gray-800 last:border-b-0"
+                                    className="bg-white overflow-hidden shadow-sm mb-3 last:mb-0"
                                 >
                                     <Page
                                         pageNumber={index + 1}
