@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
-import { getUnpublishedReports, toggleReportPublish, deleteReport } from "../actions";
+import { getUnpublishedReports, getPublishedReports, toggleReportPublish, deleteReport } from "../actions";
 import dynamic from "next/dynamic";
 
 const PdfViewer = dynamic(() => import("../investors/[id]/PdfViewer"), { ssr: false });
@@ -18,7 +18,10 @@ type Report = {
 };
 
 export default function ReviewPage() {
-    const [reports, setReports] = useState<Report[]>([]);
+    const [unpublishedReports, setUnpublishedReports] = useState<Report[]>([]);
+    const [publishedReports, setPublishedReports] = useState<Report[]>([]);
+    const [activeTab, setActiveTab] = useState<"unpublished" | "published">("unpublished");
+
     const [isLoading, setIsLoading] = useState(true);
     const [selectedReport, setSelectedReport] = useState<Report | null>(null);
     const [publishing, setPublishing] = useState<number | null>(null);
@@ -34,8 +37,12 @@ export default function ReviewPage() {
 
     const fetchReports = async () => {
         setIsLoading(true);
-        const data = await getUnpublishedReports();
-        setReports(data as Report[]);
+        const [unpublished, published] = await Promise.all([
+            getUnpublishedReports(),
+            getPublishedReports()
+        ]);
+        setUnpublishedReports(unpublished as Report[]);
+        setPublishedReports(published as Report[]);
         setIsLoading(false);
     };
 
@@ -43,25 +50,52 @@ export default function ReviewPage() {
         fetchReports();
     }, []);
 
-    const handlePublish = async (reportId: number) => {
+    const handleTogglePublish = async (reportId: number, newState: boolean) => {
         setPublishing(reportId);
-        await toggleReportPublish(reportId, true);
-        // Remove from list
-        setReports(prev => prev.filter(r => r.id !== reportId));
+        await toggleReportPublish(reportId, newState);
+
+        // Move the report between lists
+        if (newState) {
+            const reportToMove = unpublishedReports.find(r => r.id === reportId);
+            if (reportToMove) {
+                setUnpublishedReports(prev => prev.filter(r => r.id !== reportId));
+                setPublishedReports(prev => [{ ...reportToMove, isPublished: true }, ...prev]);
+            }
+        } else {
+            const reportToMove = publishedReports.find(r => r.id === reportId);
+            if (reportToMove) {
+                setPublishedReports(prev => prev.filter(r => r.id !== reportId));
+                setUnpublishedReports(prev => [{ ...reportToMove, isPublished: false }, ...prev]);
+            }
+        }
+
         if (selectedReport?.id === reportId) setSelectedReport(null);
         setPublishing(null);
     };
 
     const handleDelete = async () => {
         if (confirmDelete === null) return;
-        await deleteReport(confirmDelete, reports.find(r => r.id === confirmDelete)?.user.id || 0);
-        setReports(prev => prev.filter(r => r.id !== confirmDelete));
+
+        const reportToDelete = (activeTab === "unpublished" ? unpublishedReports : publishedReports)
+            .find(r => r.id === confirmDelete);
+
+        if (!reportToDelete) return;
+
+        await deleteReport(confirmDelete, reportToDelete.user.id);
+
+        if (activeTab === "unpublished") {
+            setUnpublishedReports(prev => prev.filter(r => r.id !== confirmDelete));
+        } else {
+            setPublishedReports(prev => prev.filter(r => r.id !== confirmDelete));
+        }
+
         if (selectedReport?.id === confirmDelete) setSelectedReport(null);
         setConfirmDelete(null);
     };
 
-    // Group reports by investor
-    const grouped = reports.reduce((acc, r) => {
+    // Group reports by investor for the active tab
+    const activeReports = activeTab === "unpublished" ? unpublishedReports : publishedReports;
+    const grouped = activeReports.reduce((acc, r) => {
         const key = r.user.name;
         if (!acc[key]) acc[key] = [];
         acc[key].push(r);
@@ -89,19 +123,49 @@ export default function ReviewPage() {
     return (
         <div className="space-y-6" dir="rtl">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-secondary dark:text-white flex items-center gap-2">
                         <span className="material-icons text-primary">rate_review</span>
                         مراجعة التقارير
                     </h1>
                     <p className="text-gray-500 mt-1">
-                        {reports.length} تقرير في انتظار المراجعة والنشر
+                        أدر التقارير الغير منشورة والتقارير التي سبق نشرها
                     </p>
+                </div>
+
+                {/* Tabs */}
+                <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl w-full md:w-auto overflow-x-auto">
+                    <button
+                        onClick={() => setActiveTab("unpublished")}
+                        className={`flex-1 md:flex-none flex items-center justify-center gap-2 min-w-[140px] px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'unpublished'
+                            ? "bg-white dark:bg-card-dark text-primary shadow-sm"
+                            : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                            }`}
+                    >
+                        <span className="material-icons text-[18px]">pending_actions</span>
+                        قيد المراجعة
+                        <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-full text-xs mr-1">
+                            {unpublishedReports.length}
+                        </span>
+                    </button>
+                    <button
+                        onClick={() => setActiveTab("published")}
+                        className={`flex-1 md:flex-none flex items-center justify-center gap-2 min-w-[140px] px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'published'
+                            ? "bg-white dark:bg-card-dark text-primary shadow-sm"
+                            : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                            }`}
+                    >
+                        <span className="material-icons text-[18px]">cloud_done</span>
+                        المنشورة
+                        <span className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded-full text-xs mr-1">
+                            {publishedReports.length}
+                        </span>
+                    </button>
                 </div>
             </div>
 
-            {reports.length === 0 ? (
+            {activeReports.length === 0 ? (
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -110,8 +174,12 @@ export default function ReviewPage() {
                     <div className="w-20 h-20 rounded-full bg-green-100 dark:bg-green-500/20 flex items-center justify-center mb-4">
                         <span className="material-icons text-4xl text-green-500">check_circle</span>
                     </div>
-                    <h3 className="text-lg font-bold text-gray-500 dark:text-gray-400 mb-1">لا توجد تقارير للمراجعة</h3>
-                    <p className="text-sm text-gray-400">كل التقارير تم مراجعتها ونشرها</p>
+                    <h3 className="text-lg font-bold text-gray-500 dark:text-gray-400 mb-1">
+                        {activeTab === "unpublished" ? "لا توجد تقارير للمراجعة" : "لا توجد تقارير منشورة"}
+                    </h3>
+                    <p className="text-sm text-gray-400">
+                        {activeTab === "unpublished" ? "كل التقارير تم مراجعتها ونشرها" : "لم تقم بنشر أي تقارير بعد"}
+                    </p>
                 </motion.div>
             ) : (
                 <div className="space-y-4">
@@ -152,15 +220,20 @@ export default function ReviewPage() {
                                         </div>
                                         <div className="flex items-center gap-1 shrink-0">
                                             <button
-                                                onClick={(e) => { e.stopPropagation(); handlePublish(report.id); }}
+                                                onClick={(e) => { e.stopPropagation(); handleTogglePublish(report.id, activeTab === "unpublished"); }}
                                                 disabled={publishing === report.id}
-                                                className="p-1 text-gray-300 hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-500/10 rounded-lg transition-colors disabled:opacity-50"
-                                                title="نشر"
+                                                className={`p-1 rounded-lg transition-colors disabled:opacity-50 ${activeTab === "unpublished"
+                                                    ? "text-gray-300 hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-500/10"
+                                                    : "text-green-500 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10"
+                                                    }`}
+                                                title={activeTab === "unpublished" ? "نشر التقرير" : "إلغاء النشر"}
                                             >
                                                 {publishing === report.id ? (
-                                                    <span className="w-4 h-4 border-2 border-green-300 border-t-green-600 rounded-full animate-spin block" />
-                                                ) : (
+                                                    <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin block" />
+                                                ) : activeTab === "unpublished" ? (
                                                     <span className="material-icons text-base">check_circle_outline</span>
+                                                ) : (
+                                                    <span className="material-icons text-base">unpublished</span>
                                                 )}
                                             </button>
                                             <button
@@ -207,16 +280,21 @@ export default function ReviewPage() {
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
                                 <button
-                                    onClick={() => handlePublish(selectedReport.id)}
+                                    onClick={() => handleTogglePublish(selectedReport.id, activeTab === "unpublished")}
                                     disabled={publishing === selectedReport.id}
-                                    className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                                    className={`px-4 py-2 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5 disabled:opacity-50 ${activeTab === "unpublished"
+                                        ? "bg-green-500 hover:bg-green-600"
+                                        : "bg-amber-500 hover:bg-amber-600"
+                                        }`}
                                 >
                                     {publishing === selectedReport.id ? (
                                         <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                    ) : (
+                                    ) : activeTab === "unpublished" ? (
                                         <span className="material-icons text-sm">check</span>
+                                    ) : (
+                                        <span className="material-icons text-sm">unpublished</span>
                                     )}
-                                    نشر التقرير
+                                    {activeTab === "unpublished" ? "نشر التقرير" : "إلغاء النشر"}
                                 </button>
                                 <button
                                     onClick={() => setConfirmDelete(selectedReport.id)}
@@ -288,6 +366,6 @@ export default function ReviewPage() {
                     </motion.div>
                 )}
             </AnimatePresence>
-        </div>
+        </div >
     );
 }

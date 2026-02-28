@@ -437,6 +437,21 @@ export async function getUnpublishedReports() {
     }
 }
 
+/** جلب التقارير المنشورة (isPublished = true) */
+export async function getPublishedReports() {
+    try {
+        const reports = await prisma.reports.findMany({
+            where: { isPublished: true },
+            include: { user: { select: { id: true, name: true } } },
+            orderBy: { updatedAt: 'desc' },
+        });
+        return reports;
+    } catch (error) {
+        console.error("Failed to fetch published reports:", error);
+        return [];
+    }
+}
+
 /** تغيير حالة النشر لتقرير */
 export async function toggleReportPublish(reportId: number, publish: boolean) {
     try {
