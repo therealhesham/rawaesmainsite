@@ -56,15 +56,13 @@ export default function PdfViewer({ url, fileName, reportType, fitToView = false
         setNumPages(0);
     }, [url]);
 
-    // Fit-to-view scale calculation (Fit to Width)
+    // Always fit PDF to container width
     useEffect(() => {
-        if (!fitToView || !scrollRef.current) return;
+        if (!scrollRef.current) return;
         const el = scrollRef.current;
         const updateFit = () => {
-            // Calculate scale based on full width
             const w = el.clientWidth;
             if (w > 0) {
-                // Max scale 2.5 to avoid getting overly massive on huge screens
                 const s = Math.max(0.3, Math.min(w / PDF_PAGE_WIDTH, 2.5));
                 setFitScale(s);
                 setScale(s);
@@ -74,7 +72,7 @@ export default function PdfViewer({ url, fileName, reportType, fitToView = false
         const ro = new ResizeObserver(updateFit);
         ro.observe(el);
         return () => ro.disconnect();
-    }, [fitToView, url]);
+    }, [url]);
 
     const onDocumentLoadSuccess = useCallback(({ numPages }: { numPages: number }) => {
         setNumPages(numPages);
@@ -85,7 +83,7 @@ export default function PdfViewer({ url, fileName, reportType, fitToView = false
     // Zoom controls
     const zoomIn = () => setScale((s) => Math.min(s + 0.2, 4));
     const zoomOut = () => setScale((s) => Math.max(s - 0.2, 0.3));
-    const resetZoom = () => setScale(fitToView ? fitScale : 1);
+    const resetZoom = () => setScale(fitScale);
 
     // Page navigation
     const goToPage = (page: number) => {
@@ -330,7 +328,7 @@ export default function PdfViewer({ url, fileName, reportType, fitToView = false
                             animate={{ width: 140, opacity: 1 }}
                             exit={{ width: 0, opacity: 0 }}
                             transition={{ duration: 0.25, ease: "easeInOut" }}
-                            className="shrink-0 border-l border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/80 overflow-hidden"
+                            className="shrink-0 bg-gray-50 dark:bg-gray-900/80 overflow-hidden"
                         >
                             <div className="w-[140px] h-full overflow-y-auto py-3 px-2 space-y-2 scrollbar-thin">
                                 {numPages > 0 && (
@@ -369,7 +367,7 @@ export default function PdfViewer({ url, fileName, reportType, fitToView = false
                 </AnimatePresence>
 
                 {/* Main document area */}
-                <div ref={scrollRef} className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-900/30" style={{ minHeight: 0 }}>
+                <div ref={scrollRef} className="flex-1 overflow-auto bg-white dark:bg-gray-900" style={{ minHeight: 0 }}>
                     <div className="flex flex-col items-center w-full">
                         <Document
                             file={url}
