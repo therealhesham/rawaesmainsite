@@ -193,7 +193,7 @@ export async function uploadReport(formData: FormData) {
                 linkUrl: publicUrl,
                 fileName: displayFileName,
                 isPublished: false,
-                releaseDate: new Date(),
+                releaseDate: new Date(new Date().getFullYear() - 1, 0, 1),
             }
         });
 
@@ -334,7 +334,7 @@ export async function saveInvestorReports(
                     linkUrl: doSpacesUrl,
                     fileName,
                     isPublished: false,
-                    releaseDate: new Date(),
+                    releaseDate: new Date(new Date().getFullYear() - 1, 0, 1),//عايز اللي يتحفظ تاريخ السنة السابقة
                 },
             });
             created++;

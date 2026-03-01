@@ -176,11 +176,18 @@ export default async function PrivateInvestorPage({
                       {reports.length > 0 ? (
                         reports.map((report) => (
                           <div key={report.id} className="flex justify-between items-center group">
-                            <div className="flex items-center gap-2 overflow-hidden">
-                              <span className="material-icons text-gray-400 text-sm">description</span>
-                              <span className="text-sm text-gray-600 dark:text-gray-300 truncate max-w-[150px]">
-                                {report.fileName || "تقرير استثماري"}
-                              </span>
+                            <div className="flex flex-col gap-0.5 mt-2">
+                              <div className="flex items-center gap-2 overflow-hidden">
+                                <span className="material-icons text-gold text-sm">description</span>
+                                <span className="text-sm font-semibold text-gray-800 dark:text-gray-200  max-w-[150px]">
+                                  {report.fileName || "تقرير استثماري"}
+                                </span>
+                              </div>
+                              <div className="mt-1.5 ms-6">
+                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[14px] font-bold bg-gold/10 text-[#b8860b] dark:text-gold border border-gold/20">
+                                  {new Date(report.releaseDate || report.createdAt).getFullYear()}
+                                </span>
+                              </div>
                             </div>
                             <a
                               href={report.linkUrl}
@@ -265,9 +272,11 @@ export default async function PrivateInvestorPage({
                         <p className="text-sm text-gray-300 mb-1">
                           {report.fileName || "تقرير استثماري"}
                         </p>
-                        <p className="font-bold font-mono text-gold">
-                          {new Date(report.createdAt).toLocaleDateString('en-GB')}
-                        </p>
+                        <div className="mt-2 text-start">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-gold/20 text-gold border border-gold/30">
+                            {new Date(report.releaseDate || report.createdAt).getFullYear()}
+                          </span>
+                        </div>
                       </div>
                       <a
                         href={report.linkUrl}
