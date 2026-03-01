@@ -14,6 +14,7 @@ export async function POST(req: NextRequest) {
     try {
         const formData = await req.formData();
         const file = formData.get("file") as File | null;
+        const reportType = formData.get("reportType") as string | null;
 
         if (!file || file.size === 0) {
             return NextResponse.json(
@@ -22,10 +23,18 @@ export async function POST(req: NextRequest) {
             );
         }
 
+        if (!reportType) {
+            return NextResponse.json(
+                { status: "error", message: "الرجاء اختيار نوع التقرير أولاً." },
+                { status: 400 }
+            );
+        }
+
         const forwardFormData = new FormData();
         forwardFormData.append("file", file);
 
-        const extractingUrl = EXTRACTING_API_URL.replace(/\/$/, "") + "/extracting";
+        const endpoint = reportType === "hotel" ? "/extracthotelsdata" : "/extracting";
+        const extractingUrl = EXTRACTING_API_URL.replace(/\/$/, "") + endpoint;
         const response = await fetch(extractingUrl, {
             method: "POST",
             body: forwardFormData,

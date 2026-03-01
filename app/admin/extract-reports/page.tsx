@@ -21,7 +21,7 @@ export default function ExtractReportsPage() {
     const [file, setFile] = useState<File | null>(null);
     const [isExtracting, setIsExtracting] = useState(false);
     const [result, setResult] = useState<ExtractResult | null>(null);
-    const [reportType, setReportType] = useState("lease");
+    const [reportType, setReportType] = useState("");
     const [isDragging, setIsDragging] = useState(false);
 
     const [saveModal, setSaveModal] = useState<SaveModalState>(null);
@@ -64,7 +64,7 @@ export default function ExtractReportsPage() {
 
     const handleExtract = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!file) return;
+        if (!file || !reportType) return;
         setIsExtracting(true);
         setResult(null);
         setSavedInvestorNames([]);
@@ -72,6 +72,7 @@ export default function ExtractReportsPage() {
         try {
             const formData = new FormData();
             formData.append("file", file);
+            formData.append("reportType", reportType);
             const res = await fetch("/api/admin/extract-reports", {
                 method: "POST",
                 body: formData,
@@ -263,9 +264,29 @@ export default function ExtractReportsPage() {
                             </div>
                         </label>
                     </div>
+
+                    <div className="flex flex-col gap-2">
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            نوع التقرير
+                        </label>
+                        <select
+                            value={reportType}
+                            onChange={(e) => setReportType(e.target.value)}
+                            required
+                            className="w-full p-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors text-sm"
+                        >
+                            <option value="">اختر نوع التقرير</option>
+                            <option value="lease">تقرير تأجير سيارات</option>
+                            <option value="contract">العقود العامة</option>
+                            <option value="hotel">عقد استثمار فنادق</option>
+                            <option value="real_estate">عقد استثمار عقاري</option>
+                            <option value="installment">عقد استثمار تقسيط</option>
+                        </select>
+                    </div>
+
                     <button
                         type="submit"
-                        disabled={isExtracting || !file}
+                        disabled={isExtracting || !file || !reportType}
                         className="w-full md:w-auto px-6 py-2.5 bg-primary hover:bg-primary/90 text-white font-medium rounded-xl flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {isExtracting ? (
@@ -321,21 +342,7 @@ export default function ExtractReportsPage() {
                                         <h3 className="text-lg font-bold text-secondary dark:text-white">
                                             الملفات حسب المستثمر
                                         </h3>
-                                        <span className="text-sm text-gray-500">اختر نوع التقرير ثم اضغط حفظ بجانب كل مستثمر لربطه بمستثمر في النظام.</span>
-                                        <select
-                                            value={reportType}
-                                            onChange={(e) => setReportType(e.target.value)}
-                                            required
-                                            className="p-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm"
-                                        >
-                                            <option value="">اختر نوع التقرير</option>
-                                            <option value="lease">تقرير تأجير سيارات</option>
-                                            {/* <option value="lease">عقد استثمار تأجير</option> */}
-                                            <option value="contract">العقود العامة</option>
-                                            <option value="hotel">عقد استثمار فنادق</option>
-                                            <option value="real_estate">عقد استثمار عقاري</option>
-                                            <option value="installment">عقد استثمار تقسيط</option>
-                                        </select>
+                                        <span className="text-sm text-gray-500">تم اختيار نوع التقرير: {reportType === "lease" ? "تأجير سيارات" : reportType === "hotel" ? "فنادق" : reportType === "contract" ? "العقود العامة" : reportType === "real_estate" ? "عقاري" : reportType === "installment" ? "تقسيط" : reportType}. اضغط حفظ بجانب كل مستثمر لربطه بمستثمر في النظام.</span>
                                     </div>
                                     <div className="space-y-6">
                                         {Object.entries(result.investors_files!)
