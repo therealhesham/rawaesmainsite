@@ -91,7 +91,7 @@ export default async function PrivateInvestorPage({
 
       <div className="container mx-auto px-4 mt-8 pb-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-8 space-y-8 order-2 lg:order-1">
+          <div className="lg:col-span-8 space-y-8 order-2 lg:order-2">
             {/* Notifications */}
             <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-6 relative overflow-hidden">
               <div className="flex flex-wrap justify-between items-center gap-4 mb-6 border-b border-gray-100 dark:border-gray-700 pb-4">
@@ -154,12 +154,13 @@ export default async function PrivateInvestorPage({
             {/* Categorized Reports */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {[
-                { id: 'lease', label: 'عقد استثمار تأجير', icon: 'car_rental' },
-                { id: 'hotel', label: 'عقد استثمار فنادق', icon: 'hotel' },
-                { id: 'real_estate', label: 'عقد استثمار عقاري', icon: 'apartment' },
-                { id: 'installment', label: 'عقد استثمار تقسيط', icon: 'credit_card' },
+                { id: 'lease', label: 'تقرير الاستثمار في قطاع السيارات', icon: 'car_rental' },
+                { id: 'hotel', label: 'تقرير الاستثمار في قطاع فنادق', icon: 'hotel' },
+                { id: 'real_estate', label: 'تقرير الاستثمار في قطاع عقاري', icon: 'apartment' },
+                { id: 'installment', label: 'تقرير الاستثمار في قطاع تقسيط', icon: 'credit_card' },
               ].map((type) => {
                 const reports = investor.reports.filter((r) => r.type === type.id);
+                if (reports.length === 0) return null;
                 return (
                   <div key={type.id} className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
                     <div className="flex items-center gap-3 mb-4 border-b border-gray-100 dark:border-gray-700 pb-3">
@@ -203,7 +204,7 @@ export default async function PrivateInvestorPage({
             </div>
           </div>
 
-          <div className="lg:col-span-4 space-y-6 order-1 lg:order-2">
+          <div className="lg:col-span-4 space-y-6 order-1 lg:order-1">
             {/* User Profile */}
             <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-md border border-gray-100 dark:border-gray-800 p-8 text-center relative">
               <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#003B46] to-gold"></div>

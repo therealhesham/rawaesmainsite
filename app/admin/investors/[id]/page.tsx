@@ -210,7 +210,7 @@ export default function InvestorDetails() {
 
                 <div className="flex flex-col lg:flex-row gap-6">
                     {/* قائمة التقارير - عمود جانبي */}
-                    <div className="w-full lg:w-80 shrink-0">
+                    <div className="w-full lg:w-[350px] shrink-0">
                         <div className="flex items-center justify-between">
                             <h2 className="text-lg font-bold text-secondary dark:text-white flex items-center gap-2">
                                 <FolderOpen className="w-5 h-5 text-primary" />
@@ -240,10 +240,10 @@ export default function InvestorDetails() {
                                             <FileOutput className="w-4 h-4" />
                                         </div>
                                         <div className="min-w-0 flex-1">
-                                            <div className="font-medium text-secondary dark:text-gray-200 text-xs truncate">
+                                            <div className="font-medium text-secondary dark:text-gray-200 text-xs break-words whitespace-normal line-clamp-2">
                                                 {report.fileName || reportTypes.find((t: any) => t.id === report.type)?.label || report.type}
                                             </div>
-                                            <div className="text-[10px] text-gray-400 truncate">
+                                            <div className="text-[10px] text-gray-400 break-words whitespace-normal">
                                                 {reportTypes.find((t: any) => t.id === report.type)?.label} · {new Date(report.createdAt).toLocaleDateString('ar-EG')}
                                             </div>
                                         </div>
