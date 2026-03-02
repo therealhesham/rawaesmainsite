@@ -137,8 +137,10 @@ export default async function PrivateInvestorPage({
               </div>
             </div>
 
-            {/* Quick Contact */}
-            <QuickContact settings={quickContactSettings} />
+            {/* Quick Contact - مخفي في الموبايل (يوجد زر عائم بدلاً منه) */}
+            <div className="hidden md:block">
+              <QuickContact settings={quickContactSettings} />
+            </div>
 
             {/* Categorized Reports */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
