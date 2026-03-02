@@ -48,7 +48,7 @@ export async function getContactUsForAdmin() {
 
 /** قائمة رسائل نموذج «تواصل معنا» للوحة التحكم */
 export async function getContactFormSubmissions() {
-  await requirePageView("contact");
+  await requirePageView("contact-messages");
   try {
     return await prisma.contactFormSubmission.findMany({
       orderBy: { createdAt: "desc" },
@@ -56,6 +56,21 @@ export async function getContactFormSubmissions() {
   } catch (error) {
     console.error("Failed to load contact form submissions:", error);
     return [];
+  }
+}
+
+/** حذف رسالة تواصل */
+export async function deleteContactFormSubmission(
+  id: number
+): Promise<ActionResult> {
+  await requirePageEdit("contact-messages");
+  try {
+    await prisma.contactFormSubmission.delete({ where: { id } });
+    revalidatePath("/admin/contact/messages");
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to delete contact form submission:", error);
+    return { success: false, error: "تعذر حذف الرسالة." };
   }
 }
 

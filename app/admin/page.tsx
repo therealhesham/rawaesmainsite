@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence } from "framer-motion";
 import { getInvestors, getStats, createInvestor } from "./actions";
+import { AlertModal } from "@/app/components/AlertModal";
 
 export default function AdminDashboard() {
     const [stats, setStats] = useState({ totalInvestors: 0, totalReports: 0, recentReports: [] });
@@ -207,10 +208,12 @@ function StatsCard({ title, value, icon, color }: any) {
 
 function AddInvestorModal({ onClose }: { onClose: () => void }) {
     const [isLoading, setIsLoading] = useState(false);
+    const [formError, setFormError] = useState<string | null>(null);
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         setIsLoading(true);
+        setFormError(null);
         const formData = new FormData(e.currentTarget);
 
         // Wait for animation
@@ -220,16 +223,22 @@ function AddInvestorModal({ onClose }: { onClose: () => void }) {
 
         if (result.success) {
             onClose();
-            // Optional: trigger refresh
             window.location.reload();
         } else {
-            alert(result.error);
+            setFormError(result.error ?? "حدث خطأ.");
         }
         setIsLoading(false);
     }
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <AlertModal
+                open={!!formError}
+                onClose={() => setFormError(null)}
+                title="خطأ"
+                message={formError ?? ""}
+                variant="error"
+            />
             <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}

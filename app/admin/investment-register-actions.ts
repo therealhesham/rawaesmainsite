@@ -86,7 +86,7 @@ export async function getInvestmentRegisterBlockForAdmin() {
 
 /** قائمة طلبات «سجل اهتمامك» من صفحة الاستثمار */
 export async function getInvestmentInterestSubmissions() {
-  await requirePageView("investment-register");
+  await requirePageView("investment-register-submissions");
   try {
     return await prisma.investmentInterestSubmission.findMany({
       orderBy: { createdAt: "desc" },
@@ -94,6 +94,21 @@ export async function getInvestmentInterestSubmissions() {
   } catch (error) {
     console.error("Failed to load investment interest submissions:", error);
     return [];
+  }
+}
+
+/** حذف طلب سجل اهتمام */
+export async function deleteInvestmentInterestSubmission(
+  id: number
+): Promise<ActionResult> {
+  await requirePageEdit("investment-register-submissions");
+  try {
+    await prisma.investmentInterestSubmission.delete({ where: { id } });
+    revalidatePath("/admin/investment-register/submissions");
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to delete investment interest submission:", error);
+    return { success: false, error: "تعذر حذف الطلب." };
   }
 }
 

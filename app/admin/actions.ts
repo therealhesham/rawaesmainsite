@@ -2,7 +2,7 @@
 
 import { PrismaClient } from "@prisma/client";
 import { revalidatePath } from "next/cache";
-import { requirePageView, requirePageEdit } from "./lib/auth";
+import { requirePageView, requirePageEdit, requirePageEditAny } from "./lib/auth";
 
 const prisma = new PrismaClient();
 
@@ -108,7 +108,7 @@ export async function searchInvestorByName(excelName: string) {
 }
 
 export async function getInvestor(id: number) {
-    await requirePageView("");
+    await requirePageView("investor-page");
     try {
         if (!id || isNaN(id)) return null;
 
@@ -141,7 +141,7 @@ const s3Client = new S3Client({
 });
 
 export async function uploadReport(formData: FormData) {
-    await requirePageEdit("");
+    await requirePageEdit("investor-upload");
     try {
         const userId = parseInt(formData.get("userId") as string);
         const type = formData.get("type") as string;
@@ -213,7 +213,7 @@ export async function uploadReport(formData: FormData) {
 }
 
 export async function deleteReport(reportId: number, userId: number) {
-    await requirePageEdit("");
+    await requirePageEdit("investor-delete-file");
     try {
         await prisma.reports.delete({
             where: { id: reportId }
@@ -464,9 +464,9 @@ export async function getPublishedReports() {
     }
 }
 
-/** تغيير حالة النشر لتقرير */
+/** تغيير حالة النشر لتقرير (من صفحة المستثمر أو مراجعة التقارير) */
 export async function toggleReportPublish(reportId: number, publish: boolean, userId?: number) {
-    await requirePageEdit("review");
+    await requirePageEditAny(["investor-publish", "review"]);
     try {
         if (publish) {
             const report = await prisma.reports.findUnique({ where: { id: reportId } });
@@ -489,9 +489,9 @@ export async function toggleReportPublish(reportId: number, publish: boolean, us
     }
 }
 
-/** اعتماد التقرير (isApproved) */
+/** اعتماد التقرير (من صفحة المستثمر أو مراجعة التقارير) */
 export async function updateReportApproval(reportId: number, isApproved: boolean, userId?: number) {
-    await requirePageEdit("review");
+    await requirePageEditAny(["investor-approve", "review"]);
     try {
         const updateData: any = { isApproved };
 

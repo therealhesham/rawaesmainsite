@@ -5,11 +5,13 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { loginWithNationalIdAndPhone } from "./actions";
+import { AlertModal } from "@/app/components/AlertModal";
 
 export default function LoginPage() {
     const router = useRouter();
     const [nationalId, setNationalId] = useState("");
     const [phoneNumber, setPhoneNumber] = useState("");
+    const [loginError, setLoginError] = useState<string | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -17,12 +19,19 @@ export default function LoginPage() {
         if (result.success && result.userId) {
             router.push(`/privatepage/${result.userId}`);
         } else {
-            alert(result.error || "خطأ في تسجيل الدخول");
+            setLoginError(result.error || "خطأ في تسجيل الدخول");
         }
     };
 
     return (
         <div className="min-h-screen flex flex-col lg:flex-row bg-background-light dark:bg-background-dark">
+            <AlertModal
+                open={!!loginError}
+                onClose={() => setLoginError(null)}
+                title="خطأ في تسجيل الدخول"
+                message={loginError ?? ""}
+                variant="error"
+            />
             {/* ── Branding Panel (Right in RTL) ── */}
             <div className="relative w-full lg:w-[52%] min-h-[280px] lg:min-h-screen overflow-hidden flex items-center justify-center">
                 {/* Background */}

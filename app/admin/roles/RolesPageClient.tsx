@@ -12,6 +12,23 @@ import {
 } from "./actions";
 import { ADMIN_PAGE_KEYS } from "../lib/permissions";
 
+/** الكاتيجوري الأم لكل صفحة (كما في السايدبار) */
+const PAGE_CATEGORY: Record<string, string> = {
+  funds: "إدارة المحتوى",
+  contact: "إدارة المحتوى",
+  "quick-contact": "إدارة المحتوى",
+  "investment-register": "إدارة المحتوى",
+  "contact-messages": "البريد",
+  "investment-register-submissions": "البريد",
+  "extract-reports": "تقارير",
+  review: "تقارير",
+  "investor-page": "صفحة المستثمر",
+  "investor-approve": "صفحة المستثمر",
+  "investor-upload": "صفحة المستثمر",
+  "investor-delete-file": "صفحة المستثمر",
+  "investor-publish": "صفحة المستثمر",
+};
+
 /** يغلف server action ليتوافق مع نوع form action: (formData) => void | Promise<void> */
 function asFormAction(
   action: (prev: unknown, formData?: FormData) => Promise<unknown>
@@ -176,33 +193,45 @@ export function RolesPageClient({
                   <h3 className="font-bold text-[#003B46] dark:text-white mb-3">صلاحيات: {role.name}</h3>
                   <form action={asFormAction(updateRolePermissions)}>
                     <input type="hidden" name="roleId" value={role.id} />
-                    <table className="w-full text-sm">
+                    <table className="w-full text-sm table-fixed">
                       <thead>
                         <tr className="border-b border-gray-200 dark:border-gray-600">
-                          <th className="py-2 text-right">الصفحة</th>
-                          <th className="py-2">عرض</th>
-                          <th className="py-2">تعديل</th>
+                          <th className="py-2 text-right w-[70%]">الصفحة</th>
+                          <th className="py-2 text-center w-[15%]">عرض</th>
+                          <th className="py-2 text-center w-[15%]">تعديل</th>
                         </tr>
                       </thead>
                       <tbody>
                         {pageKeysForPerms.map((key) => {
                           const label = ADMIN_PAGE_KEYS.find((p) => p.key === key)?.labelAr ?? key;
+                          const category = PAGE_CATEGORY[key];
                           const perm = role.permissions.find((p) => p.pageKey === key);
                           return (
                             <tr key={key} className="border-b border-gray-100 dark:border-gray-700">
-                              <td className="py-2">{label || "لوحة التحكم"}</td>
-                              <td className="py-2">
+                              <td className="py-2.5 text-right">
+                                <div className="flex items-center gap-2">
+                                  {category && (
+                                    <span className="inline-block px-2 py-0.5 rounded-md bg-[#003B46]/10 dark:bg-[#003B46]/20 text-[#003B46] dark:text-gold text-xs font-medium whitespace-nowrap">
+                                      {category}
+                                    </span>
+                                  )}
+                                  <span>{label || "لوحة التحكم"}</span>
+                                </div>
+                              </td>
+                              <td className="py-2 text-center">
                                 <input
                                   type="checkbox"
                                   name={`view_${key}`}
                                   defaultChecked={perm?.canView ?? false}
+                                  className="w-4 h-4"
                                 />
                               </td>
-                              <td className="py-2">
+                              <td className="py-2 text-center">
                                 <input
                                   type="checkbox"
                                   name={`edit_${key}`}
                                   defaultChecked={perm?.canEdit ?? false}
+                                  className="w-4 h-4"
                                 />
                               </td>
                             </tr>

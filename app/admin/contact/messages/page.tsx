@@ -6,7 +6,7 @@ import { ContactMessagesTable } from "./ContactMessagesTable";
 export const dynamic = "force-dynamic";
 
 export default async function AdminContactMessagesPage() {
-  await requirePageView("contact");
+  await requirePageView("contact-messages");
   const messages = await getContactFormSubmissions();
 
   return (

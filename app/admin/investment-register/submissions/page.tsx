@@ -6,7 +6,7 @@ import { InvestmentInterestSubmissionsTable } from "./InvestmentInterestSubmissi
 export const dynamic = "force-dynamic";
 
 export default async function AdminInvestmentInterestSubmissionsPage() {
-  await requirePageView("investment-register");
+  await requirePageView("investment-register-submissions");
   const submissions = await getInvestmentInterestSubmissions();
 
   return (

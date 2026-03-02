@@ -7,9 +7,17 @@ export const ADMIN_PAGE_KEYS = [
   { key: "contact", labelAr: "اتصل بنا" },
   { key: "quick-contact", labelAr: "التواصل السريع" },
   { key: "investment-register", labelAr: "سجل اهتمامك" },
+  { key: "contact-messages", labelAr: "رسائل التواصل" },
+  { key: "investment-register-submissions", labelAr: "طلبات سجل اهتمامك" },
   { key: "extract-reports", labelAr: "استخراج التقارير" },
   { key: "review", labelAr: "مراجعة التقارير" },
   { key: "roles", labelAr: "الصلاحيات والأدوار" },
+  // صفحة المستثمر — صلاحيات فرعية
+  { key: "investor-page", labelAr: "عرض الصفحة" },
+  { key: "investor-approve", labelAr: "اعتماد" },
+  { key: "investor-upload", labelAr: "رفع الملف" },
+  { key: "investor-delete-file", labelAr: "حذف الملف" },
+  { key: "investor-publish", labelAr: "حالة النشر" },
 ] as const;
 
 export type AdminPageKey = (typeof ADMIN_PAGE_KEYS)[number]["key"];
@@ -22,10 +30,20 @@ export type AdminUser = {
   permissions: { pageKey: string; canView: boolean; canEdit: boolean }[];
 };
 
+/** مسارات فرعية لها pageKey مستقل */
+const MULTI_SEGMENT_KEYS: Record<string, string> = {
+  "contact/messages": "contact-messages",
+  "investment-register/submissions": "investment-register-submissions",
+  investors: "investor-page", // /admin/investors أو /admin/investors/[id]
+};
+
 /** تحويل مسار الصفحة إلى pageKey */
 export function pathToPageKey(pathname: string): string {
   if (!pathname.startsWith("/admin")) return "";
   const rest = pathname.slice("/admin".length).replace(/^\//, "");
+  for (const [path, key] of Object.entries(MULTI_SEGMENT_KEYS)) {
+    if (rest === path || rest.startsWith(path + "/")) return key;
+  }
   const first = rest.split("/")[0];
   return first || "";
 }

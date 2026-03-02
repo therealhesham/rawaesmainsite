@@ -1,6 +1,9 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { deleteInvestmentInterestSubmission } from "../../investment-register-actions";
+import { AlertModal } from "@/app/components/AlertModal";
 
 const FUND_LABELS: Record<string, string> = {
   hospitality: "صندوق الضيافة",
@@ -30,11 +33,33 @@ export function InvestmentInterestSubmissionsTable({
 }: {
   submissions: Submission[];
 }) {
+  const router = useRouter();
   const [openId, setOpenId] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const selected = submissions.find((s) => s.id === openId);
+
+  async function handleDelete(id: number) {
+    if (!confirm("حذف هذا الطلب؟")) return;
+    setDeletingId(id);
+    try {
+      const res = await deleteInvestmentInterestSubmission(id);
+      if (res?.success) router.refresh();
+      else if (res && !res.success) setErrorMessage(res.error);
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   return (
     <>
+      <AlertModal
+        open={!!errorMessage}
+        onClose={() => setErrorMessage(null)}
+        title="خطأ"
+        message={errorMessage ?? ""}
+        variant="error"
+      />
       <table className="w-full">
         <thead className="bg-gray-50 dark:bg-gray-800/50 text-gray-500 dark:text-gray-400 text-sm">
           <tr>
@@ -82,14 +107,26 @@ export function InvestmentInterestSubmissionsTable({
                 })}
               </td>
               <td className="px-6 py-4 text-center">
-                <button
-                  type="button"
-                  onClick={() => setOpenId(sub.id)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary rounded-lg text-sm font-medium hover:bg-primary/20 transition-colors"
-                >
-                  <span className="material-icons text-sm">visibility</span>
-                  عرض
-                </button>
+                <div className="flex items-center justify-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setOpenId(sub.id)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary rounded-lg text-sm font-medium hover:bg-primary/20 transition-colors"
+                  >
+                    <span className="material-icons text-sm">visibility</span>
+                    عرض
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(sub.id)}
+                    disabled={deletingId === sub.id}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 text-red-600 dark:text-red-400 rounded-lg text-sm font-medium hover:bg-red-500/20 transition-colors disabled:opacity-50"
+                    aria-label="حذف"
+                  >
+                    <span className="material-icons text-sm">delete</span>
+                    حذف
+                  </button>
+                </div>
               </td>
             </tr>
           ))}

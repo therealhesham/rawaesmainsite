@@ -19,8 +19,8 @@ const FULL_MENU: MenuItem[] = [
     icon: "view_list",
     id: "mails",
     children: [
-      { label: "رسائل التواصل", icon: "mail", href: "/admin/contact/messages", pageKey: "contact" },
-      { label: "طلبات سجل اهتمامك", icon: "assignment", href: "/admin/investment-register/submissions", exact: true, pageKey: "investment-register" },
+      { label: "رسائل التواصل", icon: "mail", href: "/admin/contact/messages", pageKey: "contact-messages" },
+      { label: "طلبات سجل اهتمامك", icon: "assignment", href: "/admin/investment-register/submissions", exact: true, pageKey: "investment-register-submissions" },
     ],
   },
   { label: "استخراج التقارير", icon: "table_chart", href: "/admin/extract-reports", pageKey: "extract-reports" },

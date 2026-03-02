@@ -6,9 +6,18 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { logoutAdmin } from "./login/action";
 
+const MULTI_SEGMENT_KEYS: Record<string, string> = {
+  "contact/messages": "contact-messages",
+  "investment-register/submissions": "investment-register-submissions",
+  investors: "investor-page",
+};
+
 function pathToPageKey(pathname: string): string {
   if (!pathname.startsWith("/admin")) return "";
   const rest = pathname.slice("/admin".length).replace(/^\//, "");
+  for (const [path, key] of Object.entries(MULTI_SEGMENT_KEYS)) {
+    if (rest === path || rest.startsWith(path + "/")) return key;
+  }
   const first = rest.split("/")[0];
   return first || "";
 }

@@ -88,3 +88,14 @@ export async function requirePageEdit(pageKey: string): Promise<AdminUser> {
   }
   return admin;
 }
+
+/** التأكد من صلاحية التعديل على أي من الصفحات المحددة (مثلاً: اعتماد/نشر من صفحة المستثمر أو مراجعة التقارير) */
+export async function requirePageEditAny(pageKeys: string[]): Promise<AdminUser> {
+  const admin = await getAdminUser(true);
+  if (!admin) redirect("/admin");
+  const hasAny = pageKeys.some((key) => canEditPage(admin, key));
+  if (!hasAny) {
+    throw new Error("ليس لديك صلاحية التعديل على هذه الصفحة");
+  }
+  return admin;
+}
