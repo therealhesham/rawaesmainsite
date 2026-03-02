@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { getContactFormSubmissions } from "../../contact-actions";
+import { requirePageView } from "../../lib/auth";
 import { ContactMessagesTable } from "./ContactMessagesTable";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminContactMessagesPage() {
+  await requirePageView("contact");
   const messages = await getContactFormSubmissions();
 
   return (

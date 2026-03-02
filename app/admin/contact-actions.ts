@@ -4,6 +4,7 @@ import { PrismaClient } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { resolveLogoUrl } from "@/lib/do-spaces";
+import { requirePageView, requirePageEdit } from "./lib/auth";
 
 const prisma = new PrismaClient();
 
@@ -29,6 +30,7 @@ function getString(formData: FormData, key: string): string | null {
 }
 
 export async function getContactUsForAdmin() {
+  await requirePageView("contact");
   try {
     const contact = await prisma.contactUs.findFirst({
       orderBy: { id: "desc" },
@@ -46,6 +48,7 @@ export async function getContactUsForAdmin() {
 
 /** قائمة رسائل نموذج «تواصل معنا» للوحة التحكم */
 export async function getContactFormSubmissions() {
+  await requirePageView("contact");
   try {
     return await prisma.contactFormSubmission.findMany({
       orderBy: { createdAt: "desc" },
@@ -57,6 +60,7 @@ export async function getContactFormSubmissions() {
 }
 
 export async function updateContactUs(formData: FormData): Promise<ActionResult> {
+  await requirePageEdit("contact");
   try {
     const sectionTitle = getString(formData, "sectionTitle");
     const addressLine1 = getString(formData, "addressLine1");
@@ -113,6 +117,7 @@ export async function updateContactUs(formData: FormData): Promise<ActionResult>
 export async function uploadContactEmailLogo(
   formData: FormData
 ): Promise<ActionResult> {
+  await requirePageEdit("contact");
   try {
     const file = formData.get("file") as File | null;
     if (!file || file.size === 0) {

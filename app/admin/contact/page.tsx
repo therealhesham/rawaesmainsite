@@ -1,9 +1,11 @@
 import { getContactUsForAdmin } from "../contact-actions";
+import { requirePageView } from "../lib/auth";
 import { ContactUsForm } from "./ContactUsForm";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminContactPage() {
+  await requirePageView("contact");
   const contact = await getContactUsForAdmin();
   if (!contact) {
     return (

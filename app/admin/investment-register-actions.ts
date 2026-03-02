@@ -3,6 +3,7 @@
 import { PrismaClient } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { requirePageView, requirePageEdit } from "./lib/auth";
 
 const prisma = new PrismaClient();
 
@@ -55,6 +56,7 @@ const FIELDS = [
 ] as const;
 
 export async function getInvestmentRegisterBlockForAdmin() {
+  await requirePageView("investment-register");
   try {
     const block = await prisma.investmentRegisterBlock.findFirst({
       orderBy: { id: "desc" },
@@ -84,6 +86,7 @@ export async function getInvestmentRegisterBlockForAdmin() {
 
 /** قائمة طلبات «سجل اهتمامك» من صفحة الاستثمار */
 export async function getInvestmentInterestSubmissions() {
+  await requirePageView("investment-register");
   try {
     return await prisma.investmentInterestSubmission.findMany({
       orderBy: { createdAt: "desc" },
@@ -97,6 +100,7 @@ export async function getInvestmentInterestSubmissions() {
 export async function updateInvestmentRegisterBlock(
   formData: FormData
 ): Promise<ActionResult> {
+  await requirePageEdit("investment-register");
   try {
     const data: Record<string, string | null> = {};
     for (const key of FIELDS) {
@@ -138,6 +142,7 @@ export async function updateInvestmentRegisterBlock(
 export async function uploadInvestmentRegisterHowToImage(
   formData: FormData
 ): Promise<ActionResult> {
+  await requirePageEdit("investment-register");
   try {
     const file = formData.get("file") as File | null;
     if (!file || file.size === 0) {
@@ -187,6 +192,7 @@ export async function uploadInvestmentRegisterHowToImage(
 export async function uploadInvestmentEmailLogo(
   formData: FormData
 ): Promise<ActionResult> {
+  await requirePageEdit("investment-register");
   try {
     const file = formData.get("file") as File | null;
     if (!file || file.size === 0) {

@@ -1,7 +1,9 @@
 import { getQuickContactSettings } from "./actions";
+import { requirePageView } from "../lib/auth";
 import { QuickContactForm } from "./QuickContactForm";
 
 export default async function QuickContactAdminPage() {
+    await requirePageView("quick-contact");
     const settings = await getQuickContactSettings();
 
     return (

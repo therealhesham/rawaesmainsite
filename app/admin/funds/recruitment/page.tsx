@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { requirePageView } from "../../lib/auth";
 
 export const dynamic = "force-dynamic";
 
-export default function AdminRecruitmentFundPage() {
+export default async function AdminRecruitmentFundPage() {
+  await requirePageView("funds");
   return (
     <section className="py-8 px-4 bg-gray-50 dark:bg-background-dark" dir="rtl">
       <div className="max-w-2xl mx-auto text-center">

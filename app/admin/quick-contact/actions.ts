@@ -2,10 +2,12 @@
 
 import { PrismaClient } from "@prisma/client";
 import { revalidatePath } from "next/cache";
+import { requirePageView, requirePageEdit } from "../lib/auth";
 
 const prisma = new PrismaClient();
 
 export async function getQuickContactSettings() {
+    await requirePageView("quick-contact");
     try {
         const settings = await prisma.quickContactSettings.findFirst();
         return settings;
@@ -21,6 +23,7 @@ export async function updateQuickContactSettings(
     _prevState: QuickContactFormState,
     formData: FormData
 ): Promise<QuickContactFormState> {
+    await requirePageEdit("quick-contact");
     try {
         const legalPhone = formData.get("legalPhone") as string;
         const managementPhone = formData.get("managementPhone") as string;

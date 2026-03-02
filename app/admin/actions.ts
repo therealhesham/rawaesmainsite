@@ -2,10 +2,12 @@
 
 import { PrismaClient } from "@prisma/client";
 import { revalidatePath } from "next/cache";
+import { requirePageView, requirePageEdit } from "./lib/auth";
 
 const prisma = new PrismaClient();
 
 export async function getStats() {
+    await requirePageView("");
     try {
         const totalInvestors = await prisma.user.count({
             where: { isAdmin: false }
@@ -27,6 +29,7 @@ export async function getStats() {
 }
 
 export async function getInvestors(search?: string) {
+    await requirePageView("");
     try {
         const where = search ? {
             OR: [
@@ -56,6 +59,7 @@ export async function getInvestors(search?: string) {
 
 /** بحث عن مستثمر بالاسم — exact أولاً، ثم fuzzy بالكلمات */
 export async function searchInvestorByName(excelName: string) {
+    await requirePageView("extract-reports");
     try {
         const trimmed = excelName.trim();
         if (!trimmed) return { exact: null, suggestions: [] };
@@ -104,6 +108,7 @@ export async function searchInvestorByName(excelName: string) {
 }
 
 export async function getInvestor(id: number) {
+    await requirePageView("");
     try {
         if (!id || isNaN(id)) return null;
 
@@ -136,6 +141,7 @@ const s3Client = new S3Client({
 });
 
 export async function uploadReport(formData: FormData) {
+    await requirePageEdit("");
     try {
         const userId = parseInt(formData.get("userId") as string);
         const type = formData.get("type") as string;
@@ -207,6 +213,7 @@ export async function uploadReport(formData: FormData) {
 }
 
 export async function deleteReport(reportId: number, userId: number) {
+    await requirePageEdit("");
     try {
         await prisma.reports.delete({
             where: { id: reportId }
@@ -221,6 +228,7 @@ export async function deleteReport(reportId: number, userId: number) {
 }
 
 export async function createInvestor(formData: FormData) {
+    await requirePageEdit("");
     try {
         const name = formData.get("name") as string;
         const phoneNumber = formData.get("phoneNumber") as string;
@@ -313,6 +321,7 @@ export async function saveInvestorReports(
     urls: string[],
     reportType: string = "lease"
 ) {
+    await requirePageEdit("extract-reports");
     try {
         if (!userId || !Array.isArray(urls) || urls.length === 0) {
             return { error: "بيانات غير صالحة." };
@@ -355,6 +364,7 @@ export async function saveExtractedReports(
     investorsFiles: Record<string, string[]>,
     reportType: string = "lease"
 ) {
+    await requirePageEdit("extract-reports");
     try {
         if (!investorsFiles || typeof investorsFiles !== "object") {
             return { error: "بيانات الملفات غير صالحة." };
@@ -424,6 +434,7 @@ export async function saveExtractedReports(
 
 /** جلب التقارير الغير منشورة (isPublished = false) */
 export async function getUnpublishedReports() {
+    await requirePageView("review");
     try {
         const reports = await prisma.reports.findMany({
             where: { isPublished: false },
@@ -439,6 +450,7 @@ export async function getUnpublishedReports() {
 
 /** جلب التقارير المنشورة (isPublished = true) */
 export async function getPublishedReports() {
+    await requirePageView("review");
     try {
         const reports = await prisma.reports.findMany({
             where: { isPublished: true },
@@ -454,6 +466,7 @@ export async function getPublishedReports() {
 
 /** تغيير حالة النشر لتقرير */
 export async function toggleReportPublish(reportId: number, publish: boolean, userId?: number) {
+    await requirePageEdit("review");
     try {
         if (publish) {
             const report = await prisma.reports.findUnique({ where: { id: reportId } });
@@ -478,6 +491,7 @@ export async function toggleReportPublish(reportId: number, publish: boolean, us
 
 /** اعتماد التقرير (isApproved) */
 export async function updateReportApproval(reportId: number, isApproved: boolean, userId?: number) {
+    await requirePageEdit("review");
     try {
         const updateData: any = { isApproved };
 

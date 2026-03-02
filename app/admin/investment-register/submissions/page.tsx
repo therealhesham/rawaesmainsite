@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { getInvestmentInterestSubmissions } from "../../investment-register-actions";
+import { requirePageView } from "../../lib/auth";
 import { InvestmentInterestSubmissionsTable } from "./InvestmentInterestSubmissionsTable";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminInvestmentInterestSubmissionsPage() {
+  await requirePageView("investment-register");
   const submissions = await getInvestmentInterestSubmissions();
 
   return (

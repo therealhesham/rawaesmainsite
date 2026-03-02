@@ -4,6 +4,7 @@ import { PrismaClient } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getInvestmentFunds } from "../investment/getFunds";
+import { requirePageView, requirePageEdit } from "./lib/auth";
 
 const prisma = new PrismaClient();
 
@@ -22,6 +23,7 @@ type ActionResult =
   | { success: false; error: string };
 
 export async function getFundsForAdmin() {
+  await requirePageView("funds");
   try {
     return await getInvestmentFunds();
   } catch (error) {
@@ -51,6 +53,7 @@ function getInt(formData: FormData, key: string): number | null {
 }
 
 export async function updateCarsFund(formData: FormData): Promise<ActionResult> {
+  await requirePageEdit("funds");
   try {
     const daysRental = getString(formData, "daysRental");
     const availableServices = getString(formData, "availableServices");
@@ -88,6 +91,7 @@ export async function updateCarsFund(formData: FormData): Promise<ActionResult> 
 
 /** إضافة سطر تفاصيل استثمارية لصندوق تأجير السيارات */
 export async function createRentalCarReportDetail(formData: FormData): Promise<ActionResult> {
+  await requirePageEdit("funds");
   try {
     const investorId = getInt(formData, "investorId");
     const revenues = getInt(formData, "revenues");
@@ -114,6 +118,7 @@ export async function createRentalCarReportDetail(formData: FormData): Promise<A
 
 /** تحديث سطر تفاصيل استثمارية */
 export async function updateRentalCarReportDetail(id: number, formData: FormData): Promise<ActionResult> {
+  await requirePageEdit("funds");
   try {
     const investorId = getInt(formData, "investorId");
     const revenues = getInt(formData, "revenues");
@@ -141,6 +146,7 @@ export async function updateRentalCarReportDetail(id: number, formData: FormData
 
 /** حذف سطر تفاصيل استثمارية */
 export async function deleteRentalCarReportDetail(id: number): Promise<ActionResult> {
+  await requirePageEdit("funds");
   try {
     await prisma.rentalcarfundReportsDetails.delete({ where: { id } });
     revalidatePath("/admin/funds/cars");
@@ -152,6 +158,7 @@ export async function deleteRentalCarReportDetail(id: number): Promise<ActionRes
 }
 
 export async function updateRecruitmentFund(formData: FormData): Promise<ActionResult> {
+  await requirePageEdit("funds");
   try {
     const branches = getInt(formData, "branches");
     const contractsCount = getString(formData, "contractsCount");
@@ -191,6 +198,7 @@ export async function updateRecruitmentFund(formData: FormData): Promise<ActionR
 }
 
 export async function updateHospitalityFund(formData: FormData): Promise<ActionResult> {
+  await requirePageEdit("funds");
   try {
     const branches = getInt(formData, "branches");
     const contractsCount = getString(formData, "contractsCount");
@@ -236,6 +244,7 @@ export async function uploadFundImage(
   fundKind: FundKind,
   formData: FormData
 ): Promise<ActionResult> {
+  await requirePageEdit("funds");
   try {
     const file = formData.get("file") as File | null;
     if (!file || file.size === 0) {
