@@ -36,7 +36,7 @@ function filterMenu(items: MenuItem[], canView: (pageKey: string) => boolean): M
       if (allowedChildren.length === 0) continue;
       out.push({ ...item, children: allowedChildren });
     } else {
-      const key = "pageKey" in item ? item.pageKey : "";
+      const key = ("pageKey" in item ? item.pageKey : "") ?? "";
       if (canView(key)) out.push(item);
     }
   }

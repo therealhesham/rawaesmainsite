@@ -74,6 +74,7 @@ export async function getAdminUser(requireAuth = true): Promise<AdminUser | null
 /** التأكد من صلاحية العرض وإلا إعادة توجيه */
 export async function requirePageView(pageKey: string): Promise<AdminUser> {
   const admin = await getAdminUser(true);
+  if (!admin) redirect("/admin");
   if (!canViewPage(admin, pageKey)) redirect("/admin");
   return admin;
 }
@@ -81,6 +82,7 @@ export async function requirePageView(pageKey: string): Promise<AdminUser> {
 /** التأكد من صلاحية التعديل (للاستخدام في الـ actions) */
 export async function requirePageEdit(pageKey: string): Promise<AdminUser> {
   const admin = await getAdminUser(true);
+  if (!admin) redirect("/admin");
   if (!canEditPage(admin, pageKey)) {
     throw new Error("ليس لديك صلاحية التعديل على هذه الصفحة");
   }
