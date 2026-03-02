@@ -33,6 +33,7 @@ export default function AdminLayout({
             children: [
                 { label: "صناديق الاستثمار", icon: "account_balance", href: "/admin/funds" },
                 { label: "اتصل بنا", icon: "contact_page", href: "/admin/contact", exact: true },
+                { label: "التواصل السريع", icon: "phone", href: "/admin/quick-contact", exact: true },
                 { label: "سجل اهتمامك", icon: "how_to_reg", href: "/admin/investment-register", exact: true },
 
             ]

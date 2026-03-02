@@ -4,7 +4,8 @@ import { notFound, redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { jwtVerify } from "jose";
 import { logoutInvestor } from "../../login/actions";
-
+import QuickContact from "./QuickContact";
+import FloatingWhatsAppButton from "./FloatingWhatsAppButton";
 const prisma = new PrismaClient();
 
 const getSecretKey = () => {
@@ -30,6 +31,15 @@ async function getInvestorData(id: string) {
   });
 
   return user;
+}
+
+async function getQuickContactSettings() {
+  try {
+    return await prisma.quickContactSettings.findFirst();
+  } catch (error) {
+    console.error("Error fetching Quick Contact settings:", error);
+    return null;
+  }
 }
 
 export default async function PrivateInvestorPage({
@@ -67,6 +77,8 @@ export default async function PrivateInvestorPage({
   if (!investor) {
     notFound();
   }
+
+  const quickContactSettings = await getQuickContactSettings();
 
   return (
     <div className="min-h-screen flex flex-col transition-colors duration-300 bg-[#F5F7FA] dark:bg-[#121212] text-[#333333] dark:text-[#E0E0E0] font-body">
@@ -126,30 +138,7 @@ export default async function PrivateInvestorPage({
             </div>
 
             {/* Quick Contact */}
-            <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
-              <h3 className="text-lg font-bold text-center text-[#003B46] dark:text-white mb-6 leading-relaxed break-words px-2">
-                التواصل السريع للاستفسارات والاقتراحات
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {[
-                  { title: "الإدارة القانونية" },
-                  { title: "الإدارة العليا" },
-                  { title: "للاقتراحات والمساعدة" },
-                ].map((item, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white py-3 px-4 rounded-xl transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer"
-                  >
-                    <span className="font-medium">{item.title}</span>
-                    <img
-                      alt="Whatsapp"
-                      className="w-5 h-5 filter brightness-0 invert"
-                      src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
+            <QuickContact settings={quickContactSettings} />
 
             {/* Categorized Reports */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -296,6 +285,8 @@ export default async function PrivateInvestorPage({
           </div>
         </div>
       </div>
+
+      <FloatingWhatsAppButton settings={quickContactSettings} />
     </div>
   );
 }
