@@ -75,19 +75,21 @@ export default function FloatingWhatsAppButton({
                 {/* Main FAB */}
                 <button
                     type="button"
-                    aria-label={isOpen ? "إغلاق" : "تواصل عبر واتساب"}
+                    dir="rtl"
+                    aria-label={isOpen ? "إغلاق" : "تواصل معنا"}
                     onClick={() => setIsOpen(!isOpen)}
-                    className="w-14 h-14 rounded-full bg-[#25D366] text-white shadow-lg shadow-[#25D366]/40 hover:bg-[#20BD5A] active:scale-95 transition-all duration-200 flex items-center justify-center"
+                    className="h-12 rounded-full bg-[#25D366] text-white shadow-lg shadow-[#25D366]/40 hover:bg-[#20BD5A] active:scale-95 transition-all duration-200 flex items-center justify-center overflow-hidden"
+                    style={{ width: isOpen ? 48 : "auto", paddingInline: isOpen ? 0 : 20 }}
                 >
-                    {isOpen ? (
-                        <span className="material-icons text-3xl">close</span>
-                    ) : (
+                    <span className={`material-icons text-2xl absolute transition-all duration-200 ${isOpen ? "opacity-100 rotate-0" : "opacity-0 rotate-90"}`}>close</span>
+                    <span className={`flex items-center gap-2 transition-all duration-200 ${isOpen ? "opacity-0 scale-75" : "opacity-100 scale-100"}`}>
+                        <span className="text-sm font-bold whitespace-nowrap">تواصل معنا</span>
                         <img
-                            alt="WhatsApp"
-                            className="w-7 h-7 brightness-0 invert"
+                            alt=""
+                            className="w-5 h-5 brightness-0 invert shrink-0"
                             src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"
                         />
-                    )}
+                    </span>
                 </button>
             </div>
         </>
