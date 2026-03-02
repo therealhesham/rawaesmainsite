@@ -319,13 +319,19 @@ async function uploadFileUrlToSpaces(fileUrl: string, userId: number, fileName: 
 export async function saveInvestorReports(
     userId: number,
     urls: string[],
-    reportType: string = "lease"
+    reportType: string = "lease",
+    year?: number
 ) {
     await requirePageEdit("extract-reports");
     try {
         if (!userId || !Array.isArray(urls) || urls.length === 0) {
             return { error: "بيانات غير صالحة." };
         }
+
+        const baseYear =
+            typeof year === "number" && !Number.isNaN(year) && year > 1900
+                ? year
+                : new Date().getFullYear() - 1;
 
         let created = 0;
         for (const linkUrl of urls) {
@@ -343,7 +349,7 @@ export async function saveInvestorReports(
                     linkUrl: doSpacesUrl,
                     fileName,
                     isPublished: false,
-                    releaseDate: new Date(new Date().getFullYear() - 1, 0, 1),//عايز اللي يتحفظ تاريخ السنة السابقة
+                    releaseDate: new Date(baseYear, 0, 1),
                 },
             });
             created++;

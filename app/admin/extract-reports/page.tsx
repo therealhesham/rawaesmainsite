@@ -42,6 +42,7 @@ export default function ExtractReportsPage() {
     const [isSearching, setIsSearching] = useState(false);
     const [searchResults, setSearchResults] = useState<{ id: number; name: string }[]>([]);
     const [autoMatchedExact, setAutoMatchedExact] = useState(false);
+    const [year, setYear] = useState<string>("");
 
     const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault();
@@ -98,6 +99,7 @@ export default function ExtractReportsPage() {
             setExistingReports([]);
             setAutoMatchedExact(false);
             setSearchResults([]);
+            setYear("");
 
             // Auto-search the DB with the Excel name
             setIsSearching(true);
@@ -185,7 +187,13 @@ export default function ExtractReportsPage() {
         setIsSaving(true);
         setSaveSuccess(null);
         try {
-            const res = await saveInvestorReports(parseInt(selectedUserId, 10), saveModal.urls, reportType);
+            const parsedYear = year ? parseInt(year, 10) : undefined;
+            const res = await saveInvestorReports(
+                parseInt(selectedUserId, 10),
+                saveModal.urls,
+                reportType,
+                parsedYear
+            );
             if (res.error) {
                 setSaveSuccess("error:" + res.error);
             } else {
@@ -201,6 +209,7 @@ export default function ExtractReportsPage() {
     };
 
     const investorsFiles = result?.investors_files && Object.keys(result.investors_files).length > 0;
+    const previousYear = new Date().getFullYear() - 1;
 
     return (
         <div className="space-y-8" dir="rtl">
@@ -551,6 +560,34 @@ export default function ExtractReportsPage() {
                                                                 </motion.ul>
                                                             )}
                                                         </AnimatePresence>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                        <div>
+                                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                                سنة التقرير
+                                                            </label>
+                                                            <select
+                                                                value={year}
+                                                                onChange={(e) => setYear(e.target.value)}
+                                                                className="w-full p-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors text-sm"
+                                                            >
+                                                                <option value="">
+                                                                    السنة الماضية ({previousYear}) – افتراضيًا
+                                                                </option>
+                                                                {[0, 1, 2, 3, 4].map((offset) => {
+                                                                    const y = previousYear - offset;
+                                                                    return (
+                                                                        <option key={y} value={y}>
+                                                                            {y}
+                                                                        </option>
+                                                                    );
+                                                                })}
+                                                            </select>
+                                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                                                إذا لم تختَر سنة، سيتم حفظ التقارير تلقائيًا على سنة {previousYear}.
+                                                            </p>
+                                                        </div>
                                                     </div>
                                                 </form>
 
