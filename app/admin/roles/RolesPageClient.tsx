@@ -130,26 +130,31 @@ export function RolesPageClient({
                   <td className="py-3 px-2">{role._count.users}</td>
                   <td className="py-3 px-2">
                     {role.name !== "admin" && (
-                      <>
+                      <div className="flex flex-wrap items-center gap-2">
                         <button
                           type="button"
                           onClick={() => setEditingRoleId(editingRoleId === role.id ? null : role.id)}
-                          className="text-[#003B46] dark:text-gold hover:underline text-sm ml-2"
+                          className="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 text-[#003B46] dark:text-gold hover:bg-gray-100 dark:hover:bg-gray-800 text-sm font-medium transition-colors"
                         >
                           تعديل الاسم
                         </button>
                         <button
                           type="button"
                           onClick={() => setPermRoleId(permRoleId === role.id ? null : role.id)}
-                          className="text-[#003B46] dark:text-gold hover:underline text-sm ml-2"
+                          className="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 text-[#003B46] dark:text-gold hover:bg-gray-100 dark:hover:bg-gray-800 text-sm font-medium transition-colors"
                         >
                           {permRoleId === role.id ? "إخفاء الصلاحيات" : "الصلاحيات"}
                         </button>
-                        <form action={asFormAction(deleteRole)} className="inline-block ml-2">
+                        <form action={asFormAction(deleteRole)} className="inline-block">
                           <input type="hidden" name="roleId" value={role.id} />
-                          <button type="submit" className="text-red-600 hover:underline text-sm">حذف</button>
+                          <button
+                            type="submit"
+                            className="px-3 py-1.5 rounded-lg border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm font-medium transition-colors"
+                          >
+                            حذف
+                          </button>
                         </form>
-                      </>
+                      </div>
                     )}
                     {role.name === "admin" && (
                       <span className="text-gray-500 text-sm">صلاحيات كاملة</span>
