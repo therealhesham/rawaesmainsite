@@ -60,6 +60,7 @@ export function RolesPageClient({
 }) {
   const [state, createAction, isCreatePending] = useActionState(createRole, null);
   const [addUserState, addUserAction, isAddUserPending] = useActionState(createAdminUser, null);
+  const [permState, permAction, isPermPending] = useActionState(updateRolePermissions, null);
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
   const [editingRoleId, setEditingRoleId] = useState<number | null>(null);
   const [permRoleId, setPermRoleId] = useState<number | null>(null);
@@ -71,6 +72,12 @@ export function RolesPageClient({
       router.refresh();
     }
   }, [addUserState?.success, router]);
+
+  useEffect(() => {
+    if (permState?.success) {
+      router.refresh();
+    }
+  }, [permState?.success, router]);
 
   const pageKeysForPerms = ADMIN_PAGE_KEYS.map((p) => p.key).filter((k) => k !== "roles");
 
@@ -191,7 +198,17 @@ export function RolesPageClient({
                   className="mt-6 p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700"
                 >
                   <h3 className="font-bold text-[#003B46] dark:text-white mb-3">صلاحيات: {role.name}</h3>
-                  <form action={asFormAction(updateRolePermissions)}>
+                  {permState?.success && (
+                    <p className="mb-3 py-2 px-3 rounded-lg bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-300 text-sm font-medium">
+                      تم حفظ الصلاحيات بنجاح.
+                    </p>
+                  )}
+                  {permState?.error && (
+                    <p className="mb-3 py-2 px-3 rounded-lg bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-300 text-sm font-medium">
+                      {permState.error}
+                    </p>
+                  )}
+                  <form action={permAction}>
                     <input type="hidden" name="roleId" value={role.id} />
                     <table className="w-full text-sm table-fixed">
                       <thead>
@@ -241,9 +258,10 @@ export function RolesPageClient({
                     </table>
                     <button
                       type="submit"
-                      className="mt-3 bg-[#003B46] text-white font-bold py-2 px-4 rounded-xl"
+                      disabled={isPermPending}
+                      className="mt-3 bg-[#003B46] hover:bg-[#002830] text-white font-bold py-2 px-4 rounded-xl disabled:opacity-60"
                     >
-                      حفظ الصلاحيات
+                      {isPermPending ? "جاري الحفظ..." : "حفظ الصلاحيات"}
                     </button>
                   </form>
                 </div>
