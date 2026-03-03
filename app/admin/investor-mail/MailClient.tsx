@@ -78,8 +78,8 @@ export function MailClient({
                                 type="button"
                                 onClick={() => setMode(m)}
                                 className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-2 transition-all duration-200 font-semibold text-sm ${mode === m
-                                        ? "bg-[#003B46] border-[#003B46] text-white shadow-lg shadow-[#003B46]/20"
-                                        : "bg-white border-gray-200 text-gray-500 hover:border-[#003B46]/30 hover:text-[#003B46]"
+                                    ? "bg-[#003B46] border-[#003B46] text-white shadow-lg shadow-[#003B46]/20"
+                                    : "bg-white border-gray-200 text-gray-500 hover:border-[#003B46]/30 hover:text-[#003B46]"
                                     }`}
                             >
                                 <span className="material-icons text-[18px]">
@@ -160,13 +160,7 @@ export function MailClient({
                         />
                     </div>
 
-                    {/* Email Preview Hint */}
-                    <div className="bg-[#003B46]/5 border border-[#003B46]/15 rounded-xl p-4 flex items-center gap-3">
-                        <span className="material-icons text-[#003B46] text-[20px] shrink-0">mark_email_read</span>
-                        <p className="text-sm text-[#003B46]/80">
-                            ستتضمن الرسالة لوجو مجموعة روائس القمم وتصميم احترافي تلقائياً.
-                        </p>
-                    </div>
+
 
                     {/* Result */}
                     {result?.error && (

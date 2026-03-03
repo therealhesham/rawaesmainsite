@@ -98,11 +98,11 @@ export function buildContactEmail(
         </div>
       </div>
       ${buildFooter({
-        note: "تم الإرسال من نموذج التواصل في الموقع · يمكنك الرد مباشرة على هذا البريد",
-        logoUrl: logoUrl ?? undefined,
-        brandName: "مجموعة روائس",
-        tagline: "شركة استثمارية متخصصة في حلول الاستثمار المبتكرة والمستدامة",
-      })}
+    note: "تم الإرسال من نموذج التواصل في الموقع · يمكنك الرد مباشرة على هذا البريد",
+    logoUrl: logoUrl ?? undefined,
+    brandName: "مجموعة روائس",
+    tagline: "شركة استثمارية متخصصة في حلول الاستثمار المبتكرة والمستدامة",
+  })}
     </div>
   </div>
 </body>
@@ -203,11 +203,67 @@ export function buildInvestmentInterestEmail(
         <p style="${BASE_STYLES.valueLast}">${esc(data.amountLabel)}</p>
       </div>
       ${buildFooter({
-        note: "تم الإرسال من صفحة الاستثمار · يمكنك الرد مباشرة على هذا البريد",
-        logoUrl: logoUrl ?? undefined,
-        brandName: "روائس للاستثمار",
-        tagline: "فرص استثمارية متنوعة في صناديق الضيافة والاستقدام والمركبات",
-      })}
+    note: "تم الإرسال من صفحة الاستثمار · يمكنك الرد مباشرة على هذا البريد",
+    logoUrl: logoUrl ?? undefined,
+    brandName: "روائس للاستثمار",
+    tagline: "فرص استثمارية متنوعة في صناديق الضيافة والاستقدام والمركبات",
+  })}
+    </div>
+  </div>
+</body>
+</html>`.trim();
+
+  return { text, html };
+}
+
+export type InvestorEmailData = {
+  subject: string;
+  body: string;
+};
+
+export type InvestorEmailOptions = {
+  logoUrl?: string | null;
+};
+
+export function buildInvestorEmail(
+  data: InvestorEmailData,
+  options?: InvestorEmailOptions
+): { text: string; html: string } {
+  const logoUrl = options?.logoUrl ?? null;
+  const text = [
+    data.subject,
+    ``,
+    data.body,
+  ].join("\n");
+
+  const html = `
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${esc(data.subject)}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+</head>
+<body style="${BASE_STYLES.wrapper}">
+  <div style="${BASE_STYLES.container}">
+    <div style="${BASE_STYLES.card}">
+      <div style="${BASE_STYLES.header}">
+        ${logoUrl ? `<img src="${escAttr(logoUrl)}" alt="مجموعة روائس القمم" style="${BASE_STYLES.headerLogo}" />` : ""}
+        <h1 style="${BASE_STYLES.headerTitle}">${esc(data.subject)}</h1>
+        <p style="${BASE_STYLES.headerSub}">مراسلات المستثمرين</p>
+      </div>
+      <div style="${BASE_STYLES.body}">
+        <div style="font-size:16px; color:#374151; line-height:1.9; white-space:pre-wrap;">${data.body.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
+      </div>
+      ${buildFooter({
+    note: "هذه الرسالة مرسلة من مجموعة روائس القمم للاستثمار",
+    logoUrl: logoUrl ?? undefined,
+    brandName: "مجموعة روائس القمم للاستثمار",
+    tagline: "إدارة الاستثمارات بكفاءة وموثوقية عالية",
+  })}
     </div>
   </div>
 </body>
