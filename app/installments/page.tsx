@@ -20,7 +20,8 @@ export default function InstallmentsPage() {
       >
         <Link
           className="gold-gradient text-white px-10 py-4 rounded-full font-bold text-lg shadow-xl shadow-primary/20 hover:scale-105 transition-transform inline-block"
-          href="#apply"
+          href="https://www.files.rawaes.com/rq/branch.php"
+          target="_blank"
         >
           تقديم طلب
         </Link>
@@ -207,7 +208,8 @@ export default function InstallmentsPage() {
                 تفضل بتعبئة البيانات من هنا وسوف نتواصل معك في أقرب وقت ممكن
               </p>
               <Link
-                href="/#contact"
+                href="https://www.files.rawaes.com/rq/branch.php"
+                target="_blank"
                 className="gold-gradient text-white px-12 py-4 rounded-xl font-bold text-xl flex items-center gap-3 mx-auto md:mx-0 w-fit shadow-lg hover:shadow-primary/40 transition-all active:scale-95"
               >
                 <span>تقديم طلب تقسيط</span>
