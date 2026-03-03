@@ -16,11 +16,13 @@ const FULL_MENU: MenuItem[] = [
   },
   {
     label: "البريد",
-    icon: "view_list",
+    icon: "mail",
     id: "mails",
     children: [
       { label: "رسائل التواصل", icon: "mail", href: "/admin/contact/messages", pageKey: "contact-messages" },
       { label: "طلبات سجل اهتمامك", icon: "assignment", href: "/admin/investment-register/submissions", exact: true, pageKey: "investment-register-submissions" },
+      { label: "مراسلات البريد", icon: "forward_to_inbox", href: "/admin/investor-mail", exact: true, pageKey: "investor-mail" },
+      { label: "إرسال التنبيهات", icon: "notifications_active", href: "/admin/investor-notifications", exact: true, pageKey: "investor-notifications" },
     ],
   },
   { label: "استخراج التقارير", icon: "table_chart", href: "/admin/extract-reports", pageKey: "extract-reports" },

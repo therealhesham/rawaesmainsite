@@ -27,6 +27,10 @@ async function getInvestorData(id: string) {
         where: { isPublished: true },
         orderBy: { createdAt: "desc" },
       },
+      notfications: {
+        orderBy: { createdAt: "desc" },
+        take: 20,
+      },
     },
   });
 
@@ -128,13 +132,41 @@ export default async function PrivateInvestorPage({
                 تم تفعيل استعراض ملفات الاستثمارات من خلال الموقع الرسمي لدى
                 مجموعة روائس ( النسخة التجريبية )
               </div>
-              <div className="flex flex-col items-center justify-center py-10 text-gray-400 dark:text-gray-500">
-                <svg xmlns="http://www.w3.org/2000/svg" height="48" viewBox="0 -960 960 960" width="48" fill="currentColor" className="mb-2 opacity-50">
-                  <path d="M160-200v-80h80v-280q0-83 50-147.5T420-792v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v280h80v80H160Zm320-300Zm0 420q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80ZM320-280h320v-280q0-66-47-113t-113-47q-66 0-113 47t-47 113v280Zm374 98L512-364v-196q0-26 12-50t34-42l-58-58q-10 11-18 20.5T467-670l-60-60q21-21 46-38.5t53-29.5l-62-62q-47 2-83.5 29T316-758q-58 35-97 88.5T160-560v280h80v-280q0-66 47-113t113-47q8 0 15 .5t16 1.5l-57-57 58-58 422 422-58 58-102-101ZM752-280l-62-62q3-9 4.5-18.5T697-376l-57-57q10 21 13 44.5t-2 47.5l29 29q7-14 11-28.5t4-29.5h57q0 21-4.5 41t-15.5 39Z" /> {/* Approximate notifications off */}
-                  <path d="M792-56q-33 0-56.5-23.5T712-136q0-33 23.5-56.5T792-216q33 0 56.5 23.5T872-136q0 33-23.5 56.5T792-56Z" />
-                </svg>
-                <p>لا يوجد اشعارات حالياً</p>
-              </div>
+              {/* Notifications list */}
+              {investor.notfications.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-10 text-gray-400 dark:text-gray-500">
+                  <svg xmlns="http://www.w3.org/2000/svg" height="48" viewBox="0 -960 960 960" width="48" fill="currentColor" className="mb-2 opacity-50">
+                    <path d="M160-200v-80h80v-280q0-83 50-147.5T420-792v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v280h80v80H160Zm320-300Zm0 420q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80ZM320-280h320v-280q0-66-47-113t-113-47q-66 0-113 47t-47 113v280Z" />
+                  </svg>
+                  <p>لا يوجد اشعارات حالياً</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {investor.notfications.map((notif) => (
+                    <div
+                      key={notif.id}
+                      className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 border-r-4 border-gold flex items-start gap-3"
+                    >
+                      <span className="shrink-0 mt-0.5 w-7 h-7 rounded-full bg-gold/15 flex items-center justify-center text-[#003B46] dark:text-gold">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="16" viewBox="0 -960 960 960" width="16" fill="currentColor">
+                          <path d="M160-200v-80h80v-280q0-83 50-147.5T420-792v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v280h80v80H160Zm320-300Zm0 420q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80ZM320-280h320v-280q0-66-47-113t-113-47q-66 0-113 47t-47 113v280Z" />
+                        </svg>
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        {notif.title && (
+                          <p className="font-bold text-gray-800 dark:text-gray-100 text-sm mb-0.5">{notif.title}</p>
+                        )}
+                        {notif.message && (
+                          <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">{notif.message}</p>
+                        )}
+                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1.5">
+                          {new Date(notif.createdAt).toLocaleDateString("ar-SA", { day: "numeric", month: "long", year: "numeric" })}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Quick Contact - مخفي في الموبايل (يوجد زر عائم بدلاً منه) */}

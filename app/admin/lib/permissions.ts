@@ -12,6 +12,8 @@ export const ADMIN_PAGE_KEYS = [
   { key: "extract-reports", labelAr: "استخراج التقارير" },
   { key: "review", labelAr: "مراجعة التقارير" },
   { key: "roles", labelAr: "الصلاحيات والأدوار" },
+  { key: "investor-mail", labelAr: "مراسلات البريد" },
+  { key: "investor-notifications", labelAr: "إرسال التنبيهات" },
   // صفحة المستثمر — صلاحيات فرعية
   { key: "investor-page", labelAr: "عرض الصفحة" },
   { key: "investor-approve", labelAr: "اعتماد" },

@@ -177,3 +177,19 @@ export async function uploadContactEmailLogo(
     return { success: false, error: "تعذر رفع الشعار. تحقق من إعدادات DigitalOcean." };
   }
 }
+
+/** جلب سجل البريد المرسل من لوحة الأدمن */
+export async function getEmailLogsForMessages() {
+  await requirePageView("contact-messages");
+  try {
+    return await prisma.emailLog.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 100,
+      include: { recipient: { select: { id: true, name: true } } },
+    });
+  } catch (error) {
+    console.error("Failed to load email logs:", error);
+    return [];
+  }
+}
+

@@ -23,7 +23,7 @@ model user {
   password                    String
   isAdmin                     Boolean                       @default(false)
   roleId                      Int?
-  role                         Role?                        @relation(fields: [roleId], references: [id])
+  role                        Role?                         @relation(fields: [roleId], references: [id])
   rentalcarfundReportsDetails rentalcarfundReportsDetails[]
   email                       String?
   phoneNumber                 String?
@@ -31,16 +31,17 @@ model user {
   nationalId                  String?
   createdAt                   DateTime                      @default(now())
   updatedAt                   DateTime                      @updatedAt
+  emailLogs                   EmailLog[]
 }
 
 // أدوار الأدمن — أعلى رتبة اسمها admin وتستطيع كل شيء
 model Role {
-  id          Int          @id @default(autoincrement())
-  name        String       @unique // مثلاً: admin, محرر_محتوى, دعم
+  id          Int              @id @default(autoincrement())
+  name        String           @unique // مثلاً: admin, محرر_محتوى, دعم
   users       user[]
   permissions RolePermission[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
 }
 
 // صلاحية صفحة معينة لرتبة — يمكن التحكم في العرض والتعديل
@@ -48,7 +49,7 @@ model RolePermission {
   id        Int      @id @default(autoincrement())
   roleId    Int
   role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  pageKey   String   // مفتاح الصفحة: funds, contact, quick-contact, investment-register, extract-reports, review, roles
+  pageKey   String // مفتاح الصفحة: funds, contact, quick-contact, investment-register, extract-reports, review, roles
   canView   Boolean  @default(true)
   canEdit   Boolean  @default(false)
   createdAt DateTime @default(now())
@@ -92,8 +93,11 @@ model rentalcarfundReportsDetails {
 
 // }
 model notifications {
-  id   Int    @id @default(autoincrement())
-  type String
+  id       Int     @id @default(autoincrement())
+  type     String
+  title    String?
+  message  String? @db.Text
+  isGlobal Boolean @default(false)
 
   userId Int
 
@@ -101,6 +105,20 @@ model notifications {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   linkUrl   String
+}
+
+// سجل رسائل البريد الإلكتروني المرسلة من لوحة الأدمن للمستثمرين
+model EmailLog {
+  id            Int      @id @default(autoincrement())
+  subject       String
+  body          String   @db.Text
+  sentTo        String   @db.Text // JSON array of email addresses
+  recipientId   Int? // null = bulk (all)
+  recipient     user?    @relation(fields: [recipientId], references: [id])
+  sentByAdminId Int?
+  status        String   @default("sent") // sent | failed
+  errorMsg      String?  @db.Text
+  createdAt     DateTime @default(now())
 }
 
 // model fundsDetails {
