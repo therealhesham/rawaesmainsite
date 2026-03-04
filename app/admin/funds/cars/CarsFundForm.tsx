@@ -214,7 +214,7 @@ export function CarsFundForm({ fund, reportDetails, users }: Props) {
               حجم الاستثمار (قابل للتعديل)
             </h3>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-              {FIELDS.map(({ name, icon, label, type }) => (
+              {FIELDS.map(({ name, icon: Icon, label, type }) => (
                 <div
                   key={name}
                   className="bg-white dark:bg-slate-800 p-6 rounded-3xl text-center shadow-lg border border-gray-100 dark:border-slate-700"
