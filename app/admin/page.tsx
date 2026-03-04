@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence } from "framer-motion";
-import { getInvestors, getStats, createInvestor } from "./actions";
+import { getInvestors, getStats, createInvestor, checkAdminPermission } from "./actions";
 import { AlertModal } from "@/app/components/AlertModal";
 
 export default function AdminDashboard() {
@@ -13,15 +13,18 @@ export default function AdminDashboard() {
     const [search, setSearch] = useState("");
     const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [canManageInvestors, setCanManageInvestors] = useState(false);
 
     useEffect(() => {
         async function fetchData() {
-            const [statsData, investorsData] = await Promise.all([
+            const [statsData, investorsData, hasPermission] = await Promise.all([
                 getStats(),
-                getInvestors(search)
+                getInvestors(search),
+                checkAdminPermission("investors-manage", "edit")
             ]);
             setStats(statsData as any);
             setInvestors(investorsData);
+            setCanManageInvestors(hasPermission);
             setIsLoading(false);
         }
         fetchData();
@@ -36,13 +39,15 @@ export default function AdminDashboard() {
                     <p className="text-gray-500 mt-1">مرحباً بك في لوحة تحكم روائس</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button
-                        onClick={() => setIsModalOpen(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors shadow-sm"
-                    >
-                        <span className="material-icons text-sm">add</span>
-                        <span>إضافة مستثمر</span>
-                    </button>
+                    {canManageInvestors && (
+                        <button
+                            onClick={() => setIsModalOpen(true)}
+                            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors shadow-sm"
+                        >
+                            <span className="material-icons text-sm">add</span>
+                            <span>إضافة مستثمر</span>
+                        </button>
+                    )}
                     <span className="text-sm text-gray-500">آخر تحديث: {new Date().toLocaleTimeString()}</span>
                     <button onClick={() => window.location.reload()} className="p-2 bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-700 rounded-lg text-gray-500 hover:text-primary transition-colors">
                         <span className="material-icons text-xl">refresh</span>

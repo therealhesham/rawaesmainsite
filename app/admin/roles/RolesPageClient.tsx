@@ -29,12 +29,23 @@ const PAGE_CATEGORY: Record<string, string> = {
   "investor-publish": "صفحة المستثمر",
 };
 
-/** يغلف server action ليتوافق مع نوع form action: (formData) => void | Promise<void> */
 function asFormAction(
   action: (prev: unknown, formData?: FormData) => Promise<unknown>
 ): (formData: FormData) => Promise<void> {
-  return (formData: FormData) => action(undefined, formData).then(() => {});
+  return (formData: FormData) => action(undefined, formData).then(() => { });
 }
+
+/** الأقسام التي لا تحتوي على عمليات تعديل فعلية (لإخفاء زر التعديل) */
+const VIEW_ONLY_KEYS: string[] = ["", "messages"];
+
+/** الإجراءات التي لا تمتلك صفحة عرض مستقلة (لإخفاء زر العرض) */
+const EDIT_ONLY_KEYS: string[] = [
+  "investors-manage",
+  "investor-approve",
+  "investor-upload",
+  "investor-delete-file",
+  "investor-publish"
+];
 
 type RoleWithPerms = {
   id: number;
@@ -236,20 +247,28 @@ export function RolesPageClient({
                                 </div>
                               </td>
                               <td className="py-2 text-center">
-                                <input
-                                  type="checkbox"
-                                  name={`view_${key}`}
-                                  defaultChecked={perm?.canView ?? false}
-                                  className="w-4 h-4"
-                                />
+                                {!EDIT_ONLY_KEYS.includes(key) ? (
+                                  <input
+                                    type="checkbox"
+                                    name={`view_${key}`}
+                                    defaultChecked={perm?.canView ?? false}
+                                    className="w-4 h-4 cursor-pointer"
+                                  />
+                                ) : (
+                                  <span className="text-gray-300 dark:text-gray-600">—</span>
+                                )}
                               </td>
                               <td className="py-2 text-center">
-                                <input
-                                  type="checkbox"
-                                  name={`edit_${key}`}
-                                  defaultChecked={perm?.canEdit ?? false}
-                                  className="w-4 h-4"
-                                />
+                                {!VIEW_ONLY_KEYS.includes(key) ? (
+                                  <input
+                                    type="checkbox"
+                                    name={`edit_${key}`}
+                                    defaultChecked={perm?.canEdit ?? false}
+                                    className="w-4 h-4 cursor-pointer"
+                                  />
+                                ) : (
+                                  <span className="text-gray-300 dark:text-gray-600">—</span>
+                                )}
                               </td>
                             </tr>
                           );

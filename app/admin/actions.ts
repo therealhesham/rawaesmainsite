@@ -2,9 +2,15 @@
 
 import { PrismaClient } from "@prisma/client";
 import { revalidatePath } from "next/cache";
-import { requirePageView, requirePageEdit, requirePageEditAny } from "./lib/auth";
+import { requirePageView, requirePageEdit, requirePageEditAny, getAdminUser, canEditPage, canViewPage } from "./lib/auth";
 
 const prisma = new PrismaClient();
+
+export async function checkAdminPermission(pageKey: string, type: "view" | "edit") {
+    const admin = await getAdminUser(false);
+    if (!admin) return false;
+    return type === "view" ? canViewPage(admin, pageKey) : canEditPage(admin, pageKey);
+}
 
 export async function getStats() {
     await requirePageView("");
@@ -228,7 +234,7 @@ export async function deleteReport(reportId: number, userId: number) {
 }
 
 export async function createInvestor(formData: FormData) {
-    await requirePageEdit("");
+    await requirePageEdit("investors-manage");
     try {
         const name = formData.get("name") as string;
         const phoneNumber = formData.get("phoneNumber") as string;

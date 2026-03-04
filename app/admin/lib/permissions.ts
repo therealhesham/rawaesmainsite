@@ -3,6 +3,7 @@
 /** مفتاح كل قسم في لوحة الأدمن */
 export const ADMIN_PAGE_KEYS = [
   { key: "", labelAr: "لوحة التحكم" },
+  { key: "investors-manage", labelAr: "الحسابات — إضافة مستثمر" },
   { key: "funds", labelAr: "صناديق الاستثمار" },
   { key: "contact", labelAr: "اتصل بنا" },
   { key: "quick-contact", labelAr: "التواصل السريع" },
