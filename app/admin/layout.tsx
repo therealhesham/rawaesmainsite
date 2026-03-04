@@ -42,7 +42,7 @@ const FULL_MENU: MenuItem[] = [
     ],
   },
   { label: "استخراج التقارير", icon: <FileBarChart size={22} />, href: "/admin/extract-reports", pageKey: "extract-reports" },
-  { label: "مراجعة التقارير", icon: <FileCheck size={22} />, href: "/admin/review", pageKey: "review" },
+  // { label: "مراجعة التقارير", icon: <FileCheck size={22} />, href: "/admin/review", pageKey: "review" },
   { label: "الصلاحيات والأدوار", icon: <ShieldCheck size={22} />, href: "/admin/roles", pageKey: "roles" },
 ];
 
