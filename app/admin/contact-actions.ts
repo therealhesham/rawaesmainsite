@@ -74,6 +74,23 @@ export async function deleteContactFormSubmission(
   }
 }
 
+/** حذف مجموعة تواصلات */
+export async function deleteContactFormSubmissionsBulk(
+  ids: number[]
+): Promise<ActionResult> {
+  await requirePageEdit("contact-messages");
+  try {
+    await prisma.contactFormSubmission.deleteMany({
+      where: { id: { in: ids } },
+    });
+    revalidatePath("/admin/contact/messages");
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to delete contact form submissions bulk:", error);
+    return { success: false, error: "فشل في الحذف الجماعي." };
+  }
+}
+
 export async function updateContactUs(formData: FormData): Promise<ActionResult> {
   await requirePageEdit("contact");
   try {
@@ -190,6 +207,34 @@ export async function getEmailLogsForMessages() {
   } catch (error) {
     console.error("Failed to load email logs:", error);
     return [];
+  }
+}
+
+/** حذف سجل بريد مرسل */
+export async function deleteEmailLog(id: number) {
+  await requirePageEdit("contact-messages");
+  try {
+    await prisma.emailLog.delete({ where: { id } });
+    revalidatePath("/admin/contact/messages");
+    return { success: true };
+  } catch (error) {
+    console.error(`Failed to delete email log ${id}:`, error);
+    return { error: "تعذر الحذف" };
+  }
+}
+
+/** حذف مجموعة سجلات بريد مرسل */
+export async function deleteEmailLogsBulk(ids: number[]) {
+  await requirePageEdit("contact-messages");
+  try {
+    await prisma.emailLog.deleteMany({
+      where: { id: { in: ids } },
+    });
+    revalidatePath("/admin/contact/messages");
+    return { success: true };
+  } catch (error) {
+    console.error(`Failed to delete email logs bulk:`, error);
+    return { error: "تعذر الحذف" };
   }
 }
 

@@ -2,8 +2,54 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { deleteContactFormSubmission } from "../../contact-actions";
+import { deleteContactFormSubmission, deleteContactFormSubmissionsBulk } from "../../contact-actions";
 import { AlertModal } from "@/app/components/AlertModal";
+
+function ConfirmDeleteModal({
+  isOpen,
+  isDeleting,
+  onClose,
+  onConfirm,
+}: {
+  isOpen: boolean;
+  isDeleting: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-white dark:bg-card-dark w-full max-w-sm rounded-2xl shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700 p-6 text-center space-y-4">
+        <div className="mx-auto w-12 h-12 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center mb-4">
+          <span className="material-icons text-2xl">warning</span>
+        </div>
+        <h3 className="text-lg font-bold text-secondary dark:text-white">تأكيد الحذف</h3>
+        <p className="text-gray-500 dark:text-gray-400 text-sm">
+          هل أنت متأكد من رغبتك في الحذف نهائياً؟ لا يمكن التراجع عن هذا الإجراء.
+        </p>
+        <div className="flex gap-3 pt-2">
+          <button
+            type="button"
+            disabled={isDeleting}
+            onClick={onConfirm}
+            className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-xl disabled:opacity-50 transition-colors"
+          >
+            {isDeleting ? "جاري الحذف..." : "حذف"}
+          </button>
+          <button
+            type="button"
+            disabled={isDeleting}
+            onClick={onClose}
+            className="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+          >
+            إلغاء
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 type Message = {
   id: number;
@@ -18,21 +64,58 @@ type Message = {
 export function ContactMessagesTable({ messages }: { messages: Message[] }) {
   const router = useRouter();
   const [openId, setOpenId] = useState<number | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+  const [showBulkConfirm, setShowBulkConfirm] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const selected = messages.find((m) => m.id === openId);
 
   async function handleDelete(id: number) {
-    if (!confirm("حذف هذه الرسالة؟")) return;
     setDeletingId(id);
     try {
       const res = await deleteContactFormSubmission(id);
-      if (res?.success) router.refresh();
+      if (res?.success) {
+        setDeleteConfirmId(null);
+        router.refresh();
+      }
       else if (res && !res.success) setErrorMessage(res.error);
     } finally {
       setDeletingId(null);
     }
   }
+
+  async function handleBulkDelete() {
+    if (selectedIds.length === 0) return;
+    setIsBulkDeleting(true);
+    try {
+      const res = await deleteContactFormSubmissionsBulk(selectedIds);
+      if (res?.success) {
+        setShowBulkConfirm(false);
+        setSelectedIds([]);
+        router.refresh();
+      } else if (res && !res.success) {
+        setErrorMessage(res.error);
+      }
+    } finally {
+      setIsBulkDeleting(false);
+    }
+  }
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === messages.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(messages.map((m) => m.id));
+    }
+  };
+
+  const toggleSelect = (id: number) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
 
   return (
     <>
@@ -43,9 +126,51 @@ export function ContactMessagesTable({ messages }: { messages: Message[] }) {
         message={errorMessage ?? ""}
         variant="error"
       />
+      <ConfirmDeleteModal
+        isOpen={deleteConfirmId !== null}
+        isDeleting={deletingId !== null}
+        onClose={() => setDeleteConfirmId(null)}
+        onConfirm={() => deleteConfirmId && handleDelete(deleteConfirmId)}
+      />
+      <ConfirmDeleteModal
+        isOpen={showBulkConfirm}
+        isDeleting={isBulkDeleting}
+        onClose={() => setShowBulkConfirm(false)}
+        onConfirm={handleBulkDelete}
+      />
+
+      {selectedIds.length > 0 && (
+        <div className="bg-primary/5 border border-primary/20 dark:bg-primary/10 dark:border-primary/30 rounded-xl p-4 mb-4 flex items-center justify-between animate-in fade-in slide-in-from-top-2">
+          <div className="flex items-center gap-3">
+            <span className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/20 text-primary font-bold text-sm">
+              {selectedIds.length}
+            </span>
+            <span className="text-secondary dark:text-white font-medium">
+              عناصر محددة
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowBulkConfirm(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors shadow-sm"
+          >
+            <span className="material-icons text-sm">delete_sweep</span>
+            حذف المحدد
+          </button>
+        </div>
+      )}
+
       <table className="w-full">
         <thead className="bg-gray-50 dark:bg-gray-800/50 text-gray-500 dark:text-gray-400 text-sm">
           <tr>
+            <th className="px-6 py-4 text-center font-medium w-16">
+              <input
+                type="checkbox"
+                className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-primary focus:ring-primary cursor-pointer"
+                checked={messages.length > 0 && selectedIds.length === messages.length}
+                onChange={toggleSelectAll}
+              />
+            </th>
             <th className="px-6 py-4 text-right font-medium">الاسم</th>
             <th className="px-6 py-4 text-right font-medium">البريد</th>
             <th className="px-6 py-4 text-right font-medium">الجوال</th>
@@ -58,8 +183,16 @@ export function ContactMessagesTable({ messages }: { messages: Message[] }) {
           {messages.map((msg) => (
             <tr
               key={msg.id}
-              className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+              className={`hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors ${selectedIds.includes(msg.id) ? "bg-primary/5 dark:bg-primary/10" : ""}`}
             >
+              <td className="px-6 py-4 text-center">
+                <input
+                  type="checkbox"
+                  className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-primary focus:ring-primary cursor-pointer"
+                  checked={selectedIds.includes(msg.id)}
+                  onChange={() => toggleSelect(msg.id)}
+                />
+              </td>
               <td className="px-6 py-4">
                 <span className="font-medium text-secondary dark:text-white">
                   {msg.firstName} {msg.lastName}
@@ -97,7 +230,7 @@ export function ContactMessagesTable({ messages }: { messages: Message[] }) {
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleDelete(msg.id)}
+                    onClick={() => setDeleteConfirmId(msg.id)}
                     disabled={deletingId === msg.id}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 text-red-600 dark:text-red-400 rounded-lg text-sm font-medium hover:bg-red-500/20 transition-colors disabled:opacity-50"
                     aria-label="حذف"
