@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import { getInvestors, getInvestor, saveInvestorReports, searchInvestorByName } from "../actions";
+import { FileSpreadsheet, Upload, CheckCircle, FileOutput, AlertCircle, AlertTriangle, User, Save, X, FileText, Info, Search, FolderOpen, ExternalLink } from "lucide-react";
 
 type ExtractResult = {
     status: string;
@@ -215,7 +216,7 @@ export default function ExtractReportsPage() {
         <div className="space-y-8" dir="rtl">
             <div>
                 <h1 className="text-3xl font-bold text-secondary dark:text-white flex items-center gap-2">
-                    <span className="material-icons text-primary">table_chart</span>
+                    <FileSpreadsheet className="text-primary" size={32} />
                     استخراج تقارير من Excel
                 </h1>
                 <p className="text-gray-500 mt-1">
@@ -229,7 +230,7 @@ export default function ExtractReportsPage() {
                 className="bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-6"
             >
                 <h2 className="text-lg font-bold text-secondary dark:text-white mb-4 flex items-center gap-2">
-                    <span className="material-icons text-primary">upload_file</span>
+                    <Upload className="text-primary" size={24} />
                     رفع ملف Excel
                 </h2>
                 <form onSubmit={handleExtract} className="space-y-4">
@@ -261,7 +262,7 @@ export default function ExtractReportsPage() {
                                 className={`w-14 h-14 rounded-full flex items-center justify-center ${file ? "bg-green-100 text-green-600 dark:bg-green-500/20" : "bg-primary/10 text-primary"
                                     }`}
                             >
-                                <span className="material-icons text-3xl">{file ? "check_circle" : "table_chart"}</span>
+                                {file ? <CheckCircle size={32} /> : <FileSpreadsheet size={32} />}
                             </div>
                             <div>
                                 <p className="font-medium text-secondary dark:text-white">
@@ -305,7 +306,7 @@ export default function ExtractReportsPage() {
                             </>
                         ) : (
                             <>
-                                <span className="material-icons">hub</span>
+                                <FileOutput size={20} />
                                 استخراج PDF من Excel
                             </>
                         )}
@@ -327,7 +328,7 @@ export default function ExtractReportsPage() {
                                     : "bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300"
                                     }`}
                             >
-                                <span className="material-icons">{result.status === "error" ? "error" : "warning"}</span>
+                                {result.status === "error" ? <AlertCircle size={24} className="shrink-0" /> : <AlertTriangle size={24} className="shrink-0" />}
                                 <span>{result.message}</span>
                             </div>
                         </div>
@@ -335,7 +336,7 @@ export default function ExtractReportsPage() {
                         <>
                             <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex flex-wrap items-center justify-between gap-4">
                                 <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
-                                    <span className="material-icons">check_circle</span>
+                                    <CheckCircle size={24} />
                                     <span>{result.message}</span>
                                 </div>
                                 {result.success_count != null && (
@@ -365,7 +366,7 @@ export default function ExtractReportsPage() {
                                                     >
                                                         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                                                             <div className="font-bold text-secondary dark:text-white flex items-center gap-2">
-                                                                <span className="material-icons text-primary">person</span>
+                                                                <User className="text-primary" size={20} />
                                                                 {name}
                                                                 <span className="text-xs font-normal text-gray-400">({urls.length} ملف)</span>
                                                             </div>
@@ -375,7 +376,7 @@ export default function ExtractReportsPage() {
                                                                 disabled={urls.length === 0}
                                                                 className="shrink-0 inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                                             >
-                                                                <span className="material-icons text-lg">save</span>
+                                                                <Save size={18} />
                                                                 حفظ
                                                             </button>
                                                         </div>
@@ -397,7 +398,7 @@ export default function ExtractReportsPage() {
                                                                             className="absolute top-1.5 right-1.5 z-10 w-7 h-7 rounded-full bg-red-500 text-white flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 hover:bg-red-600 transition-all"
                                                                             title="استبعاد هذا الملف"
                                                                         >
-                                                                            <span className="material-icons text-base">close</span>
+                                                                            <X size={16} />
                                                                         </button>
                                                                         {/* PDF Preview */}
                                                                         <a href={url} target="_blank" rel="noopener noreferrer" className="block">
@@ -412,7 +413,7 @@ export default function ExtractReportsPage() {
                                                                             </div>
                                                                             <div className="p-2 flex items-center gap-2 border-t border-gray-100 dark:border-gray-700">
                                                                                 <div className="w-7 h-7 rounded-lg bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400 flex items-center justify-center shrink-0">
-                                                                                    <span className="material-icons text-base">picture_as_pdf</span>
+                                                                                    <FileText size={16} />
                                                                                 </div>
                                                                                 <span className="text-xs font-medium text-gray-600 dark:text-gray-300 truncate">PDF {i + 1}</span>
                                                                             </div>
@@ -458,7 +459,7 @@ export default function ExtractReportsPage() {
                                                     onClick={() => !isSaving && setSaveModal(null)}
                                                     className="p-1 text-gray-400 hover:text-red-500"
                                                 >
-                                                    <span className="material-icons">close</span>
+                                                    <X size={20} />
                                                 </button>
                                             </div>
                                             <div className="p-6 overflow-y-auto flex-1 space-y-6">
@@ -468,7 +469,7 @@ export default function ExtractReportsPage() {
                                                     </p>
                                                     {autoMatchedExact ? (
                                                         <p className="text-sm text-green-600 dark:text-green-400 flex items-center gap-1">
-                                                            <span className="material-icons text-sm">check_circle</span>
+                                                            <CheckCircle size={16} />
                                                             تم العثور على المستثمر تلقائياً!
                                                         </p>
                                                     ) : isSearching ? (
@@ -478,7 +479,7 @@ export default function ExtractReportsPage() {
                                                         </p>
                                                     ) : searchResults.length > 0 && !selectedUserId ? (
                                                         <p className="text-sm text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                                                            <span className="material-icons text-sm">info</span>
+                                                            <Info size={16} />
                                                             لم يتم العثور على تطابق تام — اختر من الأسماء المقاربة أدناه
                                                         </p>
                                                     ) : (
@@ -508,7 +509,7 @@ export default function ExtractReportsPage() {
                                                                 {isSearching ? (
                                                                     <span className="w-4 h-4 border-2 border-gray-300 border-t-primary rounded-full animate-spin block" />
                                                                 ) : (
-                                                                    <span className="material-icons text-xl">search</span>
+                                                                    <Search size={20} />
                                                                 )}
                                                             </span>
                                                             {selectedUserId && (
@@ -521,7 +522,7 @@ export default function ExtractReportsPage() {
                                                                     }}
                                                                     className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-red-500 transition-colors"
                                                                 >
-                                                                    <span className="material-icons text-lg">close</span>
+                                                                    <X size={18} />
                                                                 </button>
                                                             )}
                                                         </div>
@@ -552,7 +553,7 @@ export default function ExtractReportsPage() {
                                                                                     : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                                                                                     }`}
                                                                             >
-                                                                                <span className="material-icons text-base opacity-60">person</span>
+                                                                                <User size={16} className="opacity-60" />
                                                                                 {u.name}
                                                                             </li>
                                                                         ))
@@ -594,7 +595,7 @@ export default function ExtractReportsPage() {
                                                 {selectedUserId && (
                                                     <div>
                                                         <h4 className="text-sm font-bold text-secondary dark:text-white mb-3 flex items-center gap-2">
-                                                            <span className="material-icons text-primary text-lg">folder_open</span>
+                                                            <FolderOpen className="text-primary" size={20} />
                                                             ملفاته السابقة ({existingReports.length})
                                                         </h4>
                                                         {loadingReports ? (
@@ -628,14 +629,14 @@ export default function ExtractReportsPage() {
                                                                             {/* Hover icon */}
                                                                             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                                                                 <div className="w-12 h-12 rounded-full bg-primary/90 text-white flex items-center justify-center shadow-lg backdrop-blur-sm">
-                                                                                    <span className="material-icons text-2xl">open_in_new</span>
+                                                                                    <ExternalLink size={24} />
                                                                                 </div>
                                                                             </div>
                                                                         </div>
                                                                         {/* File info */}
                                                                         <div className="p-3 flex items-center gap-3 border-t border-gray-100 dark:border-gray-700">
                                                                             <div className="w-9 h-9 rounded-lg bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400 flex items-center justify-center shrink-0">
-                                                                                <span className="material-icons text-xl">picture_as_pdf</span>
+                                                                                <FileText size={20} />
                                                                             </div>
                                                                             <div className="min-w-0 flex-1">
                                                                                 <p className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate" title={report.fileName || report.type}>
@@ -685,7 +686,7 @@ export default function ExtractReportsPage() {
                                                         </>
                                                     ) : (
                                                         <>
-                                                            <span className="material-icons text-lg">save</span>
+                                                            <Save size={18} />
                                                             حفظ
                                                         </>
                                                     )}

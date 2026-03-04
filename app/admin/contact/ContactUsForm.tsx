@@ -5,6 +5,7 @@ import Link from "next/link";
 import { updateContactUs, uploadContactEmailLogo } from "../contact-actions";
 import { ContactSection } from "@/app/components/ContactSection";
 import type { ContactUsData } from "@/app/contact/getContactUs";
+import { ArrowLeft, ImagePlus, Mail } from "lucide-react";
 
 type ContactWithLogoDisplay = ContactUsData & { emailLogoUrlDisplay?: string | null };
 
@@ -44,7 +45,7 @@ export function ContactUsForm({ contact }: Props) {
               className="p-2 rounded-xl text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-secondary dark:hover:text-white transition-colors"
               aria-label="العودة للوحة التحكم"
             >
-              <span className="material-icons">arrow_forward</span>
+              <ArrowLeft size={24} />
             </Link>
             <div>
               <h1 className="text-2xl md:text-3xl font-bold text-secondary dark:text-white">
@@ -73,7 +74,7 @@ export function ContactUsForm({ contact }: Props) {
         <div className="max-w-6xl mx-auto px-4 py-6">
           <section className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-card-dark p-6 mb-6">
             <h2 className="text-lg font-bold text-secondary dark:text-white mb-2 flex items-center gap-2">
-              <span className="material-icons text-primary">image</span>
+              <ImagePlus className="text-primary" size={24} />
               شعار البريد الإلكتروني
             </h2>
             <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
@@ -142,7 +143,7 @@ export function ContactUsForm({ contact }: Props) {
 
           <section className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-card-dark p-6 mb-8">
             <h2 className="text-lg font-bold text-secondary dark:text-white mb-2 flex items-center gap-2">
-              <span className="material-icons text-primary">mail</span>
+              <Mail className="text-primary" size={24} />
               إعدادات الإشعارات
             </h2>
             <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">

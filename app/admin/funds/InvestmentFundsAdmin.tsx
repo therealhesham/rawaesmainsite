@@ -7,6 +7,7 @@ import {
   updateRecruitmentFund,
   updateHospitalityFund,
 } from "../funds-actions";
+import { CarFront, Users, Building2 } from "lucide-react";
 
 type Props = {
   initialFunds: FundsData;
@@ -83,7 +84,7 @@ export function InvestmentFundsAdmin({ initialFunds }: Props) {
             صندوق روائس لتأجير السيارات
           </h2>
           <span className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-primary/10 text-primary">
-            <span className="material-icons-round">directions_car</span>
+            <CarFront size={20} />
           </span>
         </div>
         <form
@@ -150,7 +151,7 @@ export function InvestmentFundsAdmin({ initialFunds }: Props) {
             صندوق روائس للاستقدام
           </h2>
           <span className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-primary/10 text-primary">
-            <span className="material-icons-round">group</span>
+            <Users size={20} />
           </span>
         </div>
         <form
@@ -218,7 +219,7 @@ export function InvestmentFundsAdmin({ initialFunds }: Props) {
             صندوق روائس للضيافة
           </h2>
           <span className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-primary/10 text-primary">
-            <span className="material-icons-round">apartment</span>
+            <Building2 size={20} />
           </span>
         </div>
         <form

@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { ContactMessagesTable } from "./ContactMessagesTable";
 import { deleteEmailLog, deleteEmailLogsBulk } from "../../contact-actions";
+import { AlertTriangle, Inbox, Send, Trash2, CheckCircle, AlertCircle, Eye, X } from "lucide-react";
 
 function ConfirmDeleteModal({
     isOpen,
@@ -21,7 +22,7 @@ function ConfirmDeleteModal({
             <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
             <div className="relative bg-white dark:bg-card-dark w-full max-w-sm rounded-2xl shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700 p-6 text-center space-y-4">
                 <div className="mx-auto w-12 h-12 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center mb-4">
-                    <span className="material-icons text-2xl">warning</span>
+                    <AlertTriangle size={24} />
                 </div>
                 <h3 className="text-lg font-bold text-secondary dark:text-white">تأكيد الحذف</h3>
                 <p className="text-gray-500 dark:text-gray-400 text-sm">
@@ -130,8 +131,8 @@ export function MessagesPageClient({
     };
 
     const tabs = [
-        { key: "inbox" as const, label: "الرسائل الواردة", icon: "inbox", count: messages.length },
-        { key: "sent" as const, label: "البريد المرسل", icon: "forward_to_inbox", count: emailLogs.length },
+        { key: "inbox" as const, label: "الرسائل الواردة", icon: Inbox, count: messages.length },
+        { key: "sent" as const, label: "البريد المرسل", icon: Send, count: emailLogs.length },
     ];
 
     return (
@@ -159,7 +160,7 @@ export function MessagesPageClient({
                             : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                             }`}
                     >
-                        <span className="material-icons text-[18px]">{t.icon}</span>
+                        <t.icon size={18} />
                         {t.label}
                         <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${tab === t.key ? "bg-[#003B46] text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-500"
                             }`}>
@@ -174,14 +175,14 @@ export function MessagesPageClient({
                 <div className="bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
                     <div className="p-6 border-b border-gray-100 dark:border-gray-800">
                         <h2 className="text-lg font-bold text-secondary dark:text-white flex items-center gap-2">
-                            <span className="material-icons text-primary">inbox</span>
+                            <Inbox className="text-primary" size={24} />
                             الرسائل ({messages.length})
                         </h2>
                     </div>
                     <div className="overflow-x-auto">
                         {messages.length === 0 ? (
                             <div className="px-6 py-16 text-center text-gray-500 dark:text-gray-400">
-                                <span className="material-icons text-5xl mb-3 opacity-30 block">inbox</span>
+                                <Inbox size={48} className="mb-3 opacity-30 mx-auto" />
                                 <p>لا توجد رسائل حتى الآن</p>
                             </div>
                         ) : (
@@ -196,14 +197,14 @@ export function MessagesPageClient({
                 <div className="bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
                     <div className="p-6 border-b border-gray-100 dark:border-gray-800">
                         <h2 className="text-lg font-bold text-secondary dark:text-white flex items-center gap-2">
-                            <span className="material-icons text-primary">forward_to_inbox</span>
+                            <Send className="text-primary" size={24} />
                             البريد المرسل ({emailLogs.length})
                         </h2>
                     </div>
                     <div className="overflow-x-auto">
                         {emailLogs.length === 0 ? (
                             <div className="px-6 py-16 text-center text-gray-500 dark:text-gray-400">
-                                <span className="material-icons text-5xl mb-3 opacity-30 block">forward_to_inbox</span>
+                                <Send size={48} className="mb-3 opacity-30 mx-auto" />
                                 <p>لم يتم إرسال أي رسائل بعد</p>
                             </div>
                         ) : (
@@ -223,7 +224,7 @@ export function MessagesPageClient({
                                             onClick={() => setShowBulkConfirm(true)}
                                             className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors shadow-sm"
                                         >
-                                            <span className="material-icons text-sm">delete_sweep</span>
+                                            <Trash2 size={16} />
                                             حذف المحدد
                                         </button>
                                     </div>
@@ -279,9 +280,7 @@ export function MessagesPageClient({
                                                             ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
                                                             : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
                                                             }`}>
-                                                            <span className="material-icons text-[12px]">
-                                                                {log.status === "sent" ? "check_circle" : "error"}
-                                                            </span>
+                                                            {log.status === "sent" ? <CheckCircle size={14} /> : <AlertCircle size={14} />}
                                                             {log.status === "sent" ? "أُرسل" : "فشل"}
                                                         </span>
                                                     </td>
@@ -298,7 +297,7 @@ export function MessagesPageClient({
                                                                 onClick={() => setOpenLog(log)}
                                                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary rounded-lg text-sm font-medium hover:bg-primary/20 transition-colors"
                                                             >
-                                                                <span className="material-icons text-sm">visibility</span>
+                                                                <Eye size={16} />
                                                                 عرض
                                                             </button>
                                                             <button
@@ -308,7 +307,7 @@ export function MessagesPageClient({
                                                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 text-red-600 dark:text-red-400 rounded-lg text-sm font-medium hover:bg-red-500/20 transition-colors disabled:opacity-50"
                                                                 aria-label="حذف"
                                                             >
-                                                                <span className="material-icons text-sm">delete</span>
+                                                                <Trash2 size={16} />
                                                                 حذف
                                                             </button>
                                                         </div>
@@ -332,14 +331,14 @@ export function MessagesPageClient({
                         {/* Modal Header */}
                         <div className="bg-gradient-to-l from-[#003B46] to-[#005F6B] p-5 flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <span className="material-icons text-white/80">forward_to_inbox</span>
+                                <Send className="text-white/80" size={24} />
                                 <h2 className="text-lg font-bold text-white">{openLog.subject}</h2>
                             </div>
                             <button
                                 onClick={() => setOpenLog(null)}
                                 className="p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
                             >
-                                <span className="material-icons">close</span>
+                                <X size={20} />
                             </button>
                         </div>
                         <div className="h-1 bg-gradient-to-l from-[#C9A84C] via-[#F0C040] to-[#C9A84C]" />

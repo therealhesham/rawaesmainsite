@@ -11,6 +11,7 @@ import {
     uploadFundImage,
     type FundKind,
 } from "../funds-actions";
+import { Gem, Bed, Star, Sun, Users, Utensils, BedDouble, Building2, Building, FileText, UserPlus, Award, Car, Headset, CarFront, Store } from "lucide-react";
 
 const HOSPITALITY_IMAGE =
     "https://lh3.googleusercontent.com/aida-public/AB6AXuCj4ygmIs_eB2rNZI9TW4i4vXoUlIU-2nGsdTKJMLLv0j7qqyNAc9nB2029wLwXa7lhJrgCQObkG6Sx-o2Ct4_LPAlhqZeGCcKeJNZ7dGDNijkTMtIJ9bpipRLPYW-FT-zKPyQUy5dZsO7UWVlJSrGsYk0I6mR1dg9arDs1VsQZkC8oWT__9zKJ5t-ShzVL1F0KBYjq3N5cTgUWkw94rG6HLpPnn_HN3nwu480rcsjzNevxyx5dNSMzUwCL-95zi0wFkJHcVU2E1ss";
@@ -18,10 +19,10 @@ const CARS_IMAGE = "/CarLeasing.avif";
 const RECRUITMENT_IMAGE = "istiqdam.avif";
 
 const HOTEL_BRANDS = [
-    { icon: "diamond", name: "Rest In Hotel" },
-    { icon: "bed", name: "Resan Hotel" },
-    { icon: "star", name: "Rawaes Hotel" },
-    { icon: "wb_sunny", name: "Shams Hotel" },
+    { icon: Gem, name: "Rest In Hotel" },
+    { icon: Bed, name: "Resan Hotel" },
+    { icon: Star, name: "Rawaes Hotel" },
+    { icon: Sun, name: "Shams Hotel" },
 ];
 
 type Props = {
@@ -38,11 +39,15 @@ export function InvestmentFundsSectionEditable({ tabs, funds }: Props) {
     const [imageUploading, setImageUploading] = useState<FundKind | null>(null);
     const [imageError, setImageError] = useState<string | null>(null);
 
-    async function handleImageUpload(e: React.FormEvent<HTMLFormElement>, kind: FundKind) {
-        e.preventDefault();
+    async function handleImageUpload(file: File | undefined | null, kind: FundKind) {
+        if (!file) {
+            setImageError("يرجى اختيار صورة أولاً.");
+            return;
+        }
         setImageError(null);
         setImageUploading(kind);
-        const formData = new FormData(e.currentTarget);
+        const formData = new FormData();
+        formData.append("file", file);
         const result = await uploadFundImage(kind, formData);
         setImageUploading(null);
         if (result.success) {
@@ -65,8 +70,8 @@ export function InvestmentFundsSectionEditable({ tabs, funds }: Props) {
             kind === "cars"
                 ? await updateCarsFund(formData)
                 : kind === "recruitment"
-                  ? await updateRecruitmentFund(formData)
-                  : await updateHospitalityFund(formData);
+                    ? await updateRecruitmentFund(formData)
+                    : await updateHospitalityFund(formData);
         if (result.success) {
             setMessage("تم حفظ بيانات الصندوق بنجاح.");
         } else {
@@ -131,12 +136,15 @@ export function InvestmentFundsSectionEditable({ tabs, funds }: Props) {
                                                     src={(h as { imageUrl?: string | null })?.imageUrl || HOSPITALITY_IMAGE}
                                                 />
                                             </div>
-                                            <form onSubmit={(e) => handleImageUpload(e, "hospitality")} className="flex flex-wrap items-center gap-2">
-                                                <input type="file" name="file" accept="image/*" className="text-sm text-secondary dark:text-gray-300" required />
-                                                <button type="submit" disabled={imageUploading === "hospitality"} className="px-4 py-2 rounded-xl bg-slate-700 text-white text-sm font-medium hover:bg-slate-600 disabled:opacity-50">
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <input id="hospitality-image-input" type="file" accept="image/*" className="text-sm text-secondary dark:text-gray-300" />
+                                                <button type="button" onClick={() => {
+                                                    const input = document.getElementById("hospitality-image-input") as HTMLInputElement;
+                                                    handleImageUpload(input?.files?.[0], "hospitality");
+                                                }} disabled={imageUploading === "hospitality"} className="px-4 py-2 rounded-xl bg-slate-700 text-white text-sm font-medium hover:bg-slate-600 disabled:opacity-50">
                                                     {imageUploading === "hospitality" ? "جاري الرفع..." : "تغيير الصورة"}
                                                 </button>
-                                            </form>
+                                            </div>
                                         </div>
                                         <div className="text-secondary dark:text-white space-y-6">
                                             <h3 className="text-3xl font-bold border-r-4 border-gold pr-4">
@@ -154,17 +162,17 @@ export function InvestmentFundsSectionEditable({ tabs, funds }: Props) {
                                     </div>
                                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
                                         {[
-                                            { name: "homemaidsCound", icon: "groups", label: "القوة العاملة", type: "text" as const },
-                                            { name: "facilities", icon: "restaurant_menu", label: "المرافق المتنوعة", type: "text" as const },
-                                            { name: "contractsCount", icon: "king_bed", label: "عدد الغرف", type: "text" as const },
-                                            { name: "branches", icon: "apartment", label: "عدد الفنادق", type: "number" as const },
-                                        ].map(({ name, icon, label, type }) => (
+                                            { name: "homemaidsCound", icon: Users, label: "القوة العاملة", type: "text" as const },
+                                            { name: "facilities", icon: Utensils, label: "المرافق المتنوعة", type: "text" as const },
+                                            { name: "contractsCount", icon: BedDouble, label: "عدد الغرف", type: "text" as const },
+                                            { name: "branches", icon: Building2, label: "عدد الفنادق", type: "number" as const },
+                                        ].map(({ name, icon: Icon, label, type }) => (
                                             <div
                                                 key={name}
                                                 className="bg-white dark:bg-slate-800 p-6 rounded-[32px] text-center shadow-lg border border-gray-100 dark:border-slate-700"
                                             >
                                                 <div className="bg-gold/10 dark:bg-slate-700 w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3 text-gold">
-                                                    <span className="material-icons-round text-3xl">{icon}</span>
+                                                    <Icon size={32} />
                                                 </div>
                                                 <input
                                                     type={type}
@@ -173,8 +181,8 @@ export function InvestmentFundsSectionEditable({ tabs, funds }: Props) {
                                                         name === "facilities"
                                                             ? (h as { facilities?: string | null })?.facilities ?? ""
                                                             : name === "branches"
-                                                              ? h?.branches ?? ""
-                                                              : String((h as Record<string, unknown>)?.[name] ?? "")
+                                                                ? h?.branches ?? ""
+                                                                : String((h as Record<string, unknown>)?.[name] ?? "")
                                                     }
                                                     className="w-full text-2xl font-bold text-gold bg-transparent border-b-2 border-gold/30 py-1 text-center focus:outline-none focus:border-gold"
                                                 />
@@ -183,14 +191,17 @@ export function InvestmentFundsSectionEditable({ tabs, funds }: Props) {
                                         ))}
                                     </div>
                                     <div className="flex flex-wrap justify-center items-center gap-10">
-                                        {HOTEL_BRANDS.map((brand) => (
-                                            <div key={brand.name} className="flex flex-col items-center">
-                                                <div className="w-12 h-12 bg-gold/20 rounded-full flex items-center justify-center text-gold">
-                                                    <span className="material-icons-round">{brand.icon}</span>
+                                        {HOTEL_BRANDS.map((brand) => {
+                                            const Icon = brand.icon;
+                                            return (
+                                                <div key={brand.name} className="flex flex-col items-center">
+                                                    <div className="w-12 h-12 bg-gold/20 rounded-full flex items-center justify-center text-gold">
+                                                        <Icon size={24} />
+                                                    </div>
+                                                    <span className="text-xs font-bold text-secondary dark:text-gray-300">{brand.name}</span>
                                                 </div>
-                                                <span className="text-xs font-bold text-secondary dark:text-gray-300">{brand.name}</span>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                     <div className="flex justify-end">
                                         <button
@@ -218,12 +229,15 @@ export function InvestmentFundsSectionEditable({ tabs, funds }: Props) {
                                                     src={(r as { imageUrl?: string | null })?.imageUrl || RECRUITMENT_IMAGE}
                                                 />
                                             </div>
-                                            <form onSubmit={(e) => handleImageUpload(e, "recruitment")} className="flex flex-wrap items-center gap-2">
-                                                <input type="file" name="file" accept="image/*" className="text-sm text-secondary dark:text-gray-300" required />
-                                                <button type="submit" disabled={imageUploading === "recruitment"} className="px-4 py-2 rounded-xl bg-slate-700 text-white text-sm font-medium hover:bg-slate-600 disabled:opacity-50">
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <input id="recruitment-image-input" type="file" accept="image/*" className="text-sm text-secondary dark:text-gray-300" />
+                                                <button type="button" onClick={() => {
+                                                    const input = document.getElementById("recruitment-image-input") as HTMLInputElement;
+                                                    handleImageUpload(input?.files?.[0], "recruitment");
+                                                }} disabled={imageUploading === "recruitment"} className="px-4 py-2 rounded-xl bg-slate-700 text-white text-sm font-medium hover:bg-slate-600 disabled:opacity-50">
                                                     {imageUploading === "recruitment" ? "جاري الرفع..." : "تغيير الصورة"}
                                                 </button>
-                                            </form>
+                                            </div>
                                         </div>
                                         <div className="text-secondary dark:text-white space-y-6">
                                             <h3 className="text-3xl font-bold border-r-4 border-gold pr-4">
@@ -240,17 +254,17 @@ export function InvestmentFundsSectionEditable({ tabs, funds }: Props) {
                                     </div>
                                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
                                         {[
-                                            { name: "branches", icon: "location_city", label: "عدد الفروع", type: "number" as const },
-                                            { name: "contractsCount", icon: "description", label: "عدد العقود في الشهر", type: "text" as const },
-                                            { name: "homemaidsCound", icon: "group_add", label: "عدد العمال", type: "text" as const },
-                                            { name: "musanadRating", icon: "workspace_premium", label: "تقييمنا على مساند", type: "text" as const },
-                                        ].map(({ name, icon, label, type }) => (
+                                            { name: "branches", icon: Building, label: "عدد الفروع", type: "number" as const },
+                                            { name: "contractsCount", icon: FileText, label: "عدد العقود في الشهر", type: "text" as const },
+                                            { name: "homemaidsCound", icon: UserPlus, label: "عدد العمال", type: "text" as const },
+                                            { name: "musanadRating", icon: Award, label: "تقييمنا على مساند", type: "text" as const },
+                                        ].map(({ name, icon: Icon, label, type }) => (
                                             <div
                                                 key={name}
                                                 className="bg-white dark:bg-slate-800 p-6 rounded-[32px] text-center shadow-lg border border-gray-100 dark:border-slate-700"
                                             >
                                                 <div className="bg-gold/10 dark:bg-slate-700 w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3 text-gold">
-                                                    <span className="material-icons-round text-3xl">{icon}</span>
+                                                    <Icon size={32} />
                                                 </div>
                                                 <input
                                                     type={type}
@@ -289,12 +303,15 @@ export function InvestmentFundsSectionEditable({ tabs, funds }: Props) {
                                                     src={(c as { imageUrl?: string | null })?.imageUrl || CARS_IMAGE}
                                                 />
                                             </div>
-                                            <form onSubmit={(e) => handleImageUpload(e, "cars")} className="flex flex-wrap items-center gap-2">
-                                                <input type="file" name="file" accept="image/*" className="text-sm text-secondary dark:text-gray-300" required />
-                                                <button type="submit" disabled={imageUploading === "cars"} className="px-4 py-2 rounded-xl bg-slate-700 text-white text-sm font-medium hover:bg-slate-600 disabled:opacity-50">
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <input id="cars-image-input" type="file" accept="image/*" className="text-sm text-secondary dark:text-gray-300" />
+                                                <button type="button" onClick={() => {
+                                                    const input = document.getElementById("cars-image-input") as HTMLInputElement;
+                                                    handleImageUpload(input?.files?.[0], "cars");
+                                                }} disabled={imageUploading === "cars"} className="px-4 py-2 rounded-xl bg-slate-700 text-white text-sm font-medium hover:bg-slate-600 disabled:opacity-50">
                                                     {imageUploading === "cars" ? "جاري الرفع..." : "تغيير الصورة"}
                                                 </button>
-                                            </form>
+                                            </div>
                                         </div>
                                         <div className="text-secondary dark:text-white space-y-6">
                                             <h3 className="text-3xl font-bold border-r-4 border-gold pr-4">
@@ -311,17 +328,17 @@ export function InvestmentFundsSectionEditable({ tabs, funds }: Props) {
                                     </div>
                                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
                                         {[
-                                            { name: "daysRental", icon: "car_rental", label: "عملية تأجير في اليوم", type: "text" as const },
-                                            { name: "availableServices", icon: "support_agent", label: "الخدمات المتوفرة", type: "text" as const },
-                                            { name: "avaiableCars", icon: "directions_car", label: "عدد السيارات", type: "text" as const },
-                                            { name: "branches", icon: "store", label: "عدد الفروع", type: "number" as const },
-                                        ].map(({ name, icon, label, type }) => (
+                                            { name: "daysRental", icon: Car, label: "عملية تأجير في اليوم", type: "text" as const },
+                                            { name: "availableServices", icon: Headset, label: "الخدمات المتوفرة", type: "text" as const },
+                                            { name: "avaiableCars", icon: CarFront, label: "عدد السيارات", type: "text" as const },
+                                            { name: "branches", icon: Store, label: "عدد الفروع", type: "number" as const },
+                                        ].map(({ name, icon: Icon, label, type }) => (
                                             <div
                                                 key={name}
                                                 className="bg-white dark:bg-slate-800 p-6 rounded-[32px] text-center shadow-lg border border-gray-100 dark:border-slate-700"
                                             >
                                                 <div className="bg-gold/10 dark:bg-slate-700 w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3 text-gold">
-                                                    <span className="material-icons-round text-3xl">{icon}</span>
+                                                    <Icon size={32} />
                                                 </div>
                                                 <input
                                                     type={type}

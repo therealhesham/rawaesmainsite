@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getContactFormSubmissions, getEmailLogsForMessages } from "../../contact-actions";
 import { requirePageView } from "../../lib/auth";
 import { MessagesPageClient } from "./MessagesPageClient";
+import { ArrowLeft, Mail } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -23,11 +24,11 @@ export default async function AdminContactMessagesPage() {
             className="p-2 rounded-xl text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-secondary dark:hover:text-white transition-colors"
             aria-label="العودة لاتصل بنا"
           >
-            <span className="material-icons">arrow_forward</span>
+            <ArrowLeft size={24} />
           </Link>
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-secondary dark:text-white flex items-center gap-2">
-              <span className="material-icons text-primary">mail</span>
+              <Mail className="text-primary" size={32} />
               رسائل التواصل
             </h1>
             <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">

@@ -10,6 +10,7 @@ import {
   updateRentalCarReportDetail,
   deleteRentalCarReportDetail,
 } from "../../funds-actions";
+import { Car, Headset, CarFront, Store, ArrowLeft, BarChart3, Edit, Trash2 } from "lucide-react";
 
 /** شكل بيانات صندوق تأجير السيارات من السكيما (بدون تعديل الداتابيس) */
 type CarsFund = {
@@ -38,10 +39,10 @@ type UserMinimal = { id: number; name: string };
 const CARS_IMAGE = "/CarLeasing.avif";
 
 const FIELDS = [
-  { name: "daysRental", icon: "car_rental", label: "عملية تأجير في اليوم", type: "text" as const },
-  { name: "availableServices", icon: "support_agent", label: "الخدمات المتوفرة", type: "text" as const },
-  { name: "avaiableCars", icon: "directions_car", label: "عدد السيارات", type: "text" as const },
-  { name: "branches", icon: "store", label: "عدد الفروع", type: "number" as const },
+  { name: "daysRental", icon: Car, label: "عملية تأجير في اليوم", type: "text" as const },
+  { name: "availableServices", icon: Headset, label: "الخدمات المتوفرة", type: "text" as const },
+  { name: "avaiableCars", icon: CarFront, label: "عدد السيارات", type: "text" as const },
+  { name: "branches", icon: Store, label: "عدد الفروع", type: "number" as const },
 ];
 
 type Props = {
@@ -141,7 +142,7 @@ export function CarsFundForm({ fund, reportDetails, users }: Props) {
               className="p-2 rounded-xl text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-secondary dark:hover:text-white transition-colors"
               aria-label="العودة لصناديق الاستثمار"
             >
-              <span className="material-icons">arrow_forward</span>
+              <ArrowLeft size={24} />
             </Link>
             <div>
               <h1 className="text-2xl md:text-3xl font-bold text-secondary dark:text-white">
@@ -219,7 +220,7 @@ export function CarsFundForm({ fund, reportDetails, users }: Props) {
                   className="bg-white dark:bg-slate-800 p-6 rounded-3xl text-center shadow-lg border border-gray-100 dark:border-slate-700"
                 >
                   <div className="bg-gold/10 dark:bg-slate-700 w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3 text-gold">
-                    <span className="material-icons-round text-3xl">{icon}</span>
+                    <Icon size={32} />
                   </div>
                   <input
                     type={type}
@@ -237,7 +238,7 @@ export function CarsFundForm({ fund, reportDetails, users }: Props) {
           {/* التفاصيل الاستثمارية (rentalcarfundReportsDetails) */}
           <div className="border-t border-gray-200 dark:border-gray-700 pt-10">
             <h3 className="text-lg font-bold text-secondary dark:text-white mb-4 flex items-center gap-2">
-              <span className="material-icons-round text-gold">assessment</span>
+              <BarChart3 className="text-gold" size={24} />
               <span className="w-6 h-0.5 bg-gold" />
               التفاصيل الاستثمارية
             </h3>
@@ -328,7 +329,7 @@ export function CarsFundForm({ fund, reportDetails, users }: Props) {
                               className="p-2 rounded-lg text-gray-500 hover:bg-gray-200 dark:hover:bg-slate-600 hover:text-primary"
                               title="تعديل"
                             >
-                              <span className="material-icons text-lg">edit</span>
+                              <Edit size={20} />
                             </button>
                             <button
                               type="button"
@@ -337,7 +338,7 @@ export function CarsFundForm({ fund, reportDetails, users }: Props) {
                               className="p-2 rounded-lg text-gray-500 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-600 disabled:opacity-50"
                               title="حذف"
                             >
-                              <span className="material-icons text-lg">delete</span>
+                              <Trash2 size={20} />
                             </button>
                           </td>
                         </tr>

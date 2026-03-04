@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { createNotification, deleteNotification } from "./actions";
+import { BellRing, User, Users, UserSearch, Megaphone, Type, MessageSquare, Link as LinkIcon, AlertCircle, CheckCircle, Send, Bell, Trash } from "lucide-react";
 
 type Investor = { id: number; name: string };
 type NotificationRow = {
@@ -67,7 +68,7 @@ export function NotificationsClient({
                 <div className="bg-gradient-to-l from-[#003B46] to-[#005F6B] p-6 text-white">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center">
-                            <span className="material-icons text-[22px]">notifications_active</span>
+                            <BellRing size={22} />
                         </div>
                         <div>
                             <h1 className="text-xl font-bold">إنشاء تنبيه جديد</h1>
@@ -92,9 +93,9 @@ export function NotificationsClient({
                                     : "bg-white border-gray-200 text-gray-500 hover:border-[#003B46]/30 hover:text-[#003B46]"
                                     }`}
                             >
-                                <span className="material-icons text-[18px]">
-                                    {m === "individual" ? "person" : "groups"}
-                                </span>
+                                <div className="flex items-center justify-center w-[18px]">
+                                    {m === "individual" ? <User size={18} /> : <Users size={18} />}
+                                </div>
                                 {m === "individual" ? "لمستثمر محدد" : `للجميع (${investors.length})`}
                             </button>
                         ))}
@@ -105,7 +106,7 @@ export function NotificationsClient({
                         <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-2">
                                 <span className="flex items-center gap-1.5">
-                                    <span className="material-icons text-[16px] text-[#003B46]">person_search</span>
+                                    <UserSearch size={16} className="text-[#003B46]" />
                                     المستثمر
                                 </span>
                             </label>
@@ -125,7 +126,7 @@ export function NotificationsClient({
 
                     {mode === "bulk" && (
                         <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start gap-3">
-                            <span className="material-icons text-blue-500 shrink-0">campaign</span>
+                            <Megaphone className="text-blue-500 shrink-0" size={24} />
                             <p className="text-sm text-blue-800">
                                 سيصل هذا التنبيه لجميع المستثمرين ({investors.length} مستثمر) في صفحاتهم الشخصية.
                             </p>
@@ -136,7 +137,7 @@ export function NotificationsClient({
                     <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
                             <span className="flex items-center gap-1.5">
-                                <span className="material-icons text-[16px] text-[#003B46]">title</span>
+                                <Type size={16} className="text-[#003B46]" />
                                 عنوان التنبيه
                             </span>
                         </label>
@@ -153,7 +154,7 @@ export function NotificationsClient({
                     <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
                             <span className="flex items-center gap-1.5">
-                                <span className="material-icons text-[16px] text-[#003B46]">message</span>
+                                <MessageSquare size={16} className="text-[#003B46]" />
                                 نص التنبيه
                             </span>
                         </label>
@@ -170,7 +171,7 @@ export function NotificationsClient({
                     <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
                             <span className="flex items-center gap-1.5">
-                                <span className="material-icons text-[16px] text-[#003B46]">link</span>
+                                <LinkIcon size={16} className="text-[#003B46]" />
                                 رابط (اختياري)
                             </span>
                         </label>
@@ -186,13 +187,13 @@ export function NotificationsClient({
                     {/* Result */}
                     {result?.error && (
                         <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3 text-red-700 text-sm">
-                            <span className="material-icons shrink-0">error_outline</span>
+                            <AlertCircle className="shrink-0" size={20} />
                             {result.error}
                         </div>
                     )}
                     {result?.success && (
                         <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-center gap-3 text-emerald-700 text-sm">
-                            <span className="material-icons shrink-0">check_circle</span>
+                            <CheckCircle className="shrink-0" size={20} />
                             تم إرسال التنبيه بنجاح.
                         </div>
                     )}
@@ -214,7 +215,7 @@ export function NotificationsClient({
                                 </>
                             ) : (
                                 <>
-                                    <span className="material-icons text-[18px]">send</span>
+                                    <Send size={18} />
                                     إرسال التنبيه
                                 </>
                             )}
@@ -227,7 +228,7 @@ export function NotificationsClient({
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                 <div className="p-6 border-b border-gray-100 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                        <span className="material-icons text-[#003B46]">notifications</span>
+                        <Bell className="text-[#003B46]" size={24} />
                         <h2 className="text-lg font-bold text-gray-800">التنبيهات المرسلة</h2>
                     </div>
                     <span className="text-sm text-gray-400 bg-gray-100 px-3 py-1 rounded-full">{notifications.length}</span>
@@ -235,7 +236,9 @@ export function NotificationsClient({
 
                 {notifications.length === 0 ? (
                     <div className="py-16 text-center text-gray-400">
-                        <span className="material-icons text-5xl block mb-3 opacity-40">notifications_none</span>
+                        <div className="flex justify-center mb-3 opacity-40">
+                            <Bell size={48} />
+                        </div>
                         <p>لم يتم إرسال أي تنبيهات بعد.</p>
                     </div>
                 ) : (
@@ -244,7 +247,7 @@ export function NotificationsClient({
                             <div key={n.id} className="p-4 md:p-5 flex items-start gap-4 hover:bg-gray-50/50 transition-colors group">
                                 {/* Icon */}
                                 <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${n.isGlobal ? "bg-blue-100 text-blue-600" : "bg-[#003B46]/10 text-[#003B46]"}`}>
-                                    <span className="material-icons text-[17px]">{n.isGlobal ? "campaign" : "person"}</span>
+                                    {n.isGlobal ? <Megaphone size={17} /> : <User size={17} />}
                                 </div>
                                 {/* Content */}
                                 <div className="flex-1 min-w-0">
@@ -266,7 +269,7 @@ export function NotificationsClient({
                                     className="shrink-0 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all disabled:opacity-40"
                                     title="حذف التنبيه"
                                 >
-                                    <span className="material-icons text-[18px]">delete</span>
+                                    <Trash size={18} />
                                 </button>
                             </div>
                         ))}

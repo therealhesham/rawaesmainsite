@@ -11,6 +11,7 @@ import {
   createAdminUser,
 } from "./actions";
 import { ADMIN_PAGE_KEYS } from "../lib/permissions";
+import { UserPlus, X } from "lucide-react";
 
 /** الكاتيجوري الأم لكل صفحة (كما في السايدبار) */
 const PAGE_CATEGORY: Record<string, string> = {
@@ -298,7 +299,7 @@ export function RolesPageClient({
             onClick={() => setIsAddUserModalOpen(true)}
             className="flex items-center gap-2 bg-[#003B46] hover:bg-[#002830] text-white font-bold py-2.5 px-5 rounded-xl transition-colors shadow-sm"
           >
-            <span className="material-icons text-[20px]">person_add</span>
+            <UserPlus size={20} />
             إضافة مستخدم
           </button>
         </div>
@@ -368,7 +369,7 @@ export function RolesPageClient({
                 className="p-2 rounded-full text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
                 aria-label="إغلاق"
               >
-                <span className="material-icons">close</span>
+                <X size={20} />
               </button>
             </div>
             <form action={addUserAction} className="p-5 space-y-4">

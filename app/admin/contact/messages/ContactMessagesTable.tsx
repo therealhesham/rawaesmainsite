@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { deleteContactFormSubmission, deleteContactFormSubmissionsBulk } from "../../contact-actions";
 import { AlertModal } from "@/app/components/AlertModal";
+import { AlertTriangle, Trash2, Eye, Mail, X, Reply } from "lucide-react";
 
 function ConfirmDeleteModal({
   isOpen,
@@ -22,7 +23,7 @@ function ConfirmDeleteModal({
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div className="relative bg-white dark:bg-card-dark w-full max-w-sm rounded-2xl shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700 p-6 text-center space-y-4">
         <div className="mx-auto w-12 h-12 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center mb-4">
-          <span className="material-icons text-2xl">warning</span>
+          <AlertTriangle size={24} />
         </div>
         <h3 className="text-lg font-bold text-secondary dark:text-white">تأكيد الحذف</h3>
         <p className="text-gray-500 dark:text-gray-400 text-sm">
@@ -154,7 +155,7 @@ export function ContactMessagesTable({ messages }: { messages: Message[] }) {
             onClick={() => setShowBulkConfirm(true)}
             className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors shadow-sm"
           >
-            <span className="material-icons text-sm">delete_sweep</span>
+            <Trash2 size={16} />
             حذف المحدد
           </button>
         </div>
@@ -225,7 +226,7 @@ export function ContactMessagesTable({ messages }: { messages: Message[] }) {
                     onClick={() => setOpenId(msg.id)}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary rounded-lg text-sm font-medium hover:bg-primary/20 transition-colors"
                   >
-                    <span className="material-icons text-sm">visibility</span>
+                    <Eye size={16} />
                     عرض
                   </button>
                   <button
@@ -235,7 +236,7 @@ export function ContactMessagesTable({ messages }: { messages: Message[] }) {
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 text-red-600 dark:text-red-400 rounded-lg text-sm font-medium hover:bg-red-500/20 transition-colors disabled:opacity-50"
                     aria-label="حذف"
                   >
-                    <span className="material-icons text-sm">delete</span>
+                    <Trash2 size={16} />
                     حذف
                   </button>
                 </div>
@@ -279,7 +280,7 @@ function MessageModal({
             id="message-modal-title"
             className="text-xl font-bold text-secondary dark:text-white flex items-center gap-2"
           >
-            <span className="material-icons text-primary">mail</span>
+            <Mail className="text-primary" size={24} />
             رسالة من {msg.firstName} {msg.lastName}
           </h2>
           <button
@@ -288,7 +289,7 @@ function MessageModal({
             className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-secondary dark:hover:text-white transition-colors"
             aria-label="إغلاق"
           >
-            <span className="material-icons">close</span>
+            <X size={20} />
           </button>
         </div>
         <div className="p-6 space-y-4">
@@ -334,7 +335,7 @@ function MessageModal({
             href={`mailto:${msg.email}`}
             className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl font-medium hover:bg-primary/90 transition-colors"
           >
-            <span className="material-icons text-sm">reply</span>
+            <Reply size={16} />
             رد بالبريد
           </a>
           <button

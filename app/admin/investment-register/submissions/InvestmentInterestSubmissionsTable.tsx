@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { deleteInvestmentInterestSubmission } from "../../investment-register-actions";
 import { AlertModal } from "@/app/components/AlertModal";
+import { Eye, Trash, ClipboardList, X, Reply } from "lucide-react";
 
 const FUND_LABELS: Record<string, string> = {
   hospitality: "صندوق الضيافة",
@@ -113,7 +114,7 @@ export function InvestmentInterestSubmissionsTable({
                     onClick={() => setOpenId(sub.id)}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary rounded-lg text-sm font-medium hover:bg-primary/20 transition-colors"
                   >
-                    <span className="material-icons text-sm">visibility</span>
+                    <Eye size={16} />
                     عرض
                   </button>
                   <button
@@ -123,7 +124,7 @@ export function InvestmentInterestSubmissionsTable({
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 text-red-600 dark:text-red-400 rounded-lg text-sm font-medium hover:bg-red-500/20 transition-colors disabled:opacity-50"
                     aria-label="حذف"
                   >
-                    <span className="material-icons text-sm">delete</span>
+                    <Trash size={16} />
                     حذف
                   </button>
                 </div>
@@ -167,7 +168,7 @@ function SubmissionModal({
             id="submission-modal-title"
             className="text-xl font-bold text-secondary dark:text-white flex items-center gap-2"
           >
-            <span className="material-icons text-primary">how_to_reg</span>
+            <ClipboardList className="text-primary" size={24} />
             طلب سجل اهتمام — {sub.firstName} {sub.lastName}
           </h2>
           <button
@@ -176,7 +177,7 @@ function SubmissionModal({
             className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-secondary dark:hover:text-white transition-colors"
             aria-label="إغلاق"
           >
-            <span className="material-icons">close</span>
+            <X size={20} />
           </button>
         </div>
         <div className="p-6 space-y-4">
@@ -228,7 +229,7 @@ function SubmissionModal({
             href={`mailto:${sub.email}`}
             className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl font-medium hover:bg-primary/90 transition-colors"
           >
-            <span className="material-icons text-sm">reply</span>
+            <Reply size={16} />
             رد بالبريد
           </a>
           <button

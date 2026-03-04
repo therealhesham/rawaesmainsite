@@ -4,6 +4,17 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import {
+  LogOut,
+  Menu,
+  ChevronRight,
+  ChevronLeft,
+  ChevronDown,
+  ChevronUp,
+  CircleDot,
+  Circle,
+  X
+} from "lucide-react";
 import { logoutAdmin } from "./login/action";
 
 const MULTI_SEGMENT_KEYS: Record<string, string> = {
@@ -22,10 +33,10 @@ function pathToPageKey(pathname: string): string {
   return first || "";
 }
 
-export type MenuItemChild = { label: string; icon: string; href: string; exact?: boolean; pageKey: string };
+export type MenuItemChild = { label: string; icon: React.ReactNode; href: string; exact?: boolean; pageKey: string };
 export type MenuItem =
-  | { label: string; icon: string; href: string; pageKey: string }
-  | { label: string; icon: string; id: string; children: MenuItemChild[]; pageKey?: string };
+  | { label: string; icon: React.ReactNode; href: string; pageKey: string }
+  | { label: string; icon: React.ReactNode; id: string; children: MenuItemChild[]; pageKey?: string };
 
 export default function AdminLayoutClient({
   menuItems,
@@ -63,13 +74,13 @@ export default function AdminLayoutClient({
     if (!isSidebarOpen) setIsSidebarOpen(true);
   };
 
-  const renderLink = (item: { href: string; label: string; icon: string }, isActive: boolean) => (
+  const renderLink = (item: { href: string; label: string; icon: React.ReactNode }, isActive: boolean) => (
     <Link
       href={item.href}
       className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 group ${isActive ? "bg-primary text-white shadow-lg shadow-primary/20" : "text-gray-300 hover:bg-white/5 hover:text-white"
         }`}
     >
-      <span className={`material-icons ${isActive ? "" : "group-hover:text-primary transition-colors"}`}>
+      <span className={isActive ? "" : "group-hover:text-primary transition-colors [&>svg]:w-[22px] [&>svg]:h-[22px]"}>
         {item.icon}
       </span>
       <span className="font-medium whitespace-nowrap">{item.label}</span>
@@ -83,8 +94,8 @@ export default function AdminLayoutClient({
       className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 ${isActive ? "bg-primary text-white shadow-md shadow-primary/20" : "text-gray-400 hover:bg-white/10 hover:text-white"
         }`}
     >
-      <span className="material-icons text-[18px]">
-        {isActive ? "fiber_manual_record" : "radio_button_unchecked"}
+      <span className="flex items-center justify-center w-[18px]">
+        {isActive ? <CircleDot size={18} /> : <Circle size={18} />}
       </span>
       <span className="font-medium text-sm whitespace-nowrap">{child.label}</span>
     </Link>
@@ -108,9 +119,9 @@ export default function AdminLayoutClient({
           )}
           <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="text-white/70 hover:text-white transition-colors"
+            className="text-white/70 hover:text-white transition-colors flex items-center justify-center p-1"
           >
-            <span className="material-icons text-xl">{isSidebarOpen ? "chevron_right" : "chevron_left"}</span>
+            {isSidebarOpen ? <ChevronRight size={24} /> : <ChevronLeft size={24} />}
           </button>
         </div>
 
@@ -129,7 +140,7 @@ export default function AdminLayoutClient({
                       }`}
                   >
                     <div className="flex items-center gap-4">
-                      <span className={`material-icons ${isChildActive ? "text-primary" : "group-hover:text-primary transition-colors"}`}>
+                      <span className={`${isChildActive ? "text-primary" : "group-hover:text-primary transition-colors"} [&>svg]:w-[22px] [&>svg]:h-[22px]`}>
                         {item.icon}
                       </span>
                       {isSidebarOpen && (
@@ -139,8 +150,8 @@ export default function AdminLayoutClient({
                       )}
                     </div>
                     {isSidebarOpen && (
-                      <span className={`material-icons text-sm transition-transform duration-300 ${isOpen ? "rotate-90" : "rotate-180"}`}>
-                        arrow_back_ios_new
+                      <span className="flex items-center justify-center text-gray-400">
+                        {isOpen ? <ChevronDown size={18} /> : <ChevronLeft size={18} />}
                       </span>
                     )}
                   </button>
@@ -176,9 +187,9 @@ export default function AdminLayoutClient({
           <form action={logoutAdmin} className="w-full">
             <button
               type="submit"
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-300 hover:bg-red-500/10 hover:text-red-200 transition-all"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-300 hover:bg-red-500/10 hover:text-red-200 transition-all font-medium"
             >
-              <span className="material-icons">logout</span>
+              <LogOut size={22} />
               {isSidebarOpen && <span>تسجيل الخروج</span>}
             </button>
           </form>
@@ -210,7 +221,7 @@ export default function AdminLayoutClient({
                 onClick={() => setIsMobileSidebarOpen(false)}
                 className="text-white/80 hover:text-white transition-colors"
               >
-                <span className="material-icons">close</span>
+                <X size={24} />
               </button>
             </div>
             <nav className="flex-1 py-4 px-3 space-y-2 overflow-y-auto">
@@ -224,8 +235,8 @@ export default function AdminLayoutClient({
                         className="w-full flex items-center justify-between px-4 py-3 rounded-xl text-gray-300 hover:bg-white/5 hover:text-white"
                       >
                         <span className="font-medium">{item.label}</span>
-                        <span className={`material-icons text-sm transition-transform ${isOpen ? "rotate-90" : "rotate-180"}`}>
-                          arrow_back_ios_new
+                        <span className="flex items-center justify-center">
+                          {isOpen ? <ChevronDown size={18} /> : <ChevronLeft size={18} />}
                         </span>
                       </button>
                       {isOpen && (
@@ -256,7 +267,7 @@ export default function AdminLayoutClient({
                     onClick={() => setIsMobileSidebarOpen(false)}
                     className={`flex items-center gap-4 px-4 py-3 rounded-xl ${pathname === href ? "bg-primary text-white" : "text-gray-300 hover:bg-white/5"}`}
                   >
-                    <span className="material-icons">{item.icon}</span>
+                    <span className="flex items-center justify-center [&>svg]:w-[22px] [&>svg]:h-[22px]">{item.icon}</span>
                     <span className="font-medium">{item.label}</span>
                   </Link>
                 );
@@ -266,9 +277,9 @@ export default function AdminLayoutClient({
               <form action={logoutAdmin}>
                 <button
                   type="submit"
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-300 hover:bg-red-500/10"
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-300 hover:bg-red-500/10 font-medium"
                 >
-                  <span className="material-icons">logout</span>
+                  <LogOut size={22} />
                   <span>تسجيل الخروج</span>
                 </button>
               </form>
@@ -285,10 +296,10 @@ export default function AdminLayoutClient({
           </div>
           <button
             type="button"
-            className="p-2 text-gray-500"
+            className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg dark:hover:bg-gray-800 transition-colors"
             onClick={() => setIsMobileSidebarOpen(true)}
           >
-            <span className="material-icons">menu</span>
+            <Menu size={24} />
           </button>
         </header>
         <main className="flex-1 p-4 md:p-8 overflow-y-auto">{children}</main>

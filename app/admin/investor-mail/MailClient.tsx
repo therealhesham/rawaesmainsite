@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useRef } from "react";
 import { sendInvestorEmail, getEmailLogs, InvestorBasic } from "./actions";
+import { Mail, User, Users, UserSearch, Info, Heading, FileEdit, AlertCircle, CheckCircle, Send, History } from "lucide-react";
 
 type EmailLog = {
     id: number;
@@ -57,7 +58,7 @@ export function MailClient({
                 <div className="bg-gradient-to-l from-[#003B46] to-[#005F6B] p-6 text-white">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center">
-                            <span className="material-icons text-[22px]">forward_to_inbox</span>
+                            <Mail size={22} />
                         </div>
                         <div>
                             <h1 className="text-xl font-bold">إنشاء رسالة جديدة</h1>
@@ -82,9 +83,9 @@ export function MailClient({
                                     : "bg-white border-gray-200 text-gray-500 hover:border-[#003B46]/30 hover:text-[#003B46]"
                                     }`}
                             >
-                                <span className="material-icons text-[18px]">
-                                    {m === "individual" ? "person" : "group"}
-                                </span>
+                                <div className="flex items-center justify-center w-[18px]">
+                                    {m === "individual" ? <User size={18} /> : <Users size={18} />}
+                                </div>
                                 {m === "individual" ? "رسالة فردية" : `رسالة جماعية (${withEmailCount})`}
                             </button>
                         ))}
@@ -95,7 +96,7 @@ export function MailClient({
                         <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-2">
                                 <span className="flex items-center gap-1.5">
-                                    <span className="material-icons text-[16px] text-[#003B46]">person_search</span>
+                                    <UserSearch size={16} className="text-[#003B46]" />
                                     المستثمر المستلم
                                 </span>
                             </label>
@@ -117,7 +118,7 @@ export function MailClient({
 
                     {mode === "bulk" && (
                         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
-                            <span className="material-icons text-amber-500 shrink-0">info</span>
+                            <Info className="text-amber-500 shrink-0" size={24} />
                             <p className="text-sm text-amber-800">
                                 سيتم إرسال الرسالة لجميع المستثمرين الذين لديهم بريد إلكتروني ({withEmailCount} مستثمر).
                             </p>
@@ -128,7 +129,7 @@ export function MailClient({
                     <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
                             <span className="flex items-center gap-1.5">
-                                <span className="material-icons text-[16px] text-[#003B46]">subject</span>
+                                <Heading size={16} className="text-[#003B46]" />
                                 موضوع الرسالة
                             </span>
                         </label>
@@ -146,7 +147,7 @@ export function MailClient({
                     <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
                             <span className="flex items-center gap-1.5">
-                                <span className="material-icons text-[16px] text-[#003B46]">edit_note</span>
+                                <FileEdit size={16} className="text-[#003B46]" />
                                 نص الرسالة
                             </span>
                         </label>
@@ -165,13 +166,13 @@ export function MailClient({
                     {/* Result */}
                     {result?.error && (
                         <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3 text-red-700 text-sm">
-                            <span className="material-icons shrink-0">error_outline</span>
+                            <AlertCircle className="shrink-0" size={20} />
                             {result.error}
                         </div>
                     )}
                     {result?.success && (
                         <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-center gap-3 text-emerald-700 text-sm">
-                            <span className="material-icons shrink-0">check_circle</span>
+                            <CheckCircle className="shrink-0" size={20} />
                             تم إرسال الرسالة بنجاح إلى {result.count} {result.count === 1 ? "مستثمر" : "مستثمرين"}.
                         </div>
                     )}
@@ -193,7 +194,7 @@ export function MailClient({
                                 </>
                             ) : (
                                 <>
-                                    <span className="material-icons text-[18px]">send</span>
+                                    <Send size={18} />
                                     إرسال الرسالة
                                 </>
                             )}
@@ -205,13 +206,15 @@ export function MailClient({
             {/* Email Log */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                 <div className="p-6 border-b border-gray-100 flex items-center gap-3">
-                    <span className="material-icons text-[#003B46]">history</span>
+                    <History className="text-[#003B46]" size={24} />
                     <h2 className="text-lg font-bold text-gray-800">سجل الرسائل المرسلة</h2>
                 </div>
 
                 {logs.length === 0 ? (
                     <div className="py-16 text-center text-gray-400">
-                        <span className="material-icons text-5xl block mb-3 opacity-40">mail_outline</span>
+                        <div className="flex justify-center mb-3 opacity-40">
+                            <Mail size={48} />
+                        </div>
                         <p>لم يتم إرسال أي رسائل بعد.</p>
                     </div>
                 ) : (
@@ -223,7 +226,7 @@ export function MailClient({
                             return (
                                 <div key={log.id} className="p-4 md:p-5 flex items-start gap-4 hover:bg-gray-50/50 transition-colors">
                                     <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${log.status === "sent" ? "bg-emerald-100 text-emerald-600" : "bg-red-100 text-red-500"}`}>
-                                        <span className="material-icons text-[17px]">{log.status === "sent" ? "check_circle" : "error"}</span>
+                                        {log.status === "sent" ? <CheckCircle size={17} /> : <AlertCircle size={17} />}
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <p className="font-semibold text-gray-800 text-sm truncate">{log.subject}</p>

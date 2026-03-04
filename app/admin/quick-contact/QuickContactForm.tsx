@@ -2,6 +2,7 @@
 
 import { useActionState, useRef, useState } from "react";
 import { updateQuickContactSettings, type QuickContactFormState } from "./actions";
+import { CheckCircle, AlertCircle, Phone, Info, Save } from "lucide-react";
 
 const PHONE_REGEX = /^\+?[0-9]*$/;
 const VALIDATION_MSG = "الرجاء إدخال أرقام وعلامة + فقط";
@@ -66,7 +67,7 @@ export function QuickContactForm({ settings }: { settings: Settings }) {
                     role="alert"
                     className="flex items-center gap-3 p-4 rounded-xl bg-green-50 border border-green-200 text-green-700 font-medium"
                 >
-                    <span className="material-icons text-green-600">check_circle</span>
+                    <CheckCircle className="text-green-600" size={20} />
                     تم حفظ الإعدادات بنجاح
                 </div>
             )}
@@ -77,7 +78,7 @@ export function QuickContactForm({ settings }: { settings: Settings }) {
                     role="alert"
                     className="flex items-center gap-3 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 font-medium"
                 >
-                    <span className="material-icons text-red-600">error_outline</span>
+                    <AlertCircle className="text-red-600" size={20} />
                     {state.error}
                 </div>
             )}
@@ -91,8 +92,8 @@ export function QuickContactForm({ settings }: { settings: Settings }) {
                     رقم الإدارة القانونية
                 </label>
                 <div className="relative">
-                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500 material-icons text-[20px]">phone</span>
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-500">
+                        <Phone size={18} />
                     </div>
                     <input
                         type="text"
@@ -102,16 +103,15 @@ export function QuickContactForm({ settings }: { settings: Settings }) {
                         placeholder="مثال: +966500000000"
                         onFocus={() => clearValidationFor("legalPhone")}
                         onInput={() => clearValidationFor("legalPhone")}
-                        className={`w-full pr-10 pl-4 py-3 bg-gray-50 border rounded-xl focus:ring-1 outline-none transition-all text-left dir-ltr ${
-                            validationError?.field === "legalPhone"
+                        className={`w-full pr-10 pl-4 py-3 bg-gray-50 border rounded-xl focus:ring-1 outline-none transition-all text-left dir-ltr ${validationError?.field === "legalPhone"
                                 ? "border-red-400 focus:border-red-500 focus:ring-red-500"
                                 : "border-gray-200 focus:border-[#003B46] focus:ring-[#003B46]"
-                        }`}
+                            }`}
                     />
                 </div>
                 {validationError?.field === "legalPhone" && (
                     <p className="mt-1.5 text-sm text-red-600 flex items-center gap-1">
-                        <span className="material-icons text-base">info</span>
+                        <Info size={16} />
                         {validationError.message}
                     </p>
                 )}
@@ -127,8 +127,8 @@ export function QuickContactForm({ settings }: { settings: Settings }) {
                     رقم الإدارة العليا
                 </label>
                 <div className="relative">
-                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500 material-icons text-[20px]">phone</span>
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-500">
+                        <Phone size={18} />
                     </div>
                     <input
                         type="text"
@@ -138,16 +138,15 @@ export function QuickContactForm({ settings }: { settings: Settings }) {
                         placeholder="مثال: +966500000000"
                         onFocus={() => clearValidationFor("managementPhone")}
                         onInput={() => clearValidationFor("managementPhone")}
-                        className={`w-full pr-10 pl-4 py-3 bg-gray-50 border rounded-xl focus:ring-1 outline-none transition-all text-left dir-ltr ${
-                            validationError?.field === "managementPhone"
+                        className={`w-full pr-10 pl-4 py-3 bg-gray-50 border rounded-xl focus:ring-1 outline-none transition-all text-left dir-ltr ${validationError?.field === "managementPhone"
                                 ? "border-red-400 focus:border-red-500 focus:ring-red-500"
                                 : "border-gray-200 focus:border-[#003B46] focus:ring-[#003B46]"
-                        }`}
+                            }`}
                     />
                 </div>
                 {validationError?.field === "managementPhone" && (
                     <p className="mt-1.5 text-sm text-red-600 flex items-center gap-1">
-                        <span className="material-icons text-base">info</span>
+                        <Info size={16} />
                         {validationError.message}
                     </p>
                 )}
@@ -163,8 +162,8 @@ export function QuickContactForm({ settings }: { settings: Settings }) {
                     رقم الاقتراحات والمساعدة
                 </label>
                 <div className="relative">
-                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500 material-icons text-[20px]">phone</span>
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-500">
+                        <Phone size={18} />
                     </div>
                     <input
                         type="text"
@@ -174,16 +173,15 @@ export function QuickContactForm({ settings }: { settings: Settings }) {
                         placeholder="مثال: +966500000000"
                         onFocus={() => clearValidationFor("suggestionsPhone")}
                         onInput={() => clearValidationFor("suggestionsPhone")}
-                        className={`w-full pr-10 pl-4 py-3 bg-gray-50 border rounded-xl focus:ring-1 outline-none transition-all text-left dir-ltr ${
-                            validationError?.field === "suggestionsPhone"
+                        className={`w-full pr-10 pl-4 py-3 bg-gray-50 border rounded-xl focus:ring-1 outline-none transition-all text-left dir-ltr ${validationError?.field === "suggestionsPhone"
                                 ? "border-red-400 focus:border-red-500 focus:ring-red-500"
                                 : "border-gray-200 focus:border-[#003B46] focus:ring-[#003B46]"
-                        }`}
+                            }`}
                     />
                 </div>
                 {validationError?.field === "suggestionsPhone" && (
                     <p className="mt-1.5 text-sm text-red-600 flex items-center gap-1">
-                        <span className="material-icons text-base">info</span>
+                        <Info size={16} />
                         {validationError.message}
                     </p>
                 )}
@@ -200,7 +198,7 @@ export function QuickContactForm({ settings }: { settings: Settings }) {
                         <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     ) : (
                         <>
-                            <span className="material-icons text-[20px]">save</span>
+                            <Save size={20} />
                             حفظ الإعدادات
                         </>
                     )}

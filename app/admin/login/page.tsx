@@ -4,6 +4,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { useActionState } from "react";
 import { loginAdmin } from "./action";
+import { AlertCircle, ArrowLeft, ArrowRight } from "lucide-react";
 
 export default function AdminLoginPage() {
     const [state, formAction, isPending] = useActionState(loginAdmin, null);
@@ -101,7 +102,7 @@ export default function AdminLoginPage() {
 
                         {state?.error && (
                             <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm font-medium border border-red-100 flex items-center gap-2">
-                                <span className="material-icons text-base">error_outline</span>
+                                <AlertCircle size={16} />
                                 {state.error}
                             </div>
                         )}
@@ -116,7 +117,7 @@ export default function AdminLoginPage() {
                             ) : (
                                 <>
                                     <span>دخول</span>
-                                    <span className="material-icons text-sm">arrow_back</span>
+                                    <ArrowLeft size={16} />
                                 </>
                             )}
                         </button>
@@ -124,7 +125,7 @@ export default function AdminLoginPage() {
 
                     <div className="mt-8 pt-6 border-t border-gray-100 dark:border-gray-800 text-center">
                         <Link href="/" className="text-sm text-gray-500 hover:text-primary transition-colors flex items-center justify-center gap-1 group">
-                            <span className="material-icons text-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                            <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                             العودة للرئيسية
                         </Link>
                     </div>

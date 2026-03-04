@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getInvestmentInterestSubmissions } from "../../investment-register-actions";
 import { requirePageView } from "../../lib/auth";
 import { InvestmentInterestSubmissionsTable } from "./InvestmentInterestSubmissionsTable";
+import { ArrowLeft, ClipboardList, Inbox } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -18,11 +19,11 @@ export default async function AdminInvestmentInterestSubmissionsPage() {
             className="p-2 rounded-xl text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-secondary dark:hover:text-white transition-colors"
             aria-label="العودة لسجل اهتمامك"
           >
-            <span className="material-icons">arrow_forward</span>
+            <ArrowLeft size={24} className="transform rotate-180" />
           </Link>
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-secondary dark:text-white flex items-center gap-2">
-              <span className="material-icons text-primary">how_to_reg</span>
+              <ClipboardList className="text-primary" size={28} />
               طلبات سجل اهتمامك
             </h1>
             <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">
@@ -35,7 +36,7 @@ export default async function AdminInvestmentInterestSubmissionsPage() {
       <div className="bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
         <div className="p-6 border-b border-gray-100 dark:border-gray-800">
           <h2 className="text-lg font-bold text-secondary dark:text-white flex items-center gap-2">
-            <span className="material-icons text-primary">inbox</span>
+            <Inbox className="text-primary" size={20} />
             الطلبات ({submissions.length})
           </h2>
         </div>
@@ -43,7 +44,9 @@ export default async function AdminInvestmentInterestSubmissionsPage() {
         <div className="overflow-x-auto">
           {submissions.length === 0 ? (
             <div className="px-6 py-16 text-center text-gray-500 dark:text-gray-400">
-              <span className="material-icons text-5xl mb-3 opacity-30">inbox</span>
+              <div className="flex justify-center mb-3 opacity-30">
+                <Inbox size={48} />
+              </div>
               <p>لا توجد طلبات حتى الآن</p>
             </div>
           ) : (

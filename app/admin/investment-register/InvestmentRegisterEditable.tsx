@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { InvestmentRegisterBlockData } from "@/app/investment/getInvestmentRegisterBlock";
 import { updateInvestmentRegisterBlock, uploadInvestmentRegisterHowToImage, uploadInvestmentEmailLogo } from "../investment-register-actions";
+import { Mail, ImageIcon, ArrowLeft } from "lucide-react";
 
 const DEFAULT_HOW_TO_STEPS = [
     { step: "01", title: "Ø§Ù„ØªØ³Ø¬ÙŠÙ„", description: "Ø³Ø¬Ù„ Ù…Ø¹Ù†Ø§ ÙˆØ§Ù†Ø´Ø¦ Ø·Ù„Ø¨ Ø§Ø³ØªØ«Ù…Ø§Ø± Ø¹Ø¨Ø± Ù…ÙˆÙ‚Ø¹Ù†Ø§ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ Ø¨ÙƒÙ„ Ø³Ù‡ÙˆÙ„Ø©." },
@@ -120,7 +121,7 @@ export function InvestmentRegisterEditable({ block }: Props) {
 
             <section className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-6">
                 <h2 className="text-lg font-bold text-secondary dark:text-white mb-4 flex items-center gap-2">
-                    <span className="material-icons text-primary">mail</span>
+                    <Mail className="text-primary" size={20} />
                     إعدادات الإشعارات
                 </h2>
                 <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
@@ -168,7 +169,7 @@ export function InvestmentRegisterEditable({ block }: Props) {
 
             <section className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-6">
                 <h2 className="text-lg font-bold text-secondary dark:text-white mb-4 flex items-center gap-2">
-                    <span className="material-icons text-primary">image</span>
+                    <ImageIcon className="text-primary" size={20} />
                     شعار البريد الإلكتروني (روائس للاستثمار)
                 </h2>
                 <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
@@ -373,7 +374,7 @@ export function InvestmentRegisterEditable({ block }: Props) {
                                 />
                                 <div className="text-gold text-xs flex items-center justify-center gap-1">
                                     اقرأ المزيد
-                                    <span className="material-icons-round text-sm">arrow_back</span>
+                                    <ArrowLeft size={16} />
                                 </div>
                             </div>
                         ))}

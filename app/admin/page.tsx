@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence } from "framer-motion";
+import { Plus, RefreshCw, Users, FileText, BellRing, List, Search, ArrowLeft, SearchX, X } from "lucide-react";
 import { getInvestors, getStats, createInvestor, checkAdminPermission } from "./actions";
 import { AlertModal } from "@/app/components/AlertModal";
 
@@ -14,8 +15,10 @@ export default function AdminDashboard() {
     const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [canManageInvestors, setCanManageInvestors] = useState(false);
+    const [currentTime, setCurrentTime] = useState("");
 
     useEffect(() => {
+        setCurrentTime(new Date().toLocaleTimeString("ar-EG"));
         async function fetchData() {
             const [statsData, investorsData, hasPermission] = await Promise.all([
                 getStats(),
@@ -44,13 +47,13 @@ export default function AdminDashboard() {
                             onClick={() => setIsModalOpen(true)}
                             className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors shadow-sm"
                         >
-                            <span className="material-icons text-sm">add</span>
+                            <Plus size={18} />
                             <span>إضافة مستثمر</span>
                         </button>
                     )}
-                    <span className="text-sm text-gray-500">آخر تحديث: {new Date().toLocaleTimeString()}</span>
+                    <span className="text-sm text-gray-500">آخر تحديث: {currentTime}</span>
                     <button onClick={() => window.location.reload()} className="p-2 bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-700 rounded-lg text-gray-500 hover:text-primary transition-colors">
-                        <span className="material-icons text-xl">refresh</span>
+                        <RefreshCw size={20} />
                     </button>
                 </div>
             </div>
@@ -60,19 +63,19 @@ export default function AdminDashboard() {
                 <StatsCard
                     title="إجمالي المستثمرين"
                     value={stats.totalInvestors}
-                    icon="groups"
+                    icon={<Users size={24} />}
                     color="bg-blue-500"
                 />
                 <StatsCard
                     title="إجمالي التقارير"
                     value={stats.totalReports}
-                    icon="description"
+                    icon={<FileText size={24} />}
                     color="bg-primary"
                 />
                 <StatsCard
                     title="الإشعارات المرسلة"
                     value="48"
-                    icon="notifications_active"
+                    icon={<BellRing size={24} />}
                     color="bg-purple-500"
                 />
             </div>
@@ -81,13 +84,15 @@ export default function AdminDashboard() {
             <div className="bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
                 <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <h2 className="text-xl font-bold text-secondary dark:text-white flex items-center gap-2">
-                        <span className="material-icons text-primary">list_alt</span>
+                        <List size={22} className="text-primary" />
                         قائمة المستثمرين
                     </h2>
 
                     {/* Search Bar */}
                     <div className="relative w-full md:w-96">
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 material-icons text-gray-400">search</span>
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                            <Search size={20} />
+                        </div>
                         <input
                             type="text"
                             placeholder="بحث بالاسم، الجوال، أو الهوية..."
@@ -156,7 +161,7 @@ export default function AdminDashboard() {
                                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary hover:border-primary transition-all shadow-sm"
                                             >
                                                 <span>التفاصيل</span>
-                                                <span className="material-icons text-sm">arrow_back</span>
+                                                <ArrowLeft size={16} />
                                             </Link>
                                         </td>
                                     </tr>
@@ -164,7 +169,7 @@ export default function AdminDashboard() {
                             ) : (
                                 <tr>
                                     <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
-                                        <span className="material-icons text-4xl mb-2 opacity-20">search_off</span>
+                                        <div className="flex justify-center mb-2 opacity-20"><SearchX size={36} /></div>
                                         <p>لم يتم العثور على مستثمرين</p>
                                     </td>
                                 </tr>
@@ -204,7 +209,7 @@ function StatsCard({ title, value, icon, color }: any) {
                 <div className="text-3xl font-bold text-secondary dark:text-white">{value}</div>
             </div>
             <div className={`absolute top-4 left-4 w-12 h-12 rounded-xl ${color} bg-opacity-10 flex items-center justify-center text-${color.replace('bg-', '')}`}>
-                <span className="material-icons text-2xl">{icon}</span>
+                {icon}
             </div>
             <div className={`absolute -bottom-4 -right-4 w-24 h-24 rounded-full ${color} opacity-5 group-hover:scale-110 transition-transform duration-500`} />
         </motion.div>
@@ -259,8 +264,8 @@ function AddInvestorModal({ onClose }: { onClose: () => void }) {
             >
                 <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
                     <h3 className="text-xl font-bold text-secondary dark:text-white">إضافة مستثمر جديد</h3>
-                    <button onClick={onClose} className="text-gray-400 hover:text-red-500 transition-colors">
-                        <span className="material-icons">close</span>
+                    <button type="button" onClick={onClose} className="text-gray-400 hover:text-red-500 transition-colors">
+                        <X size={20} />
                     </button>
                 </div>
 

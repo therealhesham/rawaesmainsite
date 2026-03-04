@@ -1,33 +1,49 @@
 import { getAdminUser, canViewPage, ADMIN_PAGE_KEYS } from "./lib/auth";
 import AdminLayoutClient, { type MenuItem } from "./AdminLayoutClient";
+import {
+  LayoutDashboard,
+  List,
+  Landmark,
+  Contact,
+  PhoneCall,
+  UserPlus,
+  Mail,
+  MessageSquare,
+  ClipboardList,
+  Send,
+  Bell,
+  FileBarChart,
+  FileCheck,
+  ShieldCheck,
+} from "lucide-react";
 
 const FULL_MENU: MenuItem[] = [
-  { label: "لوحة التحكم", icon: "dashboard", href: "/admin", pageKey: "" },
+  { label: "لوحة التحكم", icon: <LayoutDashboard size={22} />, href: "/admin", pageKey: "" },
   {
     label: "إدارة المحتوى",
-    icon: "view_list",
+    icon: <List size={22} />,
     id: "content",
     children: [
-      { label: "صناديق الاستثمار", icon: "account_balance", href: "/admin/funds", pageKey: "funds" },
-      { label: "اتصل بنا", icon: "contact_page", href: "/admin/contact", exact: true, pageKey: "contact" },
-      { label: "التواصل السريع", icon: "phone", href: "/admin/quick-contact", exact: true, pageKey: "quick-contact" },
-      { label: "سجل اهتمامك", icon: "how_to_reg", href: "/admin/investment-register", exact: true, pageKey: "investment-register" },
+      { label: "صناديق الاستثمار", icon: <Landmark size={22} />, href: "/admin/funds", pageKey: "funds" },
+      { label: "اتصل بنا", icon: <Contact size={22} />, href: "/admin/contact", exact: true, pageKey: "contact" },
+      { label: "التواصل السريع", icon: <PhoneCall size={22} />, href: "/admin/quick-contact", exact: true, pageKey: "quick-contact" },
+      { label: "سجل اهتمامك", icon: <UserPlus size={22} />, href: "/admin/investment-register", exact: true, pageKey: "investment-register" },
     ],
   },
   {
     label: "البريد",
-    icon: "mail",
+    icon: <Mail size={22} />,
     id: "mails",
     children: [
-      { label: "رسائل التواصل", icon: "mail", href: "/admin/contact/messages", pageKey: "contact-messages" },
-      { label: "طلبات سجل اهتمامك", icon: "assignment", href: "/admin/investment-register/submissions", exact: true, pageKey: "investment-register-submissions" },
-      { label: "مراسلات البريد", icon: "forward_to_inbox", href: "/admin/investor-mail", exact: true, pageKey: "investor-mail" },
-      { label: "إرسال التنبيهات", icon: "notifications_active", href: "/admin/investor-notifications", exact: true, pageKey: "investor-notifications" },
+      { label: "رسائل التواصل", icon: <MessageSquare size={22} />, href: "/admin/contact/messages", pageKey: "contact-messages" },
+      { label: "طلبات سجل اهتمامك", icon: <ClipboardList size={22} />, href: "/admin/investment-register/submissions", exact: true, pageKey: "investment-register-submissions" },
+      { label: "مراسلات البريد", icon: <Send size={22} />, href: "/admin/investor-mail", exact: true, pageKey: "investor-mail" },
+      { label: "إرسال التنبيهات", icon: <Bell size={22} />, href: "/admin/investor-notifications", exact: true, pageKey: "investor-notifications" },
     ],
   },
-  { label: "استخراج التقارير", icon: "table_chart", href: "/admin/extract-reports", pageKey: "extract-reports" },
-  { label: "مراجعة التقارير", icon: "rate_review", href: "/admin/review", pageKey: "review" },
-  { label: "الصلاحيات والأدوار", icon: "admin_panel_settings", href: "/admin/roles", pageKey: "roles" },
+  { label: "استخراج التقارير", icon: <FileBarChart size={22} />, href: "/admin/extract-reports", pageKey: "extract-reports" },
+  { label: "مراجعة التقارير", icon: <FileCheck size={22} />, href: "/admin/review", pageKey: "review" },
+  { label: "الصلاحيات والأدوار", icon: <ShieldCheck size={22} />, href: "/admin/roles", pageKey: "roles" },
 ];
 
 function filterMenu(items: MenuItem[], canView: (pageKey: string) => boolean): MenuItem[] {
