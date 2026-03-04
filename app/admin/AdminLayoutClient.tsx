@@ -39,6 +39,8 @@ export default function AdminLayoutClient({
   const pathname = usePathname();
   const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({ content: false, mails: false });
 
   useEffect(() => {
     if (pathname === "/admin/login") return;
@@ -48,27 +50,24 @@ export default function AdminLayoutClient({
     }
   }, [pathname, allowedPageKeys, router]);
 
+  useEffect(() => {
+    setIsMobileSidebarOpen(false);
+  }, [pathname]);
+
   if (pathname === "/admin/login") {
     return <>{children}</>;
   }
-  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({ content: false, mails: false });
 
   const toggleMenu = (id: string) => {
     setOpenMenus((prev) => ({ ...prev, [id]: !prev[id] }));
     if (!isSidebarOpen) setIsSidebarOpen(true);
   };
 
-  useEffect(() => {
-    setIsMobileSidebarOpen(false);
-  }, [pathname]);
-
   const renderLink = (item: { href: string; label: string; icon: string }, isActive: boolean) => (
     <Link
       href={item.href}
-      className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 group ${
-        isActive ? "bg-primary text-white shadow-lg shadow-primary/20" : "text-gray-300 hover:bg-white/5 hover:text-white"
-      }`}
+      className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 group ${isActive ? "bg-primary text-white shadow-lg shadow-primary/20" : "text-gray-300 hover:bg-white/5 hover:text-white"
+        }`}
     >
       <span className={`material-icons ${isActive ? "" : "group-hover:text-primary transition-colors"}`}>
         {item.icon}
@@ -81,9 +80,8 @@ export default function AdminLayoutClient({
     <Link
       key={child.href}
       href={child.href}
-      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 ${
-        isActive ? "bg-primary text-white shadow-md shadow-primary/20" : "text-gray-400 hover:bg-white/10 hover:text-white"
-      }`}
+      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 ${isActive ? "bg-primary text-white shadow-md shadow-primary/20" : "text-gray-400 hover:bg-white/10 hover:text-white"
+        }`}
     >
       <span className="material-icons text-[18px]">
         {isActive ? "fiber_manual_record" : "radio_button_unchecked"}
@@ -127,9 +125,8 @@ export default function AdminLayoutClient({
                 <div key={item.id} className="space-y-1">
                   <button
                     onClick={() => toggleMenu(item.id)}
-                    className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300 group ${
-                      isChildActive && !isOpen ? "bg-primary/20 text-white" : "text-gray-300 hover:bg-white/5 hover:text-white"
-                    }`}
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300 group ${isChildActive && !isOpen ? "bg-primary/20 text-white" : "text-gray-300 hover:bg-white/5 hover:text-white"
+                      }`}
                   >
                     <div className="flex items-center gap-4">
                       <span className={`material-icons ${isChildActive ? "text-primary" : "group-hover:text-primary transition-colors"}`}>
