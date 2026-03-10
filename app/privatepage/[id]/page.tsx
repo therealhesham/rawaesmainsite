@@ -25,7 +25,7 @@ async function getInvestorData(id: string) {
     include: {
       reports: {
         where: { isPublished: true },
-        orderBy: { createdAt: "desc" },
+        orderBy: { releaseDate: "desc" },
       },
       notfications: {
         orderBy: { createdAt: "desc" },
