@@ -128,10 +128,10 @@ export default async function PrivateInvestorPage({
                   </button>
                 </form>
               </div>
-              <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 mb-6 border-r-4 border-gold text-sm text-gray-600 dark:text-gray-300">
+              {/* <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 mb-6 border-r-4 border-gold text-sm text-gray-600 dark:text-gray-300">
                 تم تفعيل استعراض ملفات الاستثمارات من خلال الموقع الرسمي لدى
                 مجموعة روائس ( النسخة التجريبية )
-              </div>
+              </div> */}
               {/* Notifications list */}
               {investor.notfications.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-10 text-gray-400 dark:text-gray-500">
