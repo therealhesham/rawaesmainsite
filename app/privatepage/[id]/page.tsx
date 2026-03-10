@@ -253,18 +253,10 @@ export default async function PrivateInvestorPage({
               <div className="space-y-4">
                 <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
                   <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 block">
-                    رقم العضوية
-                  </p>
-                  <p className="text-lg font-bold text-gray-800 dark:text-gray-200 font-mono break-all">
-                    {investor.id}
-                  </p>
-                </div>
-                <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
-                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 block">
-                    الهوية الوطنية
+                    كلمة المرور
                   </p>
                   <p className="text-lg font-bold text-gray-800 dark:text-gray-200 break-all">
-                    {investor.nationalId || "غير متوفر"}
+                    {investor.password || "غير متوفر"}
                   </p>
                 </div>
                 <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
