@@ -253,7 +253,7 @@ export default async function PrivateInvestorPage({
               <div className="space-y-4">
                 <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
                   <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 block">
-                    كلمة المرور
+                    رقم الهوية
                   </p>
                   <p className="text-lg font-bold text-gray-800 dark:text-gray-200 break-all">
                     {investor.password || "غير متوفر"}
