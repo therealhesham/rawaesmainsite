@@ -107,9 +107,10 @@ export default function AdminDashboard() {
                     <table className="w-full">
                         <thead className="bg-gray-50 dark:bg-gray-800/50 text-gray-500 dark:text-gray-400 text-sm">
                             <tr>
+                                <th className="px-6 py-4 text-right font-medium">ID</th>
                                 <th className="px-6 py-4 text-right font-medium">المستثمر</th>
-                                <th className="px-6 py-4 text-right font-medium">رقم الجوال</th>
                                 <th className="px-6 py-4 text-right font-medium">رقم الهوية</th>
+                                <th className="px-6 py-4 text-right font-medium">رقم الجوال</th>
                                 <th className="px-6 py-4 text-center font-medium">التقارير</th>
                                 <th className="px-6 py-4 text-center font-medium">تاريخ الانضمام</th>
                                 <th className="px-6 py-4 text-center font-medium">إجراءات</th>
@@ -130,6 +131,9 @@ export default function AdminDashboard() {
                             ) : investors.length > 0 ? (
                                 investors.map((investor) => (
                                     <tr key={investor.id} className="group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                                        <td className="px-6 py-4 text-gray-600 dark:text-gray-300 font-mono text-sm">
+                                            {investor.nationalId || '-'}
+                                        </td>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-lg">
@@ -137,15 +141,14 @@ export default function AdminDashboard() {
                                                 </div>
                                                 <div>
                                                     <div className="font-bold text-secondary dark:text-white">{investor.name}</div>
-                                                    <div className="text-xs text-gray-400">ID: {investor.id}</div>
                                                 </div>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 text-gray-600 dark:text-gray-300 dir-ltr text-right font-mono text-sm">
-                                            {investor.phoneNumber}
+                                            {investor.password}
                                         </td>
-                                        <td className="px-6 py-4 text-gray-600 dark:text-gray-300 font-mono text-sm">
-                                            {investor.nationalId || '-'}
+                                        <td className="px-6 py-4 text-gray-600 dark:text-gray-300 dir-ltr text-right font-mono text-sm">
+                                            {investor.phoneNumber}
                                         </td>
                                         <td className="px-6 py-4 text-center">
                                             <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
