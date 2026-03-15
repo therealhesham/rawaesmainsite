@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
 import { BannerHeroSection } from "../components/BannerHeroSection";
+import { InstallmentFormIllustration } from "../components/InstallmentFormIllustration";
 
 export default function InstallmentsPage() {
   return (
@@ -219,9 +220,7 @@ export default function InstallmentsPage() {
             <div className="flex-1 flex justify-center">
               <div className="relative">
                 <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full animate-pulse" />
-                <span className="material-icons text-[160px] text-primary relative">
-                  contact_page
-                </span>
+                <InstallmentFormIllustration />
               </div>
             </div>
           </div>

@@ -12,7 +12,7 @@ type NavItem = {
   active?: boolean;
   icon?: React.ReactNode;
   target?: string;
-  children?: { label: string; href: string }[];
+  children?: { label: string; href: string; target?: string }[];
 };
 
 
@@ -39,8 +39,8 @@ export function Header() {
       children: [
         { label: "روائس للاستثمار", href: "/investment" },
         { label: "روائس للضيافة", href: "/rawaeshotels" },
-        { label: "روائس لاستقدام", href: "https://rec.rawaes.com" },
-        { label: "روائس لتأجير السيارات", href: "https://rent.rawaes.com" },
+        { label: "روائس لاستقدام", href: "https://rec.rawaes.com", target: "_blank" },
+        { label: "روائس لتأجير السيارات", href: "https://rent.rawaes.com", target: "_blank" },
         { label: "روائس للتقسيط", href: "/installments" },
       ],
     },
@@ -135,6 +135,8 @@ export function Header() {
                         <Link
                           key={idx}
                           href={child.href}
+                          target={child.target}
+                          rel={child.target === "_blank" ? "noopener noreferrer" : undefined}
                           className="block px-4 py-2.5 text-[0.9rem] text-[#003749]/85 hover:bg-[#d4af79]/10 hover:text-[#003749]/50 transition-colors font-medium text-right"
                         >
                           {child.label}
@@ -196,12 +198,12 @@ export function Header() {
               <div className="flex-1 overflow-y-auto no-scrollbar pb-10">
                 <ul className="flex flex-col">
                   <li>
-                    <a className="block py-5 px-6 border-b border-white/10 hover:bg-white/5 transition-colors text-right" href="https://rec.rawaes.com">
+                    <a className="block py-5 px-6 border-b border-white/10 hover:bg-white/5 transition-colors text-right" href="https://rec.rawaes.com" target="_blank" rel="noopener noreferrer">
                       روائس للاستقدام
                     </a>
                   </li>
                   <li>
-                    <a className="block py-5 px-6 border-b border-white/10 hover:bg-white/5 transition-colors text-right" href="https://rent.rawaes.com">
+                    <a className="block py-5 px-6 border-b border-white/10 hover:bg-white/5 transition-colors text-right" href="https://rent.rawaes.com" target="_blank" rel="noopener noreferrer">
                       روائس لتأجير السيارات
                     </a>
                   </li>

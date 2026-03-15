@@ -378,10 +378,10 @@ export function InvestmentPageContent({ tabs, funds, registerBlock }: Investment
                                                 href="/hospitalityfund"
                                                 className="bg-corporate hover:bg-slate-800 text-white px-10 py-4 rounded-2xl font-bold text-lg flex items-center gap-3 transition-all duration-300 group shadow-xl"
                                             >
-                                                <span>أعرف أكثر عن صندوق روائس للضيافة</span>
+                                                {/* <span>أعرف أكثر عن صندوق روائس للضيافة</span>
                                                 <span className="material-icons-round transform group-hover:-translate-x-1 transition-transform">
                                                     chevron_left
-                                                </span>
+                                                </span> */}
                                             </a>
                                         </div>
                                     </>
@@ -443,10 +443,10 @@ export function InvestmentPageContent({ tabs, funds, registerBlock }: Investment
                                                 href="/recruitmentfund"
                                                 className="bg-corporate hover:bg-slate-800 text-white px-10 py-4 rounded-2xl font-bold text-lg flex items-center gap-3 transition-all duration-300 group shadow-xl"
                                             >
-                                                <span>أعرف أكثر عن صندوق روائس للاستقدام</span>
+                                                {/* <span>أعرف أكثر عن صندوق روائس للاستقدام</span>
                                                 <span className="material-icons-round transform group-hover:-translate-x-1 transition-transform">
                                                     chevron_left
-                                                </span>
+                                                </span> */}
                                             </a>
                                         </div>
                                     </>
@@ -508,10 +508,10 @@ export function InvestmentPageContent({ tabs, funds, registerBlock }: Investment
                                                 href="/carrentalfund"
                                                 className="bg-corporate hover:bg-slate-800 text-white px-10 py-4 rounded-2xl font-bold text-lg flex items-center gap-3 transition-all duration-300 group shadow-xl"
                                             >
-                                                <span>أعرف أكثر عن صندوق روائس لتأجير السيارات</span>
+                                                {/* <span>أعرف أكثر عن صندوق روائس لتأجير السيارات</span>
                                                 <span className="material-icons-round transform group-hover:-translate-x-1 transition-transform">
                                                     chevron_left
-                                                </span>
+                                                </span> */}
                                             </a>
                                         </div>
                                     </>
