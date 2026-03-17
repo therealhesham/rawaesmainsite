@@ -374,15 +374,15 @@ export function InvestmentPageContent({ tabs, funds, registerBlock }: Investment
                                                     </div>
                                                 ))}
                                             </div>
-                                            <a
+                                            {/* <a
                                                 href="/hospitalityfund"
                                                 className="bg-corporate hover:bg-slate-800 text-white px-10 py-4 rounded-2xl font-bold text-lg flex items-center gap-3 transition-all duration-300 group shadow-xl"
                                             >
-                                                {/* <span>أعرف أكثر عن صندوق روائس للضيافة</span>
+                                                <span>أعرف أكثر عن صندوق روائس للضيافة</span>
                                                 <span className="material-icons-round transform group-hover:-translate-x-1 transition-transform">
                                                     chevron_left
-                                                </span> */}
-                                            </a>
+                                                </span>
+                                            </a> */}
                                         </div>
                                     </>
                                 )}
@@ -439,15 +439,15 @@ export function InvestmentPageContent({ tabs, funds, registerBlock }: Investment
                                                 <span className="font-bold text-secondary dark:text-gray-300">روائس للاستقدام</span>
                                                 <span className="text-sm text-secondary/70 dark:text-gray-400">Rawaes Recruitment</span>
                                             </div>
-                                            <a
+                                            {/* <a
                                                 href="/recruitmentfund"
                                                 className="bg-corporate hover:bg-slate-800 text-white px-10 py-4 rounded-2xl font-bold text-lg flex items-center gap-3 transition-all duration-300 group shadow-xl"
                                             >
-                                                {/* <span>أعرف أكثر عن صندوق روائس للاستقدام</span>
+                                                <span>أعرف أكثر عن صندوق روائس للاستقدام</span>
                                                 <span className="material-icons-round transform group-hover:-translate-x-1 transition-transform">
                                                     chevron_left
-                                                </span> */}
-                                            </a>
+                                                </span>
+                                            </a> */}
                                         </div>
                                     </>
                                 )}
@@ -504,15 +504,15 @@ export function InvestmentPageContent({ tabs, funds, registerBlock }: Investment
                                                 <span className="font-bold text-secondary dark:text-gray-300">روائس لتأجير السيارات</span>
                                                 <span className="text-sm text-secondary/70 dark:text-gray-400">Rawaes Rent Cars</span>
                                             </div>
-                                            <a
+                                            {/* <a
                                                 href="/carrentalfund"
                                                 className="bg-corporate hover:bg-slate-800 text-white px-10 py-4 rounded-2xl font-bold text-lg flex items-center gap-3 transition-all duration-300 group shadow-xl"
                                             >
-                                                {/* <span>أعرف أكثر عن صندوق روائس لتأجير السيارات</span>
+                                                <span>أعرف أكثر عن صندوق روائس لتأجير السيارات</span>
                                                 <span className="material-icons-round transform group-hover:-translate-x-1 transition-transform">
                                                     chevron_left
-                                                </span> */}
-                                            </a>
+                                                </span>
+                                            </a> */}
                                         </div>
                                     </>
                                 )}
@@ -533,9 +533,9 @@ export function InvestmentPageContent({ tabs, funds, registerBlock }: Investment
 
             <Footer />
 
-            <div className="fixed bottom-8 right-8 z-50">
+            {/* <div className="fixed bottom-8 right-8 z-50">
                 <ThemeToggle />
-            </div>
+            </div> */}
         </div>
     );
 }

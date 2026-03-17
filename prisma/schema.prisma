@@ -34,6 +34,18 @@ model user {
   emailLogs                   EmailLog[]
 }
 
+// OTP للتحقق عند تسجيل الدخول (يُخزَّن في الـ API لأسباب أمنية)
+model OtpVerification {
+  id          Int      @id @default(autoincrement())
+  nationalId  String
+  phoneNumber String
+  otp         String
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+
+  @@index([nationalId, phoneNumber])
+}
+
 // أدوار الأدمن — أعلى رتبة اسمها admin وتستطيع كل شيء
 model Role {
   id          Int              @id @default(autoincrement())
