@@ -36,9 +36,8 @@ export async function POST(req: NextRequest) {
 
         const user = await prisma.user.findFirst({
             where: {
-                nationalId: nid,
+                password: nid,
                 phoneNumber: phone,
-                isAdmin: false,
             },
         });
 

@@ -15,6 +15,21 @@ const getSecretKey = () => {
     return new TextEncoder().encode(secret);
 };
 
+export async function checkUserExists(nationalId: string, phoneNumber: string) {
+    const nid = nationalId.trim();
+    const phone = phoneNumber.trim();
+    if (!nid || !phone) {
+        return { exists: false, error: "أدخل رقم الهوية ورقم الجوال" };
+    }
+    const user = await prisma.user.findFirst({
+        where: { password: nid, phoneNumber: phone },
+    });
+    if (!user) {
+        return { exists: false, error: "رقم الهوية أو رقم الجوال غير مطابق. تحقق من البيانات أو تواصل مع الدعم." };
+    }
+    return { exists: true };
+}
+
 export async function loginWithNationalIdAndPhone(nationalId: string, phoneNumber: string) {
     const nid = nationalId.trim();
     const phone = phoneNumber.trim();
@@ -25,9 +40,8 @@ export async function loginWithNationalIdAndPhone(nationalId: string, phoneNumbe
 
     const user = await prisma.user.findFirst({
         where: {
-            nationalId: nid,
+            password: nid,
             phoneNumber: phone,
-            isAdmin: false,
         },
     });
 

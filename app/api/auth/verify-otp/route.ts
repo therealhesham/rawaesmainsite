@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
         await prisma.otpVerification.delete({ where: { id: record.id } });
 
         const user = await prisma.user.findFirst({
-            where: { nationalId: nid, phoneNumber: phone, isAdmin: false },
+            where: { password: nid, phoneNumber: phone },
         });
 
         if (!user) {

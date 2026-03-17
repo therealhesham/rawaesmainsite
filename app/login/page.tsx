@@ -1,25 +1,109 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
-import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { loginWithNationalIdAndPhone } from "./actions";
+import { checkUserExists, loginWithNationalIdAndPhone } from "./actions";
 import { AlertModal } from "@/app/components/AlertModal";
+
+const OTP_LENGTH = 6;
+const MOCK_OTP = "666666";
 
 export default function LoginPage() {
     const router = useRouter();
     const [nationalId, setNationalId] = useState("");
     const [phoneNumber, setPhoneNumber] = useState("");
+    const [step, setStep] = useState<"credentials" | "otp">("credentials");
+    const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
+    const [loading, setLoading] = useState(false);
     const [loginError, setLoginError] = useState<string | null>(null);
+    const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleCredentialsSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        const result = await loginWithNationalIdAndPhone(nationalId, phoneNumber);
-        if (result.success && result.userId) {
-            router.push(`/privatepage/${result.userId}`);
-        } else {
-            setLoginError(result.error || "خطأ في تسجيل الدخول");
+        setLoginError(null);
+        setLoading(true);
+        try {
+            const result = await checkUserExists(nationalId, phoneNumber);
+            if (result.exists) {
+                setOtp(Array(OTP_LENGTH).fill(""));
+                setStep("otp");
+                setTimeout(() => otpRefs.current[0]?.focus(), 100);
+            } else {
+                setLoginError(result.error || "خطأ في تسجيل الدخول");
+            }
+        } catch {
+            setLoginError("حدث خطأ. حاول لاحقاً.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleOtpChange = (index: number, value: string) => {
+        if (!/^\d*$/.test(value)) return;
+        const digit = value.slice(-1);
+        const next = [...otp];
+        next[index] = digit;
+        setOtp(next);
+        if (digit && index < OTP_LENGTH - 1) {
+            setTimeout(() => otpRefs.current[index + 1]?.focus(), 50);
+        }
+    };
+
+    const handleOtpKeyDown = (index: number, e: React.KeyboardEvent) => {
+        if (e.key === "Backspace") {
+            e.preventDefault();
+            if (otp[index]) {
+                const next = [...otp];
+                next[index] = "";
+                setOtp(next);
+            } else if (index > 0) {
+                const next = [...otp];
+                next[index - 1] = "";
+                setOtp(next);
+                setTimeout(() => otpRefs.current[index - 1]?.focus(), 50);
+            }
+        }
+    };
+
+    const handleOtpPaste = (e: React.ClipboardEvent) => {
+        e.preventDefault();
+        const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, OTP_LENGTH);
+        if (pasted.length) {
+            const next = [...otp];
+            pasted.split("").forEach((d, i) => (next[i] = d));
+            setOtp(next);
+            otpRefs.current[Math.min(pasted.length, OTP_LENGTH - 1)]?.focus();
+        }
+    };
+
+    const handleClearOtp = () => {
+        setOtp(Array(OTP_LENGTH).fill(""));
+        setLoginError(null);
+        otpRefs.current[0]?.focus();
+    };
+
+    const handleOtpSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const code = otp.join("");
+        if (code !== MOCK_OTP) {
+            setLoginError("رمز التحقق غير صحيح. استخدم 666666 للتجربة.");
+            return;
+        }
+        setLoginError(null);
+        setLoading(true);
+        try {
+            const result = await loginWithNationalIdAndPhone(nationalId, phoneNumber);
+            if (result.success && result.userId) {
+                router.push(`/privatepage/${result.userId}`);
+            } else {
+                setLoginError(result.error || "خطأ في تسجيل الدخول");
+            }
+        } catch {
+            setLoginError("حدث خطأ. حاول لاحقاً.");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -163,97 +247,128 @@ export default function LoginPage() {
                         <img src="/logo.png" alt="Rawaes" className="w-16 h-16 object-contain" />
                     </div>
 
-                    {/* Form header */}
-                    <motion.div
-                        className="mb-10"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, delay: 0.5 }}
-                    >
-                        <h2 className="text-2xl md:text-3xl font-bold text-secondary dark:text-white mb-3">
-                            تسجيل دخول المستثمرين
-                        </h2>
-                        <p className="text-secondary/60 dark:text-gray-400 text-sm">
-                            أدخل رقم الهوية ورقم الجوال للوصول إلى صفحتك الاستثمارية
-                        </p>
-                    </motion.div>
-
-                    {/* Form */}
-                    <motion.form
-                        className="space-y-6"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, delay: 0.6 }}
-                        onSubmit={handleSubmit}
-                    >
-                        <div className="space-y-4">
-                            <div className="space-y-2">
-                                <label
-                                    htmlFor="national-id"
-                                    className="block text-sm font-semibold text-secondary dark:text-gray-200"
-                                >
-                                    رقم الهوية
-                                </label>
-                                <div className="relative group">
-                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 material-icons text-xl text-primary/60 group-focus-within:text-primary transition-colors">
-                                        badge
-                                    </span>
-                                    <input
-                                        id="national-id"
-                                        type="text"
-                                        inputMode="numeric"
-                                        value={nationalId}
-                                        onChange={(e) => setNationalId(e.target.value.replace(/\D/g, ""))}
-                                        placeholder="رقم الهوية الوطنية"
-                                        className="w-full pr-12 pl-4 py-3.5 bg-white dark:bg-card-dark border-2 border-gray-200 dark:border-gray-600 rounded-xl text-secondary dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all duration-300 text-sm dir-ltr text-right"
-                                    />
-                                </div>
-                            </div>
-                            <div className="space-y-2">
-                                <label
-                                    htmlFor="phone-number"
-                                    className="block text-sm font-semibold text-secondary dark:text-gray-200"
-                                >
-                                    رقم الجوال
-                                </label>
-                                <div className="relative group">
-                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 material-icons text-xl text-primary/60 group-focus-within:text-primary transition-colors">
-                                        phone_iphone
-                                    </span>
-                                    <input
-                                        id="phone-number"
-                                        type="tel"
-                                        value={phoneNumber}
-                                        onChange={(e) => setPhoneNumber(e.target.value)}
-                                        placeholder="5x xxx xxxx"
-                                        className="w-full pr-12 pl-4 py-3.5 bg-white dark:bg-card-dark border-2 border-gray-200 dark:border-gray-600 rounded-xl text-secondary dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all duration-300 text-sm dir-ltr text-right"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        <motion.button
-                            type="submit"
-                            whileHover={{ scale: 1.01 }}
-                            whileTap={{ scale: 0.98 }}
-                            className="w-full py-4 bg-gradient-to-l from-[#d4af79] to-[#c49b60] hover:from-[#c49b60] hover:to-[#b5905f] text-white font-bold text-base rounded-xl shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"
-                        >
-                            <span>تسجيل الدخول</span>
-                            <span className="material-icons text-lg">login</span>
-                        </motion.button>
-                    </motion.form>
-
-                    {/* Divider */}
-                    <motion.div
-                        className="my-8 flex items-center gap-4"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.8 }}
-                    >
+                    <AnimatePresence mode="wait">
+                        {step === "credentials" ? (
+                            <motion.div
+                                key="credentials"
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                <motion.div className="mb-10">
+                                    <h2 className="text-2xl md:text-3xl font-bold text-secondary dark:text-white mb-3">
+                                        تسجيل دخول المستثمرين
+                                    </h2>
+                                    <p className="text-secondary/60 dark:text-gray-400 text-sm">
+                                        أدخل رقم الهوية ورقم الجوال للوصول إلى صفحتك الاستثمارية
+                                    </p>
+                                </motion.div>
+                                <form onSubmit={handleCredentialsSubmit} className="space-y-6">
+                                    <div className="space-y-4">
+                                        <div className="space-y-2">
+                                            <label htmlFor="national-id" className="block text-sm font-semibold text-secondary dark:text-gray-200">رقم الهوية</label>
+                                            <div className="relative group">
+                                                <span className="absolute right-4 top-1/2 -translate-y-1/2 material-icons text-xl text-primary/60 group-focus-within:text-primary transition-colors">badge</span>
+                                                <input
+                                                    id="national-id"
+                                                    type="text"
+                                                    inputMode="numeric"
+                                                    value={nationalId}
+                                                    onChange={(e) => setNationalId(e.target.value.replace(/\D/g, ""))}
+                                                    placeholder="رقم الهوية الوطنية"
+                                                    className="w-full pr-12 pl-4 py-3.5 bg-white dark:bg-card-dark border-2 border-gray-200 dark:border-gray-600 rounded-xl text-secondary dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all duration-300 text-sm dir-ltr text-right"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label htmlFor="phone-number" className="block text-sm font-semibold text-secondary dark:text-gray-200">رقم الجوال</label>
+                                            <div className="relative group">
+                                                <span className="absolute right-4 top-1/2 -translate-y-1/2 material-icons text-xl text-primary/60 group-focus-within:text-primary transition-colors">phone_iphone</span>
+                                                <input
+                                                    id="phone-number"
+                                                    type="tel"
+                                                    value={phoneNumber}
+                                                    onChange={(e) => setPhoneNumber(e.target.value)}
+                                                    placeholder="5x xxx xxxx"
+                                                    className="w-full pr-12 pl-4 py-3.5 bg-white dark:bg-card-dark border-2 border-gray-200 dark:border-gray-600 rounded-xl text-secondary dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all duration-300 text-sm dir-ltr text-right"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <motion.button
+                                        type="submit"
+                                        disabled={loading}
+                                        whileHover={{ scale: loading ? 1 : 1.01 }}
+                                        whileTap={{ scale: loading ? 1 : 0.98 }}
+                                        className="w-full py-4 bg-gradient-to-l from-[#d4af79] to-[#c49b60] hover:from-[#c49b60] hover:to-[#b5905f] disabled:opacity-70 text-white font-bold text-base rounded-xl shadow-lg shadow-primary/25 transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"
+                                    >
+                                        {loading ? <span className="material-icons animate-spin">refresh</span> : <><span>إرسال رمز التحقق</span><span className="material-icons text-lg">sms</span></>}
+                                    </motion.button>
+                                </form>
+                            </motion.div>
+                        ) : (
+                            <motion.div
+                                key="otp"
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                <motion.div className="mb-10">
+                                    <button type="button" onClick={() => { setStep("credentials"); setOtp(Array(OTP_LENGTH).fill("")); setLoginError(null); }} className="flex items-center gap-2 text-secondary/60 dark:text-gray-400 hover:text-primary mb-4 transition-colors">
+                                        <span className="material-icons">arrow_forward</span>
+                                        <span>تغيير الرقم</span>
+                                    </button>
+                                    <h2 className="text-2xl md:text-3xl font-bold text-secondary dark:text-white mb-3">أدخل رمز التحقق</h2>
+                                    <p className="text-secondary/60 dark:text-gray-400 text-sm">
+                                        أدخل الرمز <span dir="ltr" className="font-semibold text-primary">666666</span> للتجربة (بدون إرسال SMS)
+                                    </p>
+                                </motion.div>
+                                <form onSubmit={handleOtpSubmit} className="space-y-6">
+                                    <div dir="ltr" className="flex flex-row justify-center items-center gap-2 sm:gap-3" style={{ direction: "ltr" }}>
+                                        {otp.map((digit, i) => (
+                                            <input
+                                                key={i}
+                                                ref={(el) => { otpRefs.current[i] = el; }}
+                                                type="text"
+                                                inputMode="numeric"
+                                                maxLength={1}
+                                                value={digit}
+                                                onChange={(e) => handleOtpChange(i, e.target.value)}
+                                                onKeyDown={(e) => handleOtpKeyDown(i, e)}
+                                                onPaste={handleOtpPaste}
+                                                className="w-11 h-14 sm:w-12 sm:h-14 text-center text-xl font-bold bg-white dark:bg-card-dark border-2 border-gray-200 dark:border-gray-600 rounded-xl text-secondary dark:text-white focus:border-primary focus:ring-4 focus:ring-primary/20 outline-none transition-all duration-300 dir-ltr"
+                                            />
+                                        ))}
+                                        <button type="button" onClick={handleClearOtp} title="مسح الرمز" className="flex-shrink-0 p-0.5 text-red-500 hover:text-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled={!otp.some((d) => d)}>
+                                            <span className="text-md font-serif italic select-none" style={{ fontFamily: "cursive" }}>×</span>
+                                        </button>
+                                    </div>
+                                    <motion.button
+                                        type="submit"
+                                        disabled={loading || otp.join("").length !== OTP_LENGTH}
+                                        whileHover={loading || otp.join("").length !== OTP_LENGTH ? undefined : { scale: 1.01 }}
+                                        whileTap={loading || otp.join("").length !== OTP_LENGTH ? undefined : { scale: 0.98 }}
+                                        className="w-full py-4 bg-gradient-to-l from-[#d4af79] to-[#c49b60] hover:from-[#c49b60] hover:to-[#b5905f] disabled:opacity-70 text-white font-bold text-base rounded-xl shadow-lg shadow-primary/25 transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"
+                                    >
+                                        {loading ? <span className="material-icons animate-spin">refresh</span> : <><span>تسجيل الدخول</span><span className="material-icons text-lg">login</span></>}
+                                    </motion.button>
+                                </form>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+{/* 
+                    <motion.div className="my-8 flex items-center gap-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }}>
                         <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
                         <span className="text-xs text-gray-400 dark:text-gray-500">أو</span>
                         <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
                     </motion.div>
+                    <motion.div className="text-center mb-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.85 }}>
+                        <Link href="/login_otp" className="text-sm text-primary hover:underline">
+                            تسجيل دخول مع OTP حقيقي (إرسال SMS)
+                        </Link>
+                    </motion.div> */}
 
                     {/* Contact support card */}
                     <motion.div
