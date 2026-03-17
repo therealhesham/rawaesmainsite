@@ -2,8 +2,28 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useState } from "react";
+import { switchToAdminFromInvestor } from "@/app/login/actions";
+import { AlertModal } from "@/app/components/AlertModal";
 
 export function Footer() {
+    const [adminError, setAdminError] = useState<string | null>(null);
+    const [adminLoading, setAdminLoading] = useState(false);
+
+    const handleAdminGateway = async () => {
+        setAdminError(null);
+        setAdminLoading(true);
+        try {
+            const result = await switchToAdminFromInvestor();
+            if (!result.success && result.error) {
+                setAdminError(result.error);
+            }
+        } catch {
+            setAdminError("حدث خطأ. حاول لاحقاً.");
+        } finally {
+            setAdminLoading(false);
+        }
+    };
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -33,7 +53,14 @@ export function Footer() {
   };
 
   return (
-    <footer className="bg-secondary text-white border-t-8 border-primary dark:border-primary/80 overflow-hidden">
+    <footer className="bg-secondary text-white border-t-8 border-primary dark:border-primary/80 overflow-hidden relative">
+      <AlertModal
+        open={!!adminError}
+        onClose={() => setAdminError(null)}
+        title="بوابة الأدمن"
+        message={adminError ?? ""}
+        variant="error"
+      />
       <div className="container mx-auto px-4 py-12">
         <div className="flex flex-col md:flex-row justify-between items-start">
           {/* Logo Section */}
@@ -104,7 +131,7 @@ export function Footer() {
 
       {/* Footer Bottom */}
       <motion.div
-        className="bg-primary py-3 text-center"
+        className="bg-primary py-3 text-center relative"
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
@@ -113,6 +140,15 @@ export function Footer() {
         <p className="text-secondary text-xs font-bold">
           جميع الحقوق محفوظة لدى مجموعة روائس
         </p>
+        {/* بوابة مخفية: زر دخول الأدمن للمستثمرين الذين isAdmin: true */}
+        <button
+          type="button"
+          onClick={handleAdminGateway}
+          disabled={adminLoading}
+          title="بوابة الأدمن"
+          className="absolute left-2 bottom-1/2 translate-y-1/2 w-1 h-4 opacity-20 hover:opacity-40 transition-opacity cursor-pointer bg-secondary rounded disabled:opacity-50 disabled:cursor-not-allowed"
+          aria-hidden
+        />
       </motion.div>
     </footer>
   );

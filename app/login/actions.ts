@@ -74,3 +74,29 @@ export async function logoutInvestor() {
     cookieStore.delete("investor_session");
     redirect("/login");
 }
+
+/** بوابة مخفية: تسجيل دخول الأدمن باستخدام جلسة المستثمر (يُشترط isAdmin: true) */
+export async function switchToAdminFromInvestor() {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("investor_session")?.value;
+    if (!token) {
+        return { success: false, error: "سجّل الدخول كمستثمر أولاً" };
+    }
+    let userId: number;
+    try {
+        const { payload } = await jwtVerify(token, getSecretKey());
+        userId = payload.userId as number;
+    } catch {
+        return { success: false, error: "انتهت جلستك. سجّل الدخول من جديد." };
+    }
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, isAdmin: true } });
+    if (!user) return { success: false, error: "المستخدم غير موجود." };
+    if (!user.isAdmin) return { success: false, error: "ليس لديك صلاحية الدخول للإدارة." };
+    cookieStore.set("admin_session", user.id.toString(), {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 60 * 60 * 24 * 7,
+        path: "/",
+    });
+    redirect("/admin");
+}
