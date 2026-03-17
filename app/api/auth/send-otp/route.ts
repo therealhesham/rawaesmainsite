@@ -69,8 +69,8 @@ export async function POST(req: NextRequest) {
         });
 
         const phoneForSms = cleanPhoneForSms(phone);
-        const message = encodeURIComponent(`رمز التحقق: ${otp}`);
-        const url = SMS_API_URL.replace("{phone}", phoneForSms).replace("{message}", message);
+        const message = `رمز التحقق: ${otp}`;
+        const url = buildSmsUrl(phoneForSms, message);
 
         const smsRes = await fetch(url);
         if (!smsRes.ok) {
