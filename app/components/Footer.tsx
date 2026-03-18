@@ -14,10 +14,7 @@ export function Footer() {
         setAdminError(null);
         setAdminLoading(true);
         try {
-            const result = await switchToAdminFromInvestor();
-            if (!result.success && result.error) {
-                setAdminError(result.error);
-            }
+            await switchToAdminFromInvestor();
         } catch {
             setAdminError("حدث خطأ. حاول لاحقاً.");
         } finally {
