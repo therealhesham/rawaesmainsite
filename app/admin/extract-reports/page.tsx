@@ -53,6 +53,12 @@ export default function ExtractReportsPage() {
     const [saveAllYear, setSaveAllYear] = useState<string>("");
     const [isSaveAllProcessing, setIsSaveAllProcessing] = useState(false);
     const [saveAllResult, setSaveAllResult] = useState<{ autoSaved: number; manualSaved: number; error?: string } | null>(null);
+    /** Autocomplete لحفظ الكل: قيمة البحث، القائمة المفتوحة، نتائج البحث */
+    const [saveAllSearchInputs, setSaveAllSearchInputs] = useState<Record<string, string>>({});
+    const [saveAllDropdownOpen, setSaveAllDropdownOpen] = useState<string | null>(null);
+    const [saveAllSearchResults, setSaveAllSearchResults] = useState<Record<string, { id: number; name: string }[]>>({});
+    const [saveAllSearching, setSaveAllSearching] = useState<string | null>(null);
+    const saveAllAutocompleteRef = useRef<HTMLDivElement>(null);
 
     const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault();
@@ -139,6 +145,9 @@ export default function ExtractReportsPage() {
         const handleClickOutside = (e: MouseEvent) => {
             if (autocompleteRef.current && !autocompleteRef.current.contains(e.target as Node)) {
                 setShowInvestorDropdown(false);
+            }
+            if (saveAllAutocompleteRef.current && !saveAllAutocompleteRef.current.contains(e.target as Node)) {
+                setSaveAllDropdownOpen(null);
             }
         };
         document.addEventListener("mousedown", handleClickOutside);
@@ -271,12 +280,21 @@ export default function ExtractReportsPage() {
 
         if (unmatched.length > 0) {
             const initialSelections: Record<string, string> = {};
+            const initialInputs: Record<string, string> = {};
+            const initialResults: Record<string, { id: number; name: string }[]> = {};
             unmatched.forEach((u) => {
                 if (u.suggestions.length > 0) {
                     initialSelections[u.excelName] = String(u.suggestions[0].id);
+                    initialInputs[u.excelName] = u.suggestions[0].name;
+                    initialResults[u.excelName] = u.suggestions;
+                } else {
+                    initialInputs[u.excelName] = u.excelName;
+                    initialResults[u.excelName] = [];
                 }
             });
             setSaveAllSelections(initialSelections);
+            setSaveAllSearchInputs(initialInputs);
+            setSaveAllSearchResults(initialResults);
             setUnmatchedForSaveAll(unmatched);
             setSaveAllYear(String(previousYear));
             setSaveAllModalOpen(true);
@@ -291,9 +309,9 @@ export default function ExtractReportsPage() {
             setSaveAllModalOpen(false);
             return;
         }
-        const needSelection = unmatchedForSaveAll.filter((u) => u.suggestions.length > 0 && !saveAllSelections[u.excelName]);
-        if (needSelection.length > 0) {
-            alert(`الرجاء اختيار مستثمر لكل من: ${needSelection.map((m) => m.excelName).join(", ")}`);
+        const withSelection = unmatchedForSaveAll.filter((u) => saveAllSelections[u.excelName]);
+        if (withSelection.length === 0) {
+            alert("الرجاء اختيار مستثمر واحد على الأقل من القائمة.");
             return;
         }
 
@@ -302,7 +320,7 @@ export default function ExtractReportsPage() {
         const parsedYear = saveAllYear ? parseInt(saveAllYear, 10) : previousYear;
 
         let manualSaved = 0;
-        for (const u of unmatchedForSaveAll) {
+        for (const u of withSelection) {
             const userId = saveAllSelections[u.excelName];
             if (!userId) continue;
             const res = await saveInvestorReports(parseInt(userId, 10), u.urls, reportType, parsedYear);
@@ -317,6 +335,26 @@ export default function ExtractReportsPage() {
         setUnmatchedForSaveAll([]);
         setSaveAllSelections({});
         setIsSaveAllProcessing(false);
+    };
+
+    const handleSaveAllAutocompleteChange = async (excelName: string, value: string) => {
+        setSaveAllSearchInputs((prev) => ({ ...prev, [excelName]: value }));
+        setSaveAllDropdownOpen(excelName);
+        if (!value.trim()) {
+            setSaveAllSearchResults((prev) => ({ ...prev, [excelName]: [] }));
+            setSaveAllSelections((prev) => ({ ...prev, [excelName]: "" }));
+            return;
+        }
+        setSaveAllSearching(excelName);
+        const res = await searchInvestorByName(value);
+        const list = res.exact ? [res.exact] : res.suggestions;
+        setSaveAllSearchResults((prev) => ({ ...prev, [excelName]: list }));
+        if (res.exact) {
+            setSaveAllSelections((prev) => ({ ...prev, [excelName]: String(res.exact.id) }));
+        } else {
+            setSaveAllSelections((prev) => ({ ...prev, [excelName]: list.length > 0 ? String(list[0].id) : "" }));
+        }
+        setSaveAllSearching(null);
     };
 
     const investorsFiles = result?.investors_files && Object.keys(result.investors_files).length > 0;
@@ -853,7 +891,7 @@ export default function ExtractReportsPage() {
                                             initial={{ scale: 0.95 }}
                                             animate={{ scale: 1 }}
                                             exit={{ scale: 0.95 }}
-                                            className="relative w-full max-w-3xl max-h-[90vh] overflow-hidden rounded-2xl bg-white dark:bg-card-dark shadow-xl border border-gray-200 dark:border-gray-700 flex flex-col"
+                                            className="relative w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-2xl bg-white dark:bg-card-dark shadow-xl border border-gray-200 dark:border-gray-700 flex flex-col"
                                             dir="rtl"
                                         >
                                             <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-800 shrink-0">
@@ -873,55 +911,89 @@ export default function ExtractReportsPage() {
                                                 لم يتم العثور على تطابق تام — اختر المستثمر المناسب لكل اسم من القائمة أدناه:
                                             </p>
                                             <div className="p-6 overflow-y-auto flex-1">
-                                                <div className="space-y-4 mb-4">
-                                                    {unmatchedForSaveAll.map((item) => (
-                                                        <div
-                                                            key={item.excelName}
-                                                            className="flex flex-wrap items-center gap-3 p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50"
-                                                        >
-                                                            <div className="min-w-[140px] shrink-0">
-                                                                <span className="text-xs text-gray-500 block mb-1">الاسم في Excel</span>
-                                                                <strong className="text-secondary dark:text-white">{item.excelName}</strong>
-                                                                <span className="text-xs text-gray-400 mr-1">({item.urls.length} ملف)</span>
+                                                <div ref={saveAllAutocompleteRef} className="space-y-4 mb-4 min-w-0">
+                                                    {unmatchedForSaveAll.map((item) => {
+                                                        const isOpen = saveAllDropdownOpen === item.excelName;
+                                                        const options = saveAllSearchResults[item.excelName] ?? item.suggestions;
+                                                        const inputVal = saveAllSearchInputs[item.excelName] ?? item.excelName;
+                                                        const isSearching = saveAllSearching === item.excelName;
+                                                        return (
+                                                            <div
+                                                                key={item.excelName}
+                                                                className={`grid grid-cols-1 sm:grid-cols-[1fr_1fr] gap-4 p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 ${isOpen ? "relative z-10" : ""}`}
+                                                            >
+                                                                <div className="min-w-0">
+                                                                    <span className="text-xs text-gray-500 block mb-1">الاسم في Excel</span>
+                                                                    <p className="text-secondary dark:text-white font-medium truncate" title={item.excelName}>
+                                                                        {item.excelName}
+                                                                    </p>
+                                                                    <span className="text-xs text-gray-400">({item.urls.length} ملف)</span>
+                                                                </div>
+                                                                <div className="min-w-0 relative">
+                                                                    <span className="text-xs text-gray-500 block mb-1">المستثمر المقترح</span>
+                                                                    <div className="relative">
+                                                                            <input
+                                                                                type="text"
+                                                                                value={inputVal}
+                                                                                onChange={(e) => handleSaveAllAutocompleteChange(item.excelName, e.target.value)}
+                                                                                onFocus={() => setSaveAllDropdownOpen(item.excelName)}
+                                                                                placeholder="ابحث أو اختر مستثمر..."
+                                                                                autoComplete="off"
+                                                                                className="w-full min-w-0  pe-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm"
+                                                                            />
+                                                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                                                                                {isSearching ? (
+                                                                                    <span className="w-4 h-4 border-2 border-gray-300 border-t-primary rounded-full animate-spin block" />
+                                                                                ) : (
+                                                                                    <Search size={18} />
+                                                                                )}
+                                                                            </span>
+                                                                            {saveAllSelections[item.excelName] && (
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={() => {
+                                                                                        setSaveAllSelections((prev) => ({ ...prev, [item.excelName]: "" }));
+                                                                                        setSaveAllSearchInputs((prev) => ({ ...prev, [item.excelName]: item.excelName }));
+                                                                                    }}
+                                                                                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-red-500"
+                                                                                >
+                                                                                    <X size={16} />
+                                                                                </button>
+                                                                            )}
+                                                                            <AnimatePresence>
+                                                                                {isOpen && (
+                                                                                    <motion.ul
+                                                                                        initial={{ opacity: 0, y: -4 }}
+                                                                                        animate={{ opacity: 1, y: 0 }}
+                                                                                        exit={{ opacity: 0, y: -4 }}
+                                                                                        className="absolute z-[9999] mt-1 left-0 right-0 max-h-40 overflow-y-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl"
+                                                                                    >
+                                                                                        {options.length === 0 ? (
+                                                                                            <li className="p-3 text-sm text-gray-500 text-center">لا توجد نتائج</li>
+                                                                                        ) : (
+                                                                                            options.map((s) => (
+                                                                                                <li
+                                                                                                    key={s.id}
+                                                                                                    onClick={() => {
+                                                                                                        setSaveAllSelections((prev) => ({ ...prev, [item.excelName]: String(s.id) }));
+                                                                                                        setSaveAllSearchInputs((prev) => ({ ...prev, [item.excelName]: s.name }));
+                                                                                                        setSaveAllDropdownOpen(null);
+                                                                                                    }}
+                                                                                                    className={`px-4 py-2.5 text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 ${String(s.id) === saveAllSelections[item.excelName] ? "bg-primary/10 text-primary font-medium" : ""}`}
+                                                                                                >
+                                                                                                    <User size={14} />
+                                                                                                    {s.name}
+                                                                                                </li>
+                                                                                            ))
+                                                                                        )}
+                                                                                    </motion.ul>
+                                                                                )}
+                                                                            </AnimatePresence>
+                                                                        </div>
+                                                                </div>
                                                             </div>
-                                                            <div className="flex-1 min-w-[200px]">
-                                                                <span className="text-xs text-gray-500 block mb-1">المستثمر المقترح / اختر من القائمة</span>
-                                                                {item.suggestions.length > 0 ? (
-                                                                    <select
-                                                                        value={saveAllSelections[item.excelName] || ""}
-                                                                        onChange={(e) =>
-                                                                            setSaveAllSelections((prev) => ({
-                                                                                ...prev,
-                                                                                [item.excelName]: e.target.value,
-                                                                            }))
-                                                                        }
-                                                                        className="w-full p-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm"
-                                                                    >
-                                                                        <option value="">-- اختر مستثمر --</option>
-                                                                        {item.suggestions.map((s) => (
-                                                                            <option key={s.id} value={s.id}>
-                                                                                {s.name}
-                                                                            </option>
-                                                                        ))}
-                                                                    </select>
-                                                                ) : (
-                                                                    <div className="flex items-center gap-2">
-                                                                        <span className="text-sm text-amber-600 dark:text-amber-400">لا توجد اقتراحات</span>
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={() => {
-                                                                                setSaveAllModalOpen(false);
-                                                                                handleOpenSaveModal(item.excelName, item.urls);
-                                                                            }}
-                                                                            className="text-sm text-primary hover:underline"
-                                                                        >
-                                                                            بحث يدوي
-                                                                        </button>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    ))}
+                                                        );
+                                                    })}
                                                 </div>
                                                 <div className="mb-4">
                                                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">سنة التقرير</label>
@@ -952,7 +1024,7 @@ export default function ExtractReportsPage() {
                                                 <button
                                                     type="button"
                                                     onClick={handleConfirmSaveAllModal}
-                                                    disabled={isSaveAllProcessing || unmatchedForSaveAll.some((u) => u.suggestions.length > 0 && !saveAllSelections[u.excelName])}
+                                                    disabled={isSaveAllProcessing || !unmatchedForSaveAll.some((u) => saveAllSelections[u.excelName])}
                                                     className="flex-1 py-2.5 bg-primary text-white font-medium rounded-xl hover:bg-primary/90 disabled:opacity-50 flex items-center justify-center gap-2"
                                                 >
                                                     {isSaveAllProcessing ? (
