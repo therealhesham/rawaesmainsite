@@ -80,17 +80,17 @@ export async function switchToAdminFromInvestor() {
     const cookieStore = await cookies();
     const token = cookieStore.get("investor_session")?.value;
     if (!token) {
-        return { success: false, error: "سجّل الدخول كمستثمر أولاً" };
+        redirect("/admin/login");
     }
     let userId: number;
     try {
         const { payload } = await jwtVerify(token, getSecretKey());
         userId = payload.userId as number;
     } catch {
-        return { success: false, error: "انتهت جلستك. سجّل الدخول من جديد." };
+        redirect("/admin/login");
     }
     const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, isAdmin: true } });
-    if (!user) return { success: false, error: "المستخدم غير موجود." };
+    if (!user) redirect("/admin/login");
     if (!user.isAdmin) redirect("/admin/login");
     cookieStore.set("admin_session", user.id.toString(), {
         httpOnly: true,
