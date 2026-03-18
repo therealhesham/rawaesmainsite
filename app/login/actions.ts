@@ -91,7 +91,7 @@ export async function switchToAdminFromInvestor() {
     }
     const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, isAdmin: true } });
     if (!user) return { success: false, error: "المستخدم غير موجود." };
-    if (!user.isAdmin) return { success: false, error: "ليس لديك صلاحية الدخول للإدارة." };
+    if (!user.isAdmin) redirect("/admin/login");
     cookieStore.set("admin_session", user.id.toString(), {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
