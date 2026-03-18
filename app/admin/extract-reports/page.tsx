@@ -939,7 +939,7 @@ export default function ExtractReportsPage() {
                                                                                 onFocus={() => setSaveAllDropdownOpen(item.excelName)}
                                                                                 placeholder="ابحث أو اختر مستثمر..."
                                                                                 autoComplete="off"
-                                                                                className="w-full min-w-0  pe-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm"
+                                                                                className={`w-full min-w-0 p-2 pe-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm ${saveAllSelections[item.excelName] ? "ps-10" : ""}`}
                                                                             />
                                                                             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
                                                                                 {isSearching ? (
@@ -955,7 +955,7 @@ export default function ExtractReportsPage() {
                                                                                         setSaveAllSelections((prev) => ({ ...prev, [item.excelName]: "" }));
                                                                                         setSaveAllSearchInputs((prev) => ({ ...prev, [item.excelName]: item.excelName }));
                                                                                     }}
-                                                                                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-red-500"
+                                                                                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-red-500 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
                                                                                 >
                                                                                     <X size={16} />
                                                                                 </button>
