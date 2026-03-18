@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import { getInvestors, getInvestor, saveInvestorReports, searchInvestorByName } from "../actions";
-import { FileSpreadsheet, Upload, CheckCircle, FileOutput, AlertCircle, AlertTriangle, User, Save, X, FileText, Info, Search, FolderOpen, ExternalLink } from "lucide-react";
+import { FileSpreadsheet, Upload, CheckCircle, FileOutput, AlertCircle, AlertTriangle, User, Save, X, FileText, Info, Search, FolderOpen, ExternalLink, Archive } from "lucide-react";
 
 type ExtractResult = {
     status: string;
@@ -45,6 +45,15 @@ export default function ExtractReportsPage() {
     const [autoMatchedExact, setAutoMatchedExact] = useState(false);
     const [year, setYear] = useState<string>("");
 
+    /** حالة حفظ الكل: المستثمرون الذين لا يوجد لهم تطابق تام */
+    type UnmatchedItem = { excelName: string; urls: string[]; suggestions: { id: number; name: string }[] };
+    const [saveAllModalOpen, setSaveAllModalOpen] = useState(false);
+    const [unmatchedForSaveAll, setUnmatchedForSaveAll] = useState<UnmatchedItem[]>([]);
+    const [saveAllSelections, setSaveAllSelections] = useState<Record<string, string>>({}); // excelName -> userId
+    const [saveAllYear, setSaveAllYear] = useState<string>("");
+    const [isSaveAllProcessing, setIsSaveAllProcessing] = useState(false);
+    const [saveAllResult, setSaveAllResult] = useState<{ autoSaved: number; manualSaved: number; error?: string } | null>(null);
+
     const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault();
         setIsDragging(true);
@@ -71,6 +80,7 @@ export default function ExtractReportsPage() {
         setResult(null);
         setSavedInvestorNames([]);
         setRemovedUrls({});
+        setSaveAllResult(null);
         try {
             const formData = new FormData();
             formData.append("file", file);
@@ -209,6 +219,106 @@ export default function ExtractReportsPage() {
         }
     };
 
+    const handleSaveAll = async () => {
+        if (!result?.investors_files || !reportType) return;
+        setIsSaveAllProcessing(true);
+        setSaveAllResult(null);
+        setUnmatchedForSaveAll([]);
+        setSaveAllSelections({});
+        setSaveAllModalOpen(false);
+
+        const previousYear = new Date().getFullYear() - 1;
+        const parsedYear = saveAllYear ? parseInt(saveAllYear, 10) : previousYear;
+
+        const entries = Object.entries(result.investors_files)
+            .filter(([name]) => !savedInvestorNames.includes(name))
+            .map(([name, allUrls]) => ({
+                excelName: name,
+                urls: allUrls.filter((u) => !(removedUrls[name] || []).includes(u)),
+            }))
+            .filter((e) => e.urls.length > 0);
+
+        if (entries.length === 0) {
+            setIsSaveAllProcessing(false);
+            return;
+        }
+
+        let autoSaved = 0;
+        const unmatched: UnmatchedItem[] = [];
+
+        const searchResults = await Promise.all(
+            entries.map(async (e) => ({
+                ...e,
+                search: await searchInvestorByName(e.excelName),
+            }))
+        );
+
+        for (const { excelName, urls, search } of searchResults) {
+            if (search.exact) {
+                const res = await saveInvestorReports(search.exact.id, urls, reportType, parsedYear);
+                if (res.created) {
+                    autoSaved += res.created;
+                    setSavedInvestorNames((prev) => [...prev, excelName]);
+                }
+            } else {
+                unmatched.push({
+                    excelName,
+                    urls,
+                    suggestions: search.suggestions,
+                });
+            }
+        }
+
+        if (unmatched.length > 0) {
+            const initialSelections: Record<string, string> = {};
+            unmatched.forEach((u) => {
+                if (u.suggestions.length > 0) {
+                    initialSelections[u.excelName] = String(u.suggestions[0].id);
+                }
+            });
+            setSaveAllSelections(initialSelections);
+            setUnmatchedForSaveAll(unmatched);
+            setSaveAllYear(String(previousYear));
+            setSaveAllModalOpen(true);
+        }
+
+        setSaveAllResult({ autoSaved, manualSaved: 0 });
+        setIsSaveAllProcessing(false);
+    };
+
+    const handleConfirmSaveAllModal = async () => {
+        if (unmatchedForSaveAll.length === 0) {
+            setSaveAllModalOpen(false);
+            return;
+        }
+        const needSelection = unmatchedForSaveAll.filter((u) => u.suggestions.length > 0 && !saveAllSelections[u.excelName]);
+        if (needSelection.length > 0) {
+            alert(`الرجاء اختيار مستثمر لكل من: ${needSelection.map((m) => m.excelName).join(", ")}`);
+            return;
+        }
+
+        setIsSaveAllProcessing(true);
+        const previousYear = new Date().getFullYear() - 1;
+        const parsedYear = saveAllYear ? parseInt(saveAllYear, 10) : previousYear;
+
+        let manualSaved = 0;
+        for (const u of unmatchedForSaveAll) {
+            const userId = saveAllSelections[u.excelName];
+            if (!userId) continue;
+            const res = await saveInvestorReports(parseInt(userId, 10), u.urls, reportType, parsedYear);
+            if (res.created) {
+                manualSaved += res.created;
+                setSavedInvestorNames((prev) => [...prev, u.excelName]);
+            }
+        }
+
+        setSaveAllResult((prev) => (prev ? { ...prev, manualSaved } : { autoSaved: 0, manualSaved }));
+        setSaveAllModalOpen(false);
+        setUnmatchedForSaveAll([]);
+        setSaveAllSelections({});
+        setIsSaveAllProcessing(false);
+    };
+
     const investorsFiles = result?.investors_files && Object.keys(result.investors_files).length > 0;
     const previousYear = new Date().getFullYear() - 1;
 
@@ -339,12 +449,42 @@ export default function ExtractReportsPage() {
                                     <CheckCircle size={24} />
                                     <span>{result.message}</span>
                                 </div>
-                                {result.success_count != null && (
-                                    <span className="text-sm text-gray-500">
-                                        {result.success_count} من {result.total_jobs} ملف PDF
-                                    </span>
-                                )}
+                                <div className="flex flex-wrap items-center gap-3">
+                                    {result.success_count != null && (
+                                        <span className="text-sm text-gray-500">
+                                            {result.success_count} من {result.total_jobs} ملف PDF
+                                        </span>
+                                    )}
+                                    <button
+                                        type="button"
+                                        onClick={handleSaveAll}
+                                        disabled={isSaveAllProcessing || !investorsFiles || Object.keys(result.investors_files || {}).filter((n) => !savedInvestorNames.includes(n)).length === 0}
+                                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {isSaveAllProcessing ? (
+                                            <>
+                                                <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                جاري الحفظ...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Archive size={20} />
+                                                حفظ الكل
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
                             </div>
+                            {saveAllResult && (saveAllResult.autoSaved > 0 || saveAllResult.manualSaved > 0) && (
+                                <div className="px-6 pb-4">
+                                    <div className="p-3 rounded-xl bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-300 text-sm flex items-center gap-2">
+                                        <CheckCircle size={18} />
+                                        تم حفظ {saveAllResult.autoSaved + saveAllResult.manualSaved} تقريراً
+                                        {saveAllResult.autoSaved > 0 && ` (${saveAllResult.autoSaved} تطابق تام)`}
+                                        {saveAllResult.manualSaved > 0 && ` (${saveAllResult.manualSaved} من المودال)`}
+                                    </div>
+                                </div>
+                            )}
 
                             {investorsFiles && (
                                 <div className="p-6">
@@ -688,6 +828,142 @@ export default function ExtractReportsPage() {
                                                         <>
                                                             <Save size={18} />
                                                             حفظ
+                                                        </>
+                                                    )}
+                                                </button>
+                                            </div>
+                                        </motion.div>
+                                    </motion.div>
+                                )}
+
+                                {saveAllModalOpen && unmatchedForSaveAll.length > 0 && (
+                                    <motion.div
+                                        key="save-all-modal"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        className="fixed inset-0 z-50 flex items-center justify-center p-4"
+                                    >
+                                        <div
+                                            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                                            onClick={() => !isSaveAllProcessing && setSaveAllModalOpen(false)}
+                                            aria-hidden
+                                        />
+                                        <motion.div
+                                            initial={{ scale: 0.95 }}
+                                            animate={{ scale: 1 }}
+                                            exit={{ scale: 0.95 }}
+                                            className="relative w-full max-w-3xl max-h-[90vh] overflow-hidden rounded-2xl bg-white dark:bg-card-dark shadow-xl border border-gray-200 dark:border-gray-700 flex flex-col"
+                                            dir="rtl"
+                                        >
+                                            <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-800 shrink-0">
+                                                <h3 className="text-xl font-bold text-secondary dark:text-white flex items-center gap-2">
+                                                    <Info className="text-amber-500" size={24} />
+                                                    ربط المستثمرين غير المطابقين
+                                                </h3>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => !isSaveAllProcessing && setSaveAllModalOpen(false)}
+                                                    className="p-1 text-gray-400 hover:text-red-500"
+                                                >
+                                                    <X size={20} />
+                                                </button>
+                                            </div>
+                                            <p className="px-6 py-2 text-sm text-gray-500 border-b border-gray-100 dark:border-gray-800">
+                                                لم يتم العثور على تطابق تام — اختر المستثمر المناسب لكل اسم من القائمة أدناه:
+                                            </p>
+                                            <div className="p-6 overflow-y-auto flex-1">
+                                                <div className="space-y-4 mb-4">
+                                                    {unmatchedForSaveAll.map((item) => (
+                                                        <div
+                                                            key={item.excelName}
+                                                            className="flex flex-wrap items-center gap-3 p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50"
+                                                        >
+                                                            <div className="min-w-[140px] shrink-0">
+                                                                <span className="text-xs text-gray-500 block mb-1">الاسم في Excel</span>
+                                                                <strong className="text-secondary dark:text-white">{item.excelName}</strong>
+                                                                <span className="text-xs text-gray-400 mr-1">({item.urls.length} ملف)</span>
+                                                            </div>
+                                                            <div className="flex-1 min-w-[200px]">
+                                                                <span className="text-xs text-gray-500 block mb-1">المستثمر المقترح / اختر من القائمة</span>
+                                                                {item.suggestions.length > 0 ? (
+                                                                    <select
+                                                                        value={saveAllSelections[item.excelName] || ""}
+                                                                        onChange={(e) =>
+                                                                            setSaveAllSelections((prev) => ({
+                                                                                ...prev,
+                                                                                [item.excelName]: e.target.value,
+                                                                            }))
+                                                                        }
+                                                                        className="w-full p-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm"
+                                                                    >
+                                                                        <option value="">-- اختر مستثمر --</option>
+                                                                        {item.suggestions.map((s) => (
+                                                                            <option key={s.id} value={s.id}>
+                                                                                {s.name}
+                                                                            </option>
+                                                                        ))}
+                                                                    </select>
+                                                                ) : (
+                                                                    <div className="flex items-center gap-2">
+                                                                        <span className="text-sm text-amber-600 dark:text-amber-400">لا توجد اقتراحات</span>
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => {
+                                                                                setSaveAllModalOpen(false);
+                                                                                handleOpenSaveModal(item.excelName, item.urls);
+                                                                            }}
+                                                                            className="text-sm text-primary hover:underline"
+                                                                        >
+                                                                            بحث يدوي
+                                                                        </button>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                <div className="mb-4">
+                                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">سنة التقرير</label>
+                                                    <select
+                                                        value={saveAllYear}
+                                                        onChange={(e) => setSaveAllYear(e.target.value)}
+                                                        className="w-full max-w-[120px] p-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm"
+                                                    >
+                                                        {[0, 1, 2, 3, 4].map((offset) => {
+                                                            const y = new Date().getFullYear() - 1 - offset;
+                                                            return (
+                                                                <option key={y} value={y}>
+                                                                    {y}
+                                                                </option>
+                                                            );
+                                                        })}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div className="p-6 border-t border-gray-100 dark:border-gray-800 flex gap-3 shrink-0">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => !isSaveAllProcessing && setSaveAllModalOpen(false)}
+                                                    className="flex-1 py-2.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium rounded-xl"
+                                                >
+                                                    إلغاء
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={handleConfirmSaveAllModal}
+                                                    disabled={isSaveAllProcessing || unmatchedForSaveAll.some((u) => u.suggestions.length > 0 && !saveAllSelections[u.excelName])}
+                                                    className="flex-1 py-2.5 bg-primary text-white font-medium rounded-xl hover:bg-primary/90 disabled:opacity-50 flex items-center justify-center gap-2"
+                                                >
+                                                    {isSaveAllProcessing ? (
+                                                        <>
+                                                            <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                            جاري الحفظ...
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Save size={18} />
+                                                            حفظ الكل
                                                         </>
                                                     )}
                                                 </button>
