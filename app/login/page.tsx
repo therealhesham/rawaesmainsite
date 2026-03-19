@@ -275,7 +275,11 @@ export default function LoginPage() {
                                                     type="text"
                                                     inputMode="numeric"
                                                     value={nationalId}
-                                                    onChange={(e) => setNationalId(e.target.value.replace(/\D/g, ""))}
+                                                    onChange={(e) => {
+                                                        const raw = e.target.value.replace(/\D/g, "");
+                                                        const filtered = raw.replace(/^0+/, "");
+                                                        setNationalId(filtered);
+                                                    }}
                                                     placeholder="رقم الهوية الوطنية"
                                                     className="w-full pr-12 pl-4 py-3.5 bg-white dark:bg-card-dark border-2 border-gray-200 dark:border-gray-600 rounded-xl text-secondary dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all duration-300 text-sm dir-ltr text-right"
                                                 />
@@ -289,7 +293,11 @@ export default function LoginPage() {
                                                     id="phone-number"
                                                     type="tel"
                                                     value={phoneNumber}
-                                                    onChange={(e) => setPhoneNumber(e.target.value)}
+                                                    onChange={(e) => {
+                                                        const raw = e.target.value.replace(/\D/g, "");
+                                                        const filtered = raw.replace(/^0+/, "");
+                                                        setPhoneNumber(filtered);
+                                                    }}
                                                     placeholder="5x xxx xxxx"
                                                     className="w-full pr-12 pl-4 py-3.5 bg-white dark:bg-card-dark border-2 border-gray-200 dark:border-gray-600 rounded-xl text-secondary dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all duration-300 text-sm dir-ltr text-right"
                                                 />
