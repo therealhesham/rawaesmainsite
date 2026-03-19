@@ -134,7 +134,6 @@ export async function getInvestor(id: number) {
 }
 
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 // Initialize S3 Client for DigitalOcean Spaces
 const s3Client = new S3Client({
@@ -320,67 +319,6 @@ async function uploadFileUrlToSpaces(fileUrl: string, userId: number, fileName: 
     } catch (error) {
         console.error(`Error uploading file from URL ${fileUrl} to DO Spaces:`, error);
         return null;
-    }
-}
-
-/** إنشاء Presigned URL للرفع المباشر من المتصفح إلى DO Spaces */
-export async function getPresignedUploadUrl(userId: number, fileName: string) {
-    await requirePageEdit("extract-reports");
-    try {
-        const timestamp = Date.now();
-        const uid = Math.random().toString(36).slice(2, 10);
-        const safeFileName = fileName.replace(/\s+/g, "-");
-        const storageKey = `reports/${userId}/${timestamp}-${uid}-${safeFileName}`;
-        const bucket = process.env.DO_SPACES_BUCKET || "";
-        const endpoint = process.env.DO_SPACES_ENDPOINT || "";
-        const endpointUrl = new URL(endpoint);
-        const finalUrl = `${endpointUrl.protocol}//${bucket}.${endpointUrl.host}/${storageKey}`;
-
-        const command = new PutObjectCommand({
-            Bucket: bucket,
-            Key: storageKey,
-            ContentType: "application/pdf",
-            ACL: "public-read",
-        });
-        const presignedUrl = await getSignedUrl(s3Client, command, { expiresIn: 600 });
-        return { presignedUrl, finalUrl };
-    } catch (error) {
-        console.error("getPresignedUploadUrl error:", error);
-        return null;
-    }
-}
-
-/** إنشاء سجل تقرير فقط (بعد رفع الملف من المتصفح) */
-export async function createReportRecord(
-    userId: number,
-    linkUrl: string,
-    fileName: string,
-    reportType: string = "lease",
-    year?: number
-) {
-    await requirePageEdit("extract-reports");
-    try {
-        const baseYear =
-            typeof year === "number" && !Number.isNaN(year) && year > 1900
-                ? year
-                : new Date().getFullYear() - 1;
-        await prisma.reports.create({
-            data: {
-                userId,
-                type: reportType,
-                linkUrl,
-                fileName,
-                isPublished: false,
-                releaseDate: new Date(baseYear, 0, 1),
-            },
-        });
-        revalidatePath("/admin");
-        revalidatePath("/admin/extract-reports");
-        revalidatePath(`/admin/investors/${userId}`);
-        return { success: true };
-    } catch (error) {
-        console.error("createReportRecord error:", error);
-        return { success: false };
     }
 }
 

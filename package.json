@@ -13,7 +13,6 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.990.0",
     "@aws-sdk/lib-storage": "^3.990.0",
-    "@aws-sdk/s3-request-presigner": "^3.1012.0",
     "@prisma/client": "^5.22.0",
     "framer-motion": "^12.34.0",
     "ioredis": "^5.9.3",
