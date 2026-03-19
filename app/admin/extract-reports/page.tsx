@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
-import { getInvestors, getInvestor, saveInvestorReports, searchInvestorByName } from "../actions";
+import { getInvestors, getInvestor, searchInvestorByName, getPresignedUploadUrl, createReportRecord } from "../actions";
 import { FileSpreadsheet, Upload, CheckCircle, FileOutput, AlertCircle, AlertTriangle, User, Save, X, FileText, Info, Search, FolderOpen, ExternalLink, Archive } from "lucide-react";
 
 type ExtractResult = {
@@ -59,6 +59,42 @@ export default function ExtractReportsPage() {
     const [saveAllSearchResults, setSaveAllSearchResults] = useState<Record<string, { id: number; name: string }[]>>({});
     const [saveAllSearching, setSaveAllSearching] = useState<string | null>(null);
     const saveAllAutocompleteRef = useRef<HTMLDivElement>(null);
+    const [uploadProgress, setUploadProgress] = useState<{ filesDone: number; filesTotal: number; mbDone: number } | null>(null);
+
+    /** رفع ملف واحد من المتصفح: تحميل من URL ثم رفع مباشرة لـ DO Spaces */
+    const clientUploadOneFile = async (
+        pdfUrl: string,
+        userId: number,
+        fileName: string,
+        reportType: string,
+        year: number,
+        onProgress?: (bytes: number) => void
+    ): Promise<{ success: boolean; bytes?: number }> => {
+        try {
+            const res = await fetch(pdfUrl);
+            if (!res.ok) return { success: false };
+            const blob = await res.blob();
+            const bytes = blob.size;
+
+            const presigned = await getPresignedUploadUrl(userId, fileName);
+            if (!presigned) return { success: false };
+
+            const putRes = await fetch(presigned.presignedUrl, {
+                method: "PUT",
+                body: blob,
+                headers: { "Content-Type": "application/pdf" },
+            });
+            if (!putRes.ok) return { success: false };
+
+            const cr = await createReportRecord(userId, presigned.finalUrl, fileName, reportType, year);
+            if (!cr.success) return { success: false };
+
+            onProgress?.(bytes);
+            return { success: true, bytes };
+        } catch {
+            return { success: false };
+        }
+    };
 
     const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault();
@@ -206,23 +242,34 @@ export default function ExtractReportsPage() {
         if (!saveModal || !selectedUserId) return;
         setIsSaving(true);
         setSaveSuccess(null);
+        const userId = parseInt(selectedUserId, 10);
+        const parsedYear = year ? parseInt(year, 10) : new Date().getFullYear() - 1;
         try {
-            const parsedYear = year ? parseInt(year, 10) : undefined;
-            const res = await saveInvestorReports(
-                parseInt(selectedUserId, 10),
-                saveModal.urls,
-                reportType,
-                parsedYear
+            setUploadProgress({ filesDone: 0, filesTotal: saveModal.urls.length, mbDone: 0 });
+            let done = 0, mb = 0;
+            const results = await Promise.all(
+                saveModal.urls.map(async (url) => {
+                    const fileName = decodeURIComponent(url.split("/").pop() || "report.pdf");
+                    const r = await clientUploadOneFile(url, userId, fileName, reportType, parsedYear, (bytes) => {
+                        done++;
+                        mb += bytes;
+                        setUploadProgress({ filesDone: done, filesTotal: saveModal.urls.length, mbDone: mb });
+                    });
+                    return r.success;
+                })
             );
-            if (res.error) {
-                setSaveSuccess("error:" + res.error);
-            } else {
-                setSaveSuccess(`تم حفظ ${res.created} تقريراً بنجاح.`);
+            const created = results.filter(Boolean).length;
+            setUploadProgress(null);
+            if (created === saveModal.urls.length) {
+                setSaveSuccess(`تم حفظ ${created} تقريراً بنجاح.`);
                 setSavedInvestorNames((prev) => [...prev, saveModal.excelName]);
-                setTimeout(() => {
-                    setSaveModal(null);
-                }, 1200);
+                setTimeout(() => setSaveModal(null), 1200);
+            } else {
+                setSaveSuccess(created > 0 ? `error: تم حفظ ${created} فقط، فشل الباقي.` : "error: فشل الرفع. تحقق من CORS على DO Spaces.");
             }
+        } catch {
+            setUploadProgress(null);
+            setSaveSuccess("error: حدث خطأ أثناء الرفع.");
         } finally {
             setIsSaving(false);
         }
@@ -264,20 +311,28 @@ export default function ExtractReportsPage() {
 
         const exactMatches = searchResults.filter((r) => r.search.exact);
         if (exactMatches.length > 0) {
+            const items: { userId: number; url: string; excelName: string }[] = [];
+            exactMatches.forEach(({ excelName, urls, search }) => {
+                urls.forEach((url) => items.push({ userId: search.exact!.id, url, excelName }));
+            });
+            setUploadProgress({ filesDone: 0, filesTotal: items.length, mbDone: 0 });
+            let done = 0, mb = 0;
+            const savedByExcel = new Set<string>();
             const results = await Promise.all(
-                exactMatches.map(async ({ excelName, urls, search }) => {
-                    const res = await saveInvestorReports(search.exact!.id, urls, reportType, parsedYear);
-                    return { excelName, created: res.created ?? 0 };
+                items.map(async (it) => {
+                    const r = await clientUploadOneFile(it.url, it.userId, decodeURIComponent(it.url.split("/").pop() || "report.pdf"), reportType, parsedYear);
+                    if (r.success) {
+                        done++;
+                        mb += r.bytes ?? 0;
+                        savedByExcel.add(it.excelName);
+                    }
+                    setUploadProgress({ filesDone: done, filesTotal: items.length, mbDone: mb });
+                    return r.success;
                 })
             );
-            const savedNames: string[] = [];
-            for (const { excelName, created } of results) {
-                if (created > 0) {
-                    autoSaved += created;
-                    savedNames.push(excelName);
-                }
-            }
-            if (savedNames.length > 0) setSavedInvestorNames((prev) => [...prev, ...savedNames]);
+            autoSaved = results.filter(Boolean).length;
+            if (savedByExcel.size > 0) setSavedInvestorNames((prev) => [...prev, ...savedByExcel]);
+            setUploadProgress(null);
         }
 
         for (const { excelName, urls, search } of searchResults) {
@@ -331,28 +386,36 @@ export default function ExtractReportsPage() {
         const previousYear = new Date().getFullYear() - 1;
         const parsedYear = saveAllYear ? parseInt(saveAllYear, 10) : previousYear;
 
+        const items: { userId: number; url: string; excelName: string }[] = [];
+        withSelection.forEach((u) => {
+            const userId = parseInt(saveAllSelections[u.excelName], 10);
+            u.urls.forEach((url) => items.push({ userId, url, excelName: u.excelName }));
+        });
+
+        let filesDone = 0;
+        let mbDone = 0;
+        const savedByExcel = new Set<string>();
+        setUploadProgress({ filesDone: 0, filesTotal: items.length, mbDone: 0 });
+
         const results = await Promise.all(
-            withSelection.map((u) => {
-                const userId = saveAllSelections[u.excelName];
-                if (!userId) return null;
-                return saveInvestorReports(parseInt(userId, 10), u.urls, reportType, parsedYear);
-            })
+            items.map((it) =>
+                clientUploadOneFile(it.url, it.userId, decodeURIComponent(it.url.split("/").pop() || "report.pdf"), reportType, parsedYear, (bytes: number) => {
+                    filesDone++;
+                    mbDone += bytes;
+                    setUploadProgress({ filesDone, filesTotal: items.length, mbDone });
+                    savedByExcel.add(it.excelName);
+                })
+            )
         );
 
-        let manualSaved = 0;
-        const savedNames: string[] = [];
-        results.forEach((res, i) => {
-            if (res?.created) {
-                manualSaved += res.created;
-                savedNames.push(withSelection[i].excelName);
-            }
-        });
-        if (savedNames.length > 0) setSavedInvestorNames((prev) => [...prev, ...savedNames]);
+        const manualSaved = results.filter((r) => r.success).length;
+        if (savedByExcel.size > 0) setSavedInvestorNames((prev) => [...prev, ...savedByExcel]);
 
         setSaveAllResult((prev) => (prev ? { ...prev, manualSaved } : { autoSaved: 0, manualSaved }));
         setSaveAllModalOpen(false);
         setUnmatchedForSaveAll([]);
         setSaveAllSelections({});
+        setUploadProgress(null);
         setIsSaveAllProcessing(false);
     };
 
@@ -532,6 +595,24 @@ export default function ExtractReportsPage() {
                                     </button>
                                 </div>
                             </div>
+                            {uploadProgress && (
+                                <div className="px-6 pb-4">
+                                    <div className="p-4 rounded-xl bg-primary/5 dark:bg-primary/10 border border-primary/20">
+                                        <div className="flex justify-between text-sm text-secondary dark:text-white mb-2">
+                                            <span>جاري الرفع: {uploadProgress.filesDone} / {uploadProgress.filesTotal} ملف</span>
+                                            <span>{(uploadProgress.mbDone / 1024 / 1024).toFixed(2)} MB</span>
+                                        </div>
+                                        <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                            <motion.div
+                                                className="h-full bg-primary"
+                                                initial={{ width: 0 }}
+                                                animate={{ width: `${uploadProgress.filesTotal > 0 ? (uploadProgress.filesDone / uploadProgress.filesTotal) * 100 : 0}%` }}
+                                                transition={{ duration: 0.2 }}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                             {saveAllResult && (saveAllResult.autoSaved > 0 || saveAllResult.manualSaved > 0) && (
                                 <div className="px-6 pb-4">
                                     <div className="p-3 rounded-xl bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-300 text-sm flex items-center gap-2">
