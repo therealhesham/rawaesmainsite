@@ -53,7 +53,9 @@ export default function ExtractReportsPage() {
     const [saveAllYear, setSaveAllYear] = useState<string>("");
     const [isSaveAllProcessing, setIsSaveAllProcessing] = useState(false);
     const [saveAllResult, setSaveAllResult] = useState<{ autoSaved: number; manualSaved: number; error?: string } | null>(null);
-    /** Autocomplete لحفظ الكل: قيمة البحث، القائمة المفتوحة، نتائج البحث */
+    /** مودال نجاح حفظ التقارير: يعرض "تم حفظ X تقريراً" */
+    const [successSaveModal, setSuccessSaveModal] = useState<{ count: number } | null>(null);
+    /** Autocomplete لحفظ الكل */
     const [saveAllSearchInputs, setSaveAllSearchInputs] = useState<Record<string, string>>({});
     const [saveAllDropdownOpen, setSaveAllDropdownOpen] = useState<string | null>(null);
     const [saveAllSearchResults, setSaveAllSearchResults] = useState<Record<string, { id: number; name: string }[]>>({});
@@ -290,6 +292,10 @@ export default function ExtractReportsPage() {
             }
         }
 
+        if (unmatched.length === 0 && autoSaved > 0) {
+            setSuccessSaveModal({ count: autoSaved });
+        }
+
         if (unmatched.length > 0) {
             const initialSelections: Record<string, string> = {};
             const initialInputs: Record<string, string> = {};
@@ -310,6 +316,8 @@ export default function ExtractReportsPage() {
             setUnmatchedForSaveAll(unmatched);
             setSaveAllYear(String(previousYear));
             setSaveAllModalOpen(true);
+        } else if (autoSaved > 0) {
+            setSuccessSaveModal({ count: autoSaved });
         }
 
         setSaveAllResult({ autoSaved, manualSaved: 0 });
@@ -349,11 +357,13 @@ export default function ExtractReportsPage() {
         });
         if (savedNames.length > 0) setSavedInvestorNames((prev) => [...prev, ...savedNames]);
 
+        const totalSaved = (saveAllResult?.autoSaved ?? 0) + manualSaved;
         setSaveAllResult((prev) => (prev ? { ...prev, manualSaved } : { autoSaved: 0, manualSaved }));
         setSaveAllModalOpen(false);
         setUnmatchedForSaveAll([]);
         setSaveAllSelections({});
         setIsSaveAllProcessing(false);
+        if (totalSaved > 0) setSuccessSaveModal({ count: totalSaved });
     };
 
     const handleSaveAllAutocompleteChange = async (excelName: string, value: string) => {
@@ -532,16 +542,6 @@ export default function ExtractReportsPage() {
                                     </button>
                                 </div>
                             </div>
-                            {saveAllResult && (saveAllResult.autoSaved > 0 || saveAllResult.manualSaved > 0) && (
-                                <div className="px-6 pb-4">
-                                    <div className="p-3 rounded-xl bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-300 text-sm flex items-center gap-2">
-                                        <CheckCircle size={18} />
-                                        تم حفظ {saveAllResult.autoSaved + saveAllResult.manualSaved} تقريراً
-                                        {saveAllResult.autoSaved > 0 && ` (${saveAllResult.autoSaved} تطابق تام)`}
-                                        {saveAllResult.manualSaved > 0 && ` (${saveAllResult.manualSaved} من المودال)`}
-                                    </div>
-                                </div>
-                            )}
 
                             {investorsFiles && (
                                 <div className="p-6">
@@ -1059,6 +1059,43 @@ export default function ExtractReportsPage() {
                                                     )}
                                                 </button>
                                             </div>
+                                        </motion.div>
+                                    </motion.div>
+                                )}
+
+                                {successSaveModal && (
+                                    <motion.div
+                                        key="success-save-modal"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        className="fixed inset-0 z-50 flex items-center justify-center p-4"
+                                    >
+                                        <div
+                                            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                                            onClick={() => setSuccessSaveModal(null)}
+                                            aria-hidden
+                                        />
+                                        <motion.div
+                                            initial={{ scale: 0.95 }}
+                                            animate={{ scale: 1 }}
+                                            exit={{ scale: 0.95 }}
+                                            className="relative w-full max-w-sm rounded-2xl bg-white dark:bg-card-dark shadow-xl border border-gray-200 dark:border-gray-700 p-6 text-center"
+                                            dir="rtl"
+                                        >
+                                            <div className="w-14 h-14 rounded-full bg-green-100 dark:bg-green-500/20 text-green-600 dark:text-green-400 flex items-center justify-center mx-auto mb-4">
+                                                <CheckCircle size={32} />
+                                            </div>
+                                            <p className="text-lg font-bold text-secondary dark:text-white mb-2">
+                                                تم حفظ {successSaveModal.count} تقريراً
+                                            </p>
+                                            <button
+                                                type="button"
+                                                onClick={() => setSuccessSaveModal(null)}
+                                                className="w-full py-2.5 bg-primary text-white font-medium rounded-xl hover:bg-primary/90"
+                                            >
+                                                حسناً
+                                            </button>
                                         </motion.div>
                                     </motion.div>
                                 )}
