@@ -298,8 +298,9 @@ async function uploadFileUrlToSpaces(fileUrl: string, userId: number, fileName: 
         const arrayBuffer = await response.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
         const timestamp = Date.now();
+        const uid = Math.random().toString(36).slice(2, 10);
         const safeFileName = fileName.replace(/\s+/g, '-');
-        const storageKey = `reports/${userId}/${timestamp}-${safeFileName}`;
+        const storageKey = `reports/${userId}/${timestamp}-${uid}-${safeFileName}`;
 
         console.log(`[DO_UPLOAD] Uploading ${buffer.length} bytes to DO Spaces (${storageKey})...`);
         await s3Client.send(new PutObjectCommand({
@@ -339,27 +340,29 @@ export async function saveInvestorReports(
                 ? year
                 : new Date().getFullYear() - 1;
 
-        let created = 0;
-        for (const linkUrl of urls) {
-            if (!linkUrl || typeof linkUrl !== "string") continue;
-            const fileName = decodeURIComponent(linkUrl.split("/").pop() || "report.pdf");
+        const validUrls = urls.filter((u): u is string => !!u && typeof u === "string");
+        if (validUrls.length === 0) return { success: true, created: 0 };
 
-            // Upload the extracted file to DigitalOcean Spaces first
-            const doSpacesUrl = await uploadFileUrlToSpaces(linkUrl, userId, fileName);
-            if (!doSpacesUrl) continue; // Skip if upload fails
+        const results = await Promise.all(
+            validUrls.map(async (linkUrl) => {
+                const fileName = decodeURIComponent(linkUrl.split("/").pop() || "report.pdf");
+                const doSpacesUrl = await uploadFileUrlToSpaces(linkUrl, userId, fileName);
+                if (!doSpacesUrl) return 0;
+                await prisma.reports.create({
+                    data: {
+                        userId,
+                        type: reportType,
+                        linkUrl: doSpacesUrl,
+                        fileName,
+                        isPublished: false,
+                        releaseDate: new Date(baseYear, 0, 1),
+                    },
+                });
+                return 1;
+            })
+        );
 
-            await prisma.reports.create({
-                data: {
-                    userId,
-                    type: reportType,
-                    linkUrl: doSpacesUrl,
-                    fileName,
-                    isPublished: false,
-                    releaseDate: new Date(baseYear, 0, 1),
-                },
-            });
-            created++;
-        }
+        const created = results.reduce<number>((a, b) => a + b, 0);
 
         revalidatePath("/admin");
         revalidatePath("/admin/extract-reports");

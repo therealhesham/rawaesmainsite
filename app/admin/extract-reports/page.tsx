@@ -262,14 +262,26 @@ export default function ExtractReportsPage() {
             }))
         );
 
-        for (const { excelName, urls, search } of searchResults) {
-            if (search.exact) {
-                const res = await saveInvestorReports(search.exact.id, urls, reportType, parsedYear);
-                if (res.created) {
-                    autoSaved += res.created;
-                    setSavedInvestorNames((prev) => [...prev, excelName]);
+        const exactMatches = searchResults.filter((r) => r.search.exact);
+        if (exactMatches.length > 0) {
+            const results = await Promise.all(
+                exactMatches.map(async ({ excelName, urls, search }) => {
+                    const res = await saveInvestorReports(search.exact!.id, urls, reportType, parsedYear);
+                    return { excelName, created: res.created ?? 0 };
+                })
+            );
+            const savedNames: string[] = [];
+            for (const { excelName, created } of results) {
+                if (created > 0) {
+                    autoSaved += created;
+                    savedNames.push(excelName);
                 }
-            } else {
+            }
+            if (savedNames.length > 0) setSavedInvestorNames((prev) => [...prev, ...savedNames]);
+        }
+
+        for (const { excelName, urls, search } of searchResults) {
+            if (!search.exact) {
                 unmatched.push({
                     excelName,
                     urls,
@@ -319,16 +331,23 @@ export default function ExtractReportsPage() {
         const previousYear = new Date().getFullYear() - 1;
         const parsedYear = saveAllYear ? parseInt(saveAllYear, 10) : previousYear;
 
+        const results = await Promise.all(
+            withSelection.map((u) => {
+                const userId = saveAllSelections[u.excelName];
+                if (!userId) return null;
+                return saveInvestorReports(parseInt(userId, 10), u.urls, reportType, parsedYear);
+            })
+        );
+
         let manualSaved = 0;
-        for (const u of withSelection) {
-            const userId = saveAllSelections[u.excelName];
-            if (!userId) continue;
-            const res = await saveInvestorReports(parseInt(userId, 10), u.urls, reportType, parsedYear);
-            if (res.created) {
+        const savedNames: string[] = [];
+        results.forEach((res, i) => {
+            if (res?.created) {
                 manualSaved += res.created;
-                setSavedInvestorNames((prev) => [...prev, u.excelName]);
+                savedNames.push(withSelection[i].excelName);
             }
-        }
+        });
+        if (savedNames.length > 0) setSavedInvestorNames((prev) => [...prev, ...savedNames]);
 
         setSaveAllResult((prev) => (prev ? { ...prev, manualSaved } : { autoSaved: 0, manualSaved }));
         setSaveAllModalOpen(false);
