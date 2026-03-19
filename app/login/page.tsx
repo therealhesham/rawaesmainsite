@@ -29,7 +29,7 @@ export default function LoginPage() {
             if (result.exists) {
                 setOtp(Array(OTP_LENGTH).fill(""));
                 setStep("otp");
-                setTimeout(() => otpRefs.current[0]?.focus(), 100);
+                setTimeout(() => otpRefs.current[0]?.focus(), 350);
             } else {
                 setLoginError(result.error || "خطأ في تسجيل الدخول");
             }
@@ -366,7 +366,7 @@ export default function LoginPage() {
                             </motion.div>
                         )}
                     </AnimatePresence>
-{/* 
+                    {/* 
                     <motion.div className="my-8 flex items-center gap-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }}>
                         <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
                         <span className="text-xs text-gray-400 dark:text-gray-500">أو</span>
