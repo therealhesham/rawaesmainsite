@@ -36,12 +36,12 @@ export default function FloatingWhatsAppButton({
                     type="button"
                     aria-label="إغلاق"
                     onClick={() => setIsOpen(false)}
-                    className="md:hidden fixed inset-0 z-40 bg-black/10"
+                    className="fixed inset-0 z-40 bg-black/10"
                 />
             )}
 
-            {/* FAB container - physical right edge */}
-            <div className="md:hidden fixed z-50" dir="ltr" style={{ bottom: 24, right: 16 }}>
+            {/* FAB container - physical right edge (shown on both mobile and desktop) */}
+            <div className="fixed z-50" dir="ltr" style={{ bottom: 24, right: 16 }}>
                 {/* Options - grow to the left */}
                 <div className="absolute bottom-16 right-0 flex flex-col items-end gap-2 mb-1">
                     {items.map((item, i) => (

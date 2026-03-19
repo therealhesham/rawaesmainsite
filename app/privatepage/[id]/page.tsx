@@ -169,8 +169,8 @@ export default async function PrivateInvestorPage({
               )}
             </div>
 
-            {/* Quick Contact - مخفي في الموبايل (يوجد زر عائم بدلاً منه) */}
-            <div className="hidden md:block">
+            {/* Quick Contact - مُخفى؛ يظهر زر العائم (تواصل معنا) في الجوال والديسكتوب */}
+            <div className="hidden">
               <QuickContact settings={quickContactSettings} />
             </div>
 
