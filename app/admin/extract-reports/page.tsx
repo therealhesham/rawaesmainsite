@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import { getInvestors, getInvestor, saveInvestorReports, searchInvestorByName } from "../actions";
+import { REPORT_TYPE_OPTIONS, reportTypeLabelAr } from "@/lib/reportTypeAr";
 import { FileSpreadsheet, Upload, CheckCircle, FileOutput, AlertCircle, AlertTriangle, User, Save, X, FileText, Info, Search, FolderOpen, ExternalLink, Archive } from "lucide-react";
 
 type ExtractResult = {
@@ -463,11 +464,11 @@ export default function ExtractReportsPage() {
                             className="w-full p-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors text-sm"
                         >
                             <option value="">اختر نوع التقرير</option>
-                            <option value="lease">تقرير تأجير سيارات</option>
-                            <option value="contract">العقود العامة</option>
-                            <option value="hotel">عقد استثمار فنادق</option>
-                            <option value="real_estate">عقد استثمار عقاري</option>
-                            <option value="installment">عقد استثمار تقسيط</option>
+                            {REPORT_TYPE_OPTIONS.map((o) => (
+                                <option key={o.id} value={o.id}>
+                                    {o.label}
+                                </option>
+                            ))}
                         </select>
                     </div>
 
@@ -549,7 +550,7 @@ export default function ExtractReportsPage() {
                                         <h3 className="text-lg font-bold text-secondary dark:text-white">
                                             الملفات حسب المستثمر
                                         </h3>
-                                        <span className="text-sm text-gray-500">تم اختيار نوع التقرير: {reportType === "lease" ? "تأجير سيارات" : reportType === "hotel" ? "فنادق" : reportType === "contract" ? "العقود العامة" : reportType === "real_estate" ? "عقاري" : reportType === "installment" ? "تقسيط" : reportType}. اضغط حفظ بجانب كل مستثمر لربطه بمستثمر في النظام.</span>
+                                        <span className="text-sm text-gray-500">تم اختيار نوع التقرير: {reportTypeLabelAr(reportType)}. اضغط حفظ بجانب كل مستثمر لربطه بمستثمر في النظام.</span>
                                     </div>
                                     <div className="space-y-6">
                                         {Object.entries(result.investors_files!)
@@ -818,7 +819,7 @@ export default function ExtractReportsPage() {
                                                                             <iframe
                                                                                 src={`${report.linkUrl}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
                                                                                 className="w-full h-full border-0 pointer-events-none"
-                                                                                title={report.fileName || report.type}
+                                                                                title={report.fileName || reportTypeLabelAr(report.type)}
                                                                                 loading="lazy"
                                                                             />
                                                                             {/* Overlay for click-through */}
@@ -836,8 +837,8 @@ export default function ExtractReportsPage() {
                                                                                 <FileText size={20} />
                                                                             </div>
                                                                             <div className="min-w-0 flex-1">
-                                                                                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate" title={report.fileName || report.type}>
-                                                                                    {report.fileName || report.type}
+                                                                                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate" title={report.fileName || reportTypeLabelAr(report.type)}>
+                                                                                    {report.fileName || reportTypeLabelAr(report.type)}
                                                                                 </p>
                                                                                 <p className="text-[11px] text-gray-400">
                                                                                     {new Date(report.createdAt).toLocaleDateString("ar-EG")}

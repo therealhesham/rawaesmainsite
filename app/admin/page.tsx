@@ -4,8 +4,9 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence } from "framer-motion";
-import { Plus, RefreshCw, Users, FileText, BellRing, List, Search, ArrowLeft, SearchX, X } from "lucide-react";
-import { getInvestors, getStats, createInvestor, checkAdminPermission } from "./actions";
+import { Plus, RefreshCw, Users, FileText, BellRing, List, Search, ArrowLeft, SearchX, X, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
+import { getInvestors, getStats, createInvestor, checkAdminPermission, getInvestorReportsForAdmin } from "./actions";
+import { reportTypeLabelAr } from "@/lib/reportTypeAr";
 import { AlertModal } from "@/app/components/AlertModal";
 
 export default function AdminDashboard() {
@@ -130,48 +131,11 @@ export default function AdminDashboard() {
                                 ))
                             ) : investors.length > 0 ? (
                                 investors.map((investor) => (
-                                    <tr key={investor.id} className="group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                                        <td className="px-6 py-4 text-gray-600 dark:text-gray-300 font-mono text-sm">
-                                            {investor.nationalId || '-'}
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-lg">
-                                                    {investor.name.charAt(0)}
-                                                </div>
-                                                <div>
-                                                    <div className="font-bold text-secondary dark:text-white">{investor.name}</div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 text-gray-600 dark:text-gray-300 dir-ltr text-right font-mono text-sm">
-                                            {investor.password}
-                                        </td>
-                                        <td className="px-6 py-4 text-gray-600 dark:text-gray-300 dir-ltr text-right font-mono text-sm">
-                                            {investor.phoneNumber}
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
-                                                {investor._count.reports}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-center text-sm text-gray-500">
-                                            {new Date(investor.createdAt).toLocaleDateString('ar-EG')}
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <Link
-                                                href={`/admin/investors/${investor.id}`}
-                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary hover:border-primary transition-all shadow-sm"
-                                            >
-                                                <span>التفاصيل</span>
-                                                <ArrowLeft size={16} />
-                                            </Link>
-                                        </td>
-                                    </tr>
+                                    <InvestorRowWithReports key={investor.id} investor={investor} />
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                                    <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
                                         <div className="flex justify-center mb-2 opacity-20"><SearchX size={36} /></div>
                                         <p>لم يتم العثور على مستثمرين</p>
                                     </td>
@@ -197,6 +161,153 @@ export default function AdminDashboard() {
                 )}
             </AnimatePresence>
         </div>
+    );
+}
+
+type InvestorListItem = {
+    id: number;
+    name: string;
+    nationalId: string | null;
+    password: string;
+    phoneNumber: string;
+    createdAt: Date;
+    _count: { reports: number };
+};
+
+function InvestorRowWithReports({ investor }: { investor: InvestorListItem }) {
+    const [open, setOpen] = useState(false);
+    const [reports, setReports] = useState<
+        Awaited<ReturnType<typeof getInvestorReportsForAdmin>>
+    >([]);
+    const [loading, setLoading] = useState(false);
+    const count = investor._count.reports;
+    const canToggle = count > 0;
+
+    async function toggleReports() {
+        if (!canToggle) return;
+        if (open) {
+            setOpen(false);
+            return;
+        }
+        setOpen(true);
+        if (reports.length === 0) {
+            setLoading(true);
+            try {
+                const data = await getInvestorReportsForAdmin(investor.id);
+                setReports(data);
+            } finally {
+                setLoading(false);
+            }
+        }
+    }
+
+    return (
+        <>
+            <tr className="group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                <td className="px-6 py-4 text-gray-600 dark:text-gray-300 font-mono text-sm">
+                    {investor.nationalId || "-"}
+                </td>
+                <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-lg">
+                            {investor.name.charAt(0)}
+                        </div>
+                        <div>
+                            <div className="font-bold text-secondary dark:text-white">{investor.name}</div>
+                        </div>
+                    </div>
+                </td>
+                <td className="px-6 py-4 text-gray-600 dark:text-gray-300 dir-ltr text-right font-mono text-sm">
+                    {investor.password}
+                </td>
+                <td className="px-6 py-4 text-gray-600 dark:text-gray-300 dir-ltr text-right font-mono text-sm">
+                    {investor.phoneNumber}
+                </td>
+                <td className="px-6 py-4 text-center">
+                    <button
+                        type="button"
+                        onClick={toggleReports}
+                        disabled={!canToggle}
+                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                            canToggle
+                                ? "bg-primary/10 text-primary hover:bg-primary/20 cursor-pointer"
+                                : "bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500 cursor-default"
+                        }`}
+                        aria-expanded={open}
+                        aria-label={`تقارير ${investor.name}: ${count}`}
+                    >
+                        {open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                        {count}
+                    </button>
+                </td>
+                <td className="px-6 py-4 text-center text-sm text-gray-500">
+                    {new Date(investor.createdAt).toLocaleDateString("ar-EG")}
+                </td>
+                <td className="px-6 py-4 text-center">
+                    <Link
+                        href={`/admin/investors/${investor.id}`}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary hover:border-primary transition-all shadow-sm"
+                    >
+                        <span>التفاصيل</span>
+                        <ArrowLeft size={16} />
+                    </Link>
+                </td>
+            </tr>
+            {open && (
+                <tr className="bg-gray-50/80 dark:bg-gray-900/40">
+                    <td colSpan={7} className="px-6 py-0 border-b border-gray-100 dark:border-gray-800">
+                        <motion.div
+                            initial={{ opacity: 0, y: -6 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.18 }}
+                            className="py-4 pr-4 pl-4 md:pr-12"
+                        >
+                            {loading ? (
+                                <p className="text-sm text-gray-500 text-center py-2">جاري التحميل...</p>
+                            ) : reports.length === 0 ? (
+                                <p className="text-sm text-gray-500 text-center py-2">لا توجد تقارير</p>
+                            ) : (
+                                <ul className="space-y-2 text-right">
+                                    {reports.map((r) => (
+                                        <li
+                                            key={r.id}
+                                            className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-card-dark px-4 py-3 text-sm"
+                                        >
+                                            <div className="min-w-0 flex-1">
+                                                <div className="font-medium text-secondary dark:text-white truncate">
+                                                    {r.fileName || reportTypeLabelAr(r.type) || `تقرير #${r.id}`}
+                                                </div>
+                                                <div className="text-xs text-gray-500 mt-0.5 flex flex-wrap gap-x-3 gap-y-1">
+                                                    <span>{reportTypeLabelAr(r.type)}</span>
+                                                    <span>
+                                                        الإصدار:{" "}
+                                                        {new Date(r.releaseDate).toLocaleDateString("ar-EG")}
+                                                    </span>
+                                                    {r.isApproved ? (
+                                                        <span className="text-emerald-600">معتمد</span>
+                                                    ) : (
+                                                        <span className="text-amber-600">قيد المراجعة</span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <Link
+                                                href={`/admin/investors/${investor.id}?report=${r.id}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-1 shrink-0 text-primary hover:underline"
+                                            >
+                                                <ExternalLink size={16} />
+                                                فتح
+                                            </Link>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </motion.div>
+                    </td>
+                </tr>
+            )}
+        </>
     );
 }
 

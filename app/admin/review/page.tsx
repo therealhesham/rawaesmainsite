@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { getUnpublishedReports, getPublishedReports, toggleReportPublish, deleteReport } from "../actions";
 import dynamic from "next/dynamic";
 import { Star, Clock, CloudCheck, CheckCircle, User, FileText, FileMinus, Trash, Check, Trash2, X } from "lucide-react";
+import { reportTypeLabelAr } from "@/lib/reportTypeAr";
 
 const PdfViewer = dynamic(() => import("../investors/[id]/PdfViewer"), { ssr: false });
 
@@ -27,14 +28,6 @@ export default function ReviewPage() {
     const [selectedReport, setSelectedReport] = useState<Report | null>(null);
     const [publishing, setPublishing] = useState<number | null>(null);
     const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
-
-    const reportTypes: Record<string, string> = {
-        lease: "عقد استثمار تأجير",
-        hotel: "عقد استثمار فنادق",
-        real_estate: "عقد استثمار عقاري",
-        installment: "عقد استثمار تقسيط",
-        contract: "العقود العامة",
-    };
 
     const fetchReports = async () => {
         setIsLoading(true);
@@ -213,10 +206,10 @@ export default function ReviewPage() {
                                         </div>
                                         <div className="min-w-0 flex-1">
                                             <div className="font-medium text-xs text-secondary dark:text-gray-200 truncate">
-                                                {report.fileName || reportTypes[report.type] || report.type}
+                                                {report.fileName || reportTypeLabelAr(report.type)}
                                             </div>
                                             <div className="text-[10px] text-gray-400">
-                                                {reportTypes[report.type] || report.type} · {new Date(report.createdAt).toLocaleDateString('ar-EG')}
+                                                {reportTypeLabelAr(report.type)} · {new Date(report.createdAt).toLocaleDateString('ar-EG')}
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-1 shrink-0">
@@ -272,10 +265,10 @@ export default function ReviewPage() {
                                 </div>
                                 <div className="min-w-0">
                                     <h3 className="font-bold text-secondary dark:text-white text-sm truncate">
-                                        {selectedReport.fileName || reportTypes[selectedReport.type] || selectedReport.type}
+                                        {selectedReport.fileName || reportTypeLabelAr(selectedReport.type)}
                                     </h3>
                                     <p className="text-xs text-gray-400">
-                                        {selectedReport.user.name} — {reportTypes[selectedReport.type]} — {new Date(selectedReport.createdAt).toLocaleDateString('ar-EG')}
+                                        {selectedReport.user.name} — {reportTypeLabelAr(selectedReport.type)} — {new Date(selectedReport.createdAt).toLocaleDateString('ar-EG')}
                                     </p>
                                 </div>
                             </div>

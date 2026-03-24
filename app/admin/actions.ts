@@ -62,6 +62,31 @@ export async function getInvestors(search?: string) {
     }
 }
 
+export async function getInvestorReportsForAdmin(userId: number) {
+    await requirePageView("");
+    try {
+        if (!userId || Number.isNaN(userId)) return [];
+        const reports = await prisma.reports.findMany({
+            where: { userId },
+            orderBy: { createdAt: "desc" },
+            select: {
+                id: true,
+                type: true,
+                fileName: true,
+                releaseDate: true,
+                linkUrl: true,
+                isPublished: true,
+                isApproved: true,
+                createdAt: true,
+            },
+        });
+        return reports;
+    } catch (error) {
+        console.error("getInvestorReportsForAdmin error:", error);
+        return [];
+    }
+}
+
 /** بحث عن مستثمر بالاسم — exact أولاً، ثم fuzzy بالكلمات */
 export async function searchInvestorByName(excelName: string) {
     await requirePageView("extract-reports");

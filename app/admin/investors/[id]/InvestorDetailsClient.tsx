@@ -6,6 +6,7 @@ import { ArrowRight, Phone, IdCard, Calendar, Plus, FolderOpen, FolderX, FileTex
 import { useEffect, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getInvestor, uploadReport, deleteReport, toggleReportPublish, updateReportApproval } from "../../actions";
+import { REPORT_TYPE_OPTIONS, reportTypeLabelAr } from "@/lib/reportTypeAr";
 import dynamic from "next/dynamic";
 
 const PdfViewer = dynamic(() => import("./PdfViewer"), { ssr: false });
@@ -167,14 +168,6 @@ export default function InvestorDetailsClient({
   if (isLoading) return <div className="p-8 text-center">Loading...</div>;
   if (!investor) return <div className="p-8 text-center text-red-500">Investor not found</div>;
 
-  const reportTypes = [
-    { id: 'lease', label: 'عقد استثمار تأجير' },
-    { id: 'hotel', label: 'عقد استثمار فنادق' },
-    { id: 'real_estate', label: 'عقد استثمار عقاري' },
-    { id: 'installment', label: 'عقد استثمار تقسيط' },
-    { id: 'contract', label: 'العقود العامة' },
-  ];
-
   return (
     <>
       <div className="space-y-8 max-w-[1600px] mx-auto">
@@ -247,10 +240,10 @@ export default function InvestorDetailsClient({
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="font-medium text-secondary dark:text-gray-200 text-xs break-words whitespace-normal line-clamp-2">
-                        {report.fileName || reportTypes.find((t: any) => t.id === report.type)?.label || report.type}
+                        {report.fileName || reportTypeLabelAr(report.type)}
                       </div>
                       <div className="text-[10px] text-gray-400 break-words whitespace-normal">
-                        {reportTypes.find((t: any) => t.id === report.type)?.label} · {new Date(report.createdAt).toLocaleDateString('ar-EG')}
+                        {reportTypeLabelAr(report.type)} · {new Date(report.createdAt).toLocaleDateString('ar-EG')}
                       </div>
                     </div>
                     {hasAnyReportAction && (
@@ -329,7 +322,7 @@ export default function InvestorDetailsClient({
                   <PdfViewer
                     url={selectedReport.linkUrl}
                     fileName={selectedReport.fileName || selectedReport.type}
-                    reportType={reportTypes.find((t: any) => t.id === selectedReport.type)?.label}
+                    reportType={reportTypeLabelAr(selectedReport.type)}
                     fitToView
                   />
                 </div>
@@ -391,7 +384,7 @@ export default function InvestorDetailsClient({
                       onChange={(e) => setReportType(e.target.value)}
                       className="w-full p-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:ring-2 focus:ring-primary/20"
                     >
-                      {reportTypes.map(t => (
+                      {REPORT_TYPE_OPTIONS.map(t => (
                         <option key={t.id} value={t.id}>{t.label}</option>
                       ))}
                     </select>
