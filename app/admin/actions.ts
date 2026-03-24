@@ -43,8 +43,7 @@ export async function getInvestors(search?: string) {
                 { phoneNumber: { contains: search } },
                 { nationalId: { contains: search } },
             ],
-            isAdmin: false
-        } : { isAdmin: false };
+        } : {};
 
         const investors = await prisma.user.findMany({
             where,
