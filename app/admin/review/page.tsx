@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef, startTransition } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import {
     getReportsReviewPageData,
@@ -28,6 +28,7 @@ import {
     CloudCheck,
     BadgeCheck,
     CircleX,
+    RefreshCw,
 } from "lucide-react";
 import { reportTypeLabelAr } from "@/lib/reportTypeAr";
 
@@ -59,6 +60,8 @@ export default function ReviewPage() {
     const [activeFilter, setActiveFilter] = useState<ReportReviewFilter>("all");
 
     const [isLoading, setIsLoading] = useState(true);
+    const [isFilterRefreshing, setIsFilterRefreshing] = useState(false);
+    const hasCompletedInitialFetch = useRef(false);
     const [publishing, setPublishing] = useState<number | null>(null);
     const [approving, setApproving] = useState<number | null>(null);
     const [canApproveReport, setCanApproveReport] = useState(false);
@@ -79,10 +82,12 @@ export default function ReviewPage() {
 
     const updateSearchParams = useCallback(
         (mutate: (p: URLSearchParams) => void) => {
-            const p = new URLSearchParams(searchParams.toString());
-            mutate(p);
-            const q = p.toString();
-            router.replace(q ? `${pathname}?${q}` : pathname);
+            startTransition(() => {
+                const p = new URLSearchParams(searchParams.toString());
+                mutate(p);
+                const q = p.toString();
+                router.replace(q ? `${pathname}?${q}` : pathname);
+            });
         },
         [searchParams, pathname, router]
     );
@@ -104,18 +109,33 @@ export default function ReviewPage() {
 
     const refresh = useCallback(
         async (opts?: { silent?: boolean }) => {
-            if (!opts?.silent) setIsLoading(true);
-            const data = await getReportsReviewPageData(filterRaw);
-            setActiveFilter(data.filter);
-            setCounts(data.counts);
-            setReports(data.reports);
-            if (!opts?.silent) setIsLoading(false);
+            const silent = Boolean(opts?.silent);
+            if (silent) {
+                setIsFilterRefreshing(true);
+            } else {
+                setIsLoading(true);
+            }
+            try {
+                const data = await getReportsReviewPageData(filterRaw);
+                setActiveFilter(data.filter);
+                setCounts(data.counts);
+                setReports(data.reports);
+            } finally {
+                if (silent) {
+                    setIsFilterRefreshing(false);
+                } else {
+                    setIsLoading(false);
+                }
+            }
         },
         [filterRaw],
     );
 
     useEffect(() => {
-        refresh();
+        const silent = hasCompletedInitialFetch.current;
+        void refresh({ silent }).finally(() => {
+            hasCompletedInitialFetch.current = true;
+        });
     }, [refresh]);
 
     /** إزالة report من الرابط إذا لم يعد ضمن نتائج الفلتر الحالي */
@@ -143,14 +163,16 @@ export default function ReviewPage() {
     }, []);
 
     const setFilter = (key: ReportReviewFilter) => {
-        const params = new URLSearchParams(searchParams.toString());
-        if (key === "all") {
-            params.delete("filter");
-        } else {
-            params.set("filter", key);
-        }
-        const q = params.toString();
-        router.replace(q ? `${pathname}?${q}` : pathname);
+        startTransition(() => {
+            const params = new URLSearchParams(searchParams.toString());
+            if (key === "all") {
+                params.delete("filter");
+            } else {
+                params.set("filter", key);
+            }
+            const q = params.toString();
+            router.replace(q ? `${pathname}?${q}` : pathname);
+        });
     };
 
     const handleTogglePublish = async (reportId: number, publish: boolean) => {
@@ -238,7 +260,7 @@ export default function ReviewPage() {
                    
                 </div>
 
-                <div className="flex flex-wrap gap-2 bg-gray-100 dark:bg-gray-800 p-1.5 rounded-xl">
+                <div className="flex flex-wrap items-center gap-2 bg-gray-100 dark:bg-gray-800 p-1.5 rounded-xl">
                     {FILTER_CHIPS.map(({ key, label, icon }) => {
                         const count =
                             key === "all"
@@ -254,13 +276,18 @@ export default function ReviewPage() {
                                 key={key}
                                 type="button"
                                 onClick={() => setFilter(key)}
-                                className={`flex items-center justify-center gap-2 min-w-0 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                                disabled={isFilterRefreshing}
+                                className={`flex items-center justify-center gap-2 min-w-0 px-3 py-2.5 rounded-lg text-sm font-medium transition-all disabled:opacity-60 disabled:pointer-events-none ${
                                     isActive
                                         ? "bg-white dark:bg-card-dark text-primary shadow-sm"
                                         : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
                                 }`}
                             >
-                                {icon}
+                                {isActive && isFilterRefreshing ? (
+                                    <RefreshCw size={18} className="shrink-0 animate-spin text-primary" />
+                                ) : (
+                                    icon
+                                )}
                                 <span>{label}</span>
                                 <span
                                     className={`px-2 py-0.5 rounded-full text-xs mr-0.5 ${
@@ -277,6 +304,11 @@ export default function ReviewPage() {
                 </div>
             </div>
 
+            <div
+                className={`transition-opacity duration-200 ${
+                    isFilterRefreshing ? "opacity-50 pointer-events-none" : "opacity-100"
+                }`}
+            >
             {reports.length === 0 ? (
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -463,6 +495,7 @@ export default function ReviewPage() {
                     ))}
                 </div>
             )}
+            </div>
 
             <AnimatePresence>
                 {selectedReport && (
