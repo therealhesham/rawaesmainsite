@@ -3,6 +3,12 @@
 import { PrismaClient } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { requirePageView, requirePageEdit, requirePageEditAny, getAdminUser, canEditPage, canViewPage } from "./lib/auth";
+import {
+    normalizeReportReviewFilter,
+    reportReviewPrismaWhere,
+    type ReportsReviewPageData,
+    type ReviewPageReport,
+} from "./lib/reportsReview";
 
 const prisma = new PrismaClient();
 
@@ -15,22 +21,44 @@ export async function checkAdminPermission(pageKey: string, type: "view" | "edit
 export async function getStats() {
     await requirePageView("");
     try {
-        const totalInvestors = await prisma.user.count({
-            where: { isAdmin: false }
-        });
-        const totalReports = await prisma.reports.count();
+        const [
+            totalInvestors,
+            totalReports,
+            unapprovedReports,
+            pendingPublishReports,
+            publishedReports,
+            recentReports,
+        ] = await Promise.all([
+            prisma.user.count({ where: { isAdmin: false } }),
+            prisma.reports.count(),
+            prisma.reports.count({ where: { isApproved: false } }),
+            prisma.reports.count({ where: { isApproved: true, isPublished: false } }),
+            prisma.reports.count({ where: { isPublished: true } }),
+            prisma.reports.findMany({
+                take: 5,
+                orderBy: { createdAt: "desc" },
+                include: { user: true },
+            }),
+        ]);
 
-        // Get recent reports
-        const recentReports = await prisma.reports.findMany({
-            take: 5,
-            orderBy: { createdAt: 'desc' },
-            include: { user: true }
-        });
-
-        return { totalInvestors, totalReports, recentReports };
+        return {
+            totalInvestors,
+            totalReports,
+            unapprovedReports,
+            pendingPublishReports,
+            publishedReports,
+            recentReports,
+        };
     } catch (error) {
         console.error("Failed to fetch stats:", error);
-        return { totalInvestors: 0, totalReports: 0, recentReports: [] };
+        return {
+            totalInvestors: 0,
+            totalReports: 0,
+            unapprovedReports: 0,
+            pendingPublishReports: 0,
+            publishedReports: 0,
+            recentReports: [],
+        };
     }
 }
 
@@ -471,35 +499,47 @@ export async function saveExtractedReports(
     }
 }
 
-/** جلب التقارير الغير منشورة (isPublished = false) */
-export async function getUnpublishedReports() {
+/** قائمة التقارير في صفحة المراجعة مع أعداد الفلاتر (يُطابق استعلام كل فلتر) */
+export async function getReportsReviewPageData(filterRaw: string | null): Promise<ReportsReviewPageData> {
     await requirePageView("review");
+    const filter = normalizeReportReviewFilter(filterRaw);
     try {
-        const reports = await prisma.reports.findMany({
-            where: { isPublished: false },
-            include: { user: { select: { id: true, name: true } } },
-            orderBy: { createdAt: 'desc' },
-        });
-        return reports;
-    } catch (error) {
-        console.error("Failed to fetch unpublished reports:", error);
-        return [];
-    }
-}
+        const baseWhere = reportReviewPrismaWhere(filter);
+        const [
+            countAll,
+            countUnapproved,
+            countPendingPublish,
+            countPublished,
+            reports,
+        ] = await Promise.all([
+            prisma.reports.count(),
+            prisma.reports.count({ where: { isApproved: false } }),
+            prisma.reports.count({ where: { isApproved: true, isPublished: false } }),
+            prisma.reports.count({ where: { isPublished: true } }),
+            prisma.reports.findMany({
+                where: baseWhere ?? {},
+                include: { user: { select: { id: true, name: true } } },
+                orderBy: { createdAt: "desc" },
+            }),
+        ]);
 
-/** جلب التقارير المنشورة (isPublished = true) */
-export async function getPublishedReports() {
-    await requirePageView("review");
-    try {
-        const reports = await prisma.reports.findMany({
-            where: { isPublished: true },
-            include: { user: { select: { id: true, name: true } } },
-            orderBy: { updatedAt: 'desc' },
-        });
-        return reports;
+        return {
+            filter,
+            counts: {
+                all: countAll,
+                unapproved: countUnapproved,
+                pendingPublish: countPendingPublish,
+                published: countPublished,
+            },
+            reports: reports as ReviewPageReport[],
+        };
     } catch (error) {
-        console.error("Failed to fetch published reports:", error);
-        return [];
+        console.error("Failed to fetch reports review page data:", error);
+        return {
+            filter,
+            counts: { all: 0, unapproved: 0, pendingPublish: 0, published: 0 },
+            reports: [],
+        };
     }
 }
 

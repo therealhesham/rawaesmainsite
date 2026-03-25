@@ -1,16 +1,23 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { AnimatePresence } from "framer-motion";
-import { Plus, RefreshCw, Users, FileText, BellRing, List, Search, ArrowLeft, SearchX, X, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
+import { Plus, RefreshCw, Users, FileText, BellRing, List, Search, ArrowLeft, SearchX, X, ChevronDown, ChevronUp, ExternalLink, ShieldAlert, Send, BadgeCheck } from "lucide-react";
 import { getInvestors, getStats, createInvestor, checkAdminPermission, getInvestorReportsForAdmin } from "./actions";
 import { reportTypeLabelAr } from "@/lib/reportTypeAr";
 import { AlertModal } from "@/app/components/AlertModal";
 
 export default function AdminDashboard() {
-    const [stats, setStats] = useState({ totalInvestors: 0, totalReports: 0, recentReports: [] });
+    const [stats, setStats] = useState({
+        totalInvestors: 0,
+        totalReports: 0,
+        unapprovedReports: 0,
+        pendingPublishReports: 0,
+        publishedReports: 0,
+        recentReports: [] as unknown[],
+    });
     const [investors, setInvestors] = useState<any[]>([]);
     const [search, setSearch] = useState("");
     const [isLoading, setIsLoading] = useState(true);
@@ -60,25 +67,49 @@ export default function AdminDashboard() {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <StatsCard
                     title="إجمالي المستثمرين"
                     value={stats.totalInvestors}
                     icon={<Users size={24} />}
                     color="bg-blue-500"
                 />
-                <StatsCard
-                    title="إجمالي التقارير"
-                    value={stats.totalReports}
-                    icon={<FileText size={24} />}
-                    color="bg-primary"
-                />
-                <StatsCard
-                    title="الإشعارات المرسلة"
-                    value="48"
-                    icon={<BellRing size={24} />}
-                    color="bg-purple-500"
-                />
+             
+            </div> */}
+
+            <div>
+                <h2 className="text-lg font-bold text-secondary dark:text-white mb-4">إحصائيات التقارير</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <StatsCard
+                        title="إجمالي التقارير"
+                        value={stats.totalReports}
+                        icon={<FileText size={24} />}
+                        color="bg-slate-500"
+                        href="/admin/review"
+                    />
+                    <StatsCard
+                        title="تقارير غير معتمدة"
+                        value={stats.unapprovedReports}
+                        icon={<ShieldAlert size={24} />}
+                        color="bg-amber-500"
+                        href="/admin/review?filter=unapproved"
+                    />
+                    <StatsCard
+                        title="تقارير في انتظار النشر"
+                        titleHint="(معتمدة وغير منشورة)"
+                        value={stats.pendingPublishReports}
+                        icon={<Send size={24} />}
+                        color="bg-teal-500"
+                        href="/admin/review?filter=pending-publish"
+                    />
+                    <StatsCard
+                        title="تقارير منشورة"
+                        value={stats.publishedReports}
+                        icon={<BadgeCheck size={24} />}
+                        color="bg-emerald-500"
+                        href="/admin/review?filter=published"
+                    />
+                </div>
             </div>
 
             {/* Investors Table Section */}
@@ -311,23 +342,100 @@ function InvestorRowWithReports({ investor }: { investor: InvestorListItem }) {
     );
 }
 
-function StatsCard({ title, value, icon, color }: any) {
-    return (
+/** ألوان مربع الأيقونة — صيغ نصية ثابتة ليعمل Tailwind JIT */
+const STATS_ACCENT: Record<string, { iconBox: string; blob: string }> = {
+    "bg-blue-500": {
+        iconBox: "bg-blue-500/15 text-blue-600 dark:text-blue-400",
+        blob: "bg-blue-500",
+    },
+    "bg-primary": {
+        iconBox: "bg-primary/15 text-primary",
+        blob: "bg-primary",
+    },
+    "bg-purple-500": {
+        iconBox: "bg-purple-500/15 text-purple-600 dark:text-purple-400",
+        blob: "bg-purple-500",
+    },
+    "bg-slate-500": {
+        iconBox: "bg-slate-500/15 text-slate-600 dark:text-slate-300",
+        blob: "bg-slate-500",
+    },
+    "bg-amber-500": {
+        iconBox: "bg-amber-500/15 text-amber-600 dark:text-amber-400",
+        blob: "bg-amber-500",
+    },
+    "bg-teal-500": {
+        iconBox: "bg-teal-500/15 text-teal-600 dark:text-teal-400",
+        blob: "bg-teal-500",
+    },
+    "bg-emerald-500": {
+        iconBox: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
+        blob: "bg-emerald-500",
+    },
+};
+
+function StatsCard({
+    title,
+    titleHint,
+    value,
+    icon,
+    color,
+    href,
+}: {
+    title: string;
+    titleHint?: string;
+    value: number | string;
+    icon: ReactNode;
+    color: string;
+    href?: string;
+}) {
+    const accent = STATS_ACCENT[color] ?? {
+        iconBox: "bg-gray-500/15 text-gray-600 dark:text-gray-400",
+        blob: "bg-gray-500",
+    };
+
+    const card = (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white dark:bg-card-dark p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 relative overflow-hidden group"
+            className={`bg-white dark:bg-card-dark p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 relative overflow-hidden group ${
+                href
+                    ? "cursor-pointer transition-all hover:border-primary/35 hover:shadow-md dark:hover:border-primary/30"
+                    : ""
+            }`}
         >
-            <div className="relative z-10">
-                <div className="text-gray-500 font-medium mb-1">{title}</div>
+            <div className="relative z-0 pe-14">
+                <div className="text-gray-500 font-medium mb-1 flex flex-wrap items-baseline gap-x-1.5 gap-y-0">
+                    <span>{title}</span>
+                    {titleHint ? (
+                        <span className="text-xs font-normal text-gray-400 dark:text-gray-500">{titleHint}</span>
+                    ) : null}
+                </div>
                 <div className="text-3xl font-bold text-secondary dark:text-white">{value}</div>
             </div>
-            <div className={`absolute top-4 left-4 w-12 h-12 rounded-xl ${color} bg-opacity-10 flex items-center justify-center text-${color.replace('bg-', '')}`}>
+            <div
+                className={`absolute top-4 left-4 z-10 w-12 h-12 rounded-xl flex items-center justify-center ${accent.iconBox}`}
+            >
                 {icon}
             </div>
-            <div className={`absolute -bottom-4 -right-4 w-24 h-24 rounded-full ${color} opacity-5 group-hover:scale-110 transition-transform duration-500`} />
+            <div
+                className={`absolute -bottom-4 -right-4 w-24 h-24 rounded-full opacity-5 group-hover:scale-110 transition-transform duration-500 pointer-events-none ${accent.blob}`}
+            />
         </motion.div>
-    )
+    );
+
+    if (href) {
+        return (
+            <Link
+                href={href}
+                className="block rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900"
+            >
+                {card}
+            </Link>
+        );
+    }
+
+    return card;
 }
 
 function AddInvestorModal({ onClose }: { onClose: () => void }) {
