@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import {
     getReportsReviewPageData,
@@ -27,6 +27,7 @@ import {
     Send,
     CloudCheck,
     BadgeCheck,
+    CircleX,
 } from "lucide-react";
 import { reportTypeLabelAr } from "@/lib/reportTypeAr";
 
@@ -58,13 +59,49 @@ export default function ReviewPage() {
     const [activeFilter, setActiveFilter] = useState<ReportReviewFilter>("all");
 
     const [isLoading, setIsLoading] = useState(true);
-    const [selectedReport, setSelectedReport] = useState<ReviewPageReport | null>(null);
     const [publishing, setPublishing] = useState<number | null>(null);
     const [approving, setApproving] = useState<number | null>(null);
     const [canApproveReport, setCanApproveReport] = useState(false);
     const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
 
     const filterRaw = searchParams.get("filter");
+    const reportParam = searchParams.get("report");
+    const parsedReportId = useMemo(() => {
+        if (!reportParam) return NaN;
+        const n = parseInt(reportParam, 10);
+        return Number.isFinite(n) ? n : NaN;
+    }, [reportParam]);
+
+    const selectedReport = useMemo((): ReviewPageReport | null => {
+        if (Number.isNaN(parsedReportId)) return null;
+        return reports.find((r) => r.id === parsedReportId) ?? null;
+    }, [reports, parsedReportId]);
+
+    const updateSearchParams = useCallback(
+        (mutate: (p: URLSearchParams) => void) => {
+            const p = new URLSearchParams(searchParams.toString());
+            mutate(p);
+            const q = p.toString();
+            router.replace(q ? `${pathname}?${q}` : pathname);
+        },
+        [searchParams, pathname, router]
+    );
+
+    const openReport = useCallback(
+        (report: ReviewPageReport) => {
+            updateSearchParams((p) => {
+                p.set("report", String(report.id));
+            });
+        },
+        [updateSearchParams]
+    );
+
+    const closeReport = useCallback(() => {
+        updateSearchParams((p) => {
+            p.delete("report");
+        });
+    }, [updateSearchParams]);
+
     const refresh = useCallback(
         async (opts?: { silent?: boolean }) => {
             if (!opts?.silent) setIsLoading(true);
@@ -80,6 +117,16 @@ export default function ReviewPage() {
     useEffect(() => {
         refresh();
     }, [refresh]);
+
+    /** إزالة report من الرابط إذا لم يعد ضمن نتائج الفلتر الحالي */
+    useEffect(() => {
+        if (isLoading) return;
+        if (Number.isNaN(parsedReportId)) return;
+        if (selectedReport) return;
+        updateSearchParams((p) => {
+            p.delete("report");
+        });
+    }, [isLoading, parsedReportId, selectedReport, updateSearchParams]);
 
     useEffect(() => {
         let cancelled = false;
@@ -107,22 +154,22 @@ export default function ReviewPage() {
     };
 
     const handleTogglePublish = async (reportId: number, publish: boolean) => {
+        const shouldCloseViewer = searchParams.get("report") === String(reportId);
         setPublishing(reportId);
         await toggleReportPublish(reportId, publish);
         await refresh({ silent: true });
-        setSelectedReport((prev) => (prev?.id === reportId ? null : prev));
+        if (shouldCloseViewer) closeReport();
         setPublishing(null);
     };
 
-    const handleApproveReport = async (reportId: number, userId: number) => {
+    const handleApprovalChange = async (
+        reportId: number,
+        userId: number,
+        approve: boolean
+    ) => {
         setApproving(reportId);
-        const result = await updateReportApproval(reportId, true, userId);
+        await updateReportApproval(reportId, approve, userId);
         await refresh({ silent: true });
-        if (result && !("error" in result && result.error)) {
-            setSelectedReport((prev) =>
-                prev?.id === reportId ? { ...prev, isApproved: true } : prev
-            );
-        }
         setApproving(null);
     };
 
@@ -133,7 +180,7 @@ export default function ReviewPage() {
 
         await deleteReport(confirmDelete, reportToDelete.user.id);
         await refresh({ silent: true });
-        if (selectedReport?.id === confirmDelete) setSelectedReport(null);
+        if (searchParams.get("report") === String(confirmDelete)) closeReport();
         setConfirmDelete(null);
     };
 
@@ -272,7 +319,7 @@ export default function ReviewPage() {
                                     return (
                                         <div
                                             key={report.id}
-                                            onClick={() => setSelectedReport(report)}
+                                            onClick={() => openReport(report)}
                                             className="flex items-center gap-2.5 px-3 py-2.5 cursor-pointer transition-all hover:bg-gray-50 dark:hover:bg-gray-800/30"
                                         >
                                             <div className="w-7 h-7 rounded-md bg-red-50 dark:bg-red-500/10 text-red-500 flex items-center justify-center shrink-0">
@@ -313,7 +360,11 @@ export default function ReviewPage() {
                                                         type="button"
                                                         onClick={(e) => {
                                                             e.stopPropagation();
-                                                            void handleApproveReport(report.id, report.user.id);
+                                                            void handleApprovalChange(
+                                                                report.id,
+                                                                report.user.id,
+                                                                true
+                                                            );
                                                         }}
                                                         disabled={approving === report.id}
                                                         className="p-1 rounded-lg text-amber-600 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors disabled:opacity-40"
@@ -323,6 +374,31 @@ export default function ReviewPage() {
                                                             <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin block" />
                                                         ) : (
                                                             <BadgeCheck size={16} />
+                                                        )}
+                                                    </button>
+                                                ) : canApproveReport && report.isApproved ? (
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            void handleApprovalChange(
+                                                                report.id,
+                                                                report.user.id,
+                                                                false
+                                                            );
+                                                        }}
+                                                        disabled={approving === report.id}
+                                                        className="p-1 rounded-lg text-emerald-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-colors disabled:opacity-40"
+                                                        title={
+                                                            report.isPublished
+                                                                ? "إلغاء الاعتماد وإزالة التقرير من النشر"
+                                                                : "إلغاء الاعتماد"
+                                                        }
+                                                    >
+                                                        {approving === report.id ? (
+                                                            <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin block" />
+                                                        ) : (
+                                                            <CircleX size={16} />
                                                         )}
                                                     </button>
                                                 ) : null}
@@ -422,9 +498,10 @@ export default function ReviewPage() {
                                     <button
                                         type="button"
                                         onClick={() =>
-                                            void handleApproveReport(
+                                            void handleApprovalChange(
                                                 selectedReport.id,
-                                                selectedReport.user.id
+                                                selectedReport.user.id,
+                                                true
                                             )
                                         }
                                         disabled={approving === selectedReport.id}
@@ -436,6 +513,31 @@ export default function ReviewPage() {
                                             <BadgeCheck size={14} />
                                         )}
                                         اعتماد التقرير
+                                    </button>
+                                ) : canApproveReport && selectedReport.isApproved ? (
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            void handleApprovalChange(
+                                                selectedReport.id,
+                                                selectedReport.user.id,
+                                                false
+                                            )
+                                        }
+                                        disabled={approving === selectedReport.id}
+                                        title={
+                                            selectedReport.isPublished
+                                                ? "إلغاء الاعتماد وإزالة التقرير من النشر"
+                                                : "إلغاء الاعتماد"
+                                        }
+                                        className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                                    >
+                                        {approving === selectedReport.id ? (
+                                            <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        ) : (
+                                            <CircleX size={14} />
+                                        )}
+                                        إلغاء الاعتماد
                                     </button>
                                 ) : null}
                                 {selectedReport.isPublished ? (
@@ -487,7 +589,7 @@ export default function ReviewPage() {
                                 <div className="w-px h-7 bg-gray-200 dark:bg-gray-700 mx-1" />
                                 <button
                                     type="button"
-                                    onClick={() => setSelectedReport(null)}
+                                    onClick={() => closeReport()}
                                     className="p-2 text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
                                     title="رجوع"
                                 >
