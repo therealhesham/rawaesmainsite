@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { AnimatePresence } from "framer-motion";
-import { Plus, RefreshCw, Users, FileText, BellRing, List, Search, ArrowLeft, SearchX, X, ChevronDown, ChevronUp, ExternalLink, ShieldAlert, Send, BadgeCheck } from "lucide-react";
+import { Plus, RefreshCw, Users, FileText, List, Search, ArrowLeft, SearchX, X, ChevronDown, ChevronUp, ExternalLink, ShieldAlert, Send, BadgeCheck } from "lucide-react";
 import { getInvestors, getStats, createInvestor, checkAdminPermission, getInvestorReportsForAdmin } from "./actions";
 import { reportTypeLabelAr } from "@/lib/reportTypeAr";
 import { AlertModal } from "@/app/components/AlertModal";
@@ -66,20 +66,16 @@ export default function AdminDashboard() {
                 </div>
             </div>
 
-            {/* Stats Cards */}
-            {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <StatsCard
-                    title="إجمالي المستثمرين"
-                    value={stats.totalInvestors}
-                    icon={<Users size={24} />}
-                    color="bg-blue-500"
-                />
-             
-            </div> */}
-
             <div>
-                <h2 className="text-lg font-bold text-secondary dark:text-white mb-4">إحصائيات التقارير</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <h2 className="text-lg font-bold text-secondary dark:text-white mb-4">الإحصائيات</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+                    <StatsCard
+                        title=" المستثمرين"
+                        value={stats.totalInvestors}
+                        icon={<Users size={24} />}
+                        color="bg-blue-500"
+                        href="#investors-list"
+                    />
                     <StatsCard
                         title="إجمالي التقارير"
                         value={stats.totalReports}
@@ -96,7 +92,7 @@ export default function AdminDashboard() {
                     />
                     <StatsCard
                         title="تقارير في انتظار النشر"
-                        titleHint="(معتمدة وغير منشورة)"
+                        // titleHint="(معتمدة وغير منشورة)"
                         value={stats.pendingPublishReports}
                         icon={<Send size={24} />}
                         color="bg-teal-500"
@@ -113,7 +109,10 @@ export default function AdminDashboard() {
             </div>
 
             {/* Investors Table Section */}
-            <div className="bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
+            <div
+                id="investors-list"
+                className="bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden scroll-mt-6"
+            >
                 <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <h2 className="text-xl font-bold text-secondary dark:text-white flex items-center gap-2">
                         <List size={22} className="text-primary" />
