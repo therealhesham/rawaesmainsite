@@ -3,7 +3,13 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { getReportsReviewPageData, toggleReportPublish, deleteReport } from "../actions";
+import {
+    getReportsReviewPageData,
+    toggleReportPublish,
+    deleteReport,
+    checkAdminPermission,
+    updateReportApproval,
+} from "../actions";
 import { type ReportReviewFilter, type ReviewPageReport } from "../lib/reportsReview";
 import dynamic from "next/dynamic";
 import {
@@ -20,6 +26,7 @@ import {
     ShieldAlert,
     Send,
     CloudCheck,
+    BadgeCheck,
 } from "lucide-react";
 import { reportTypeLabelAr } from "@/lib/reportTypeAr";
 
@@ -53,6 +60,8 @@ export default function ReviewPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [selectedReport, setSelectedReport] = useState<ReviewPageReport | null>(null);
     const [publishing, setPublishing] = useState<number | null>(null);
+    const [approving, setApproving] = useState<number | null>(null);
+    const [canApproveReport, setCanApproveReport] = useState(false);
     const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
 
     const filterRaw = searchParams.get("filter");
@@ -72,6 +81,20 @@ export default function ReviewPage() {
         refresh();
     }, [refresh]);
 
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            const [investorApprove, reviewEdit] = await Promise.all([
+                checkAdminPermission("investor-approve", "edit"),
+                checkAdminPermission("review", "edit"),
+            ]);
+            if (!cancelled) setCanApproveReport(investorApprove || reviewEdit);
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
     const setFilter = (key: ReportReviewFilter) => {
         const params = new URLSearchParams(searchParams.toString());
         if (key === "all") {
@@ -89,6 +112,18 @@ export default function ReviewPage() {
         await refresh({ silent: true });
         setSelectedReport((prev) => (prev?.id === reportId ? null : prev));
         setPublishing(null);
+    };
+
+    const handleApproveReport = async (reportId: number, userId: number) => {
+        setApproving(reportId);
+        const result = await updateReportApproval(reportId, true, userId);
+        await refresh({ silent: true });
+        if (result && !("error" in result && result.error)) {
+            setSelectedReport((prev) =>
+                prev?.id === reportId ? { ...prev, isApproved: true } : prev
+            );
+        }
+        setApproving(null);
     };
 
     const handleDelete = async () => {
@@ -153,9 +188,7 @@ export default function ReviewPage() {
                         <Star size={28} className="text-primary" />
                         مراجعة التقارير
                     </h1>
-                    <p className="text-gray-500 mt-1">
-                        تصفية التقارير حسب الاعتماد والنشر — يتوافق العرض مع الاستعلام في الخادم
-                    </p>
+                   
                 </div>
 
                 <div className="flex flex-wrap gap-2 bg-gray-100 dark:bg-gray-800 p-1.5 rounded-xl">
@@ -275,6 +308,24 @@ export default function ReviewPage() {
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-1 shrink-0">
+                                                {canApproveReport && !report.isApproved ? (
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            void handleApproveReport(report.id, report.user.id);
+                                                        }}
+                                                        disabled={approving === report.id}
+                                                        className="p-1 rounded-lg text-amber-600 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors disabled:opacity-40"
+                                                        title="اعتماد التقرير"
+                                                    >
+                                                        {approving === report.id ? (
+                                                            <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin block" />
+                                                        ) : (
+                                                            <BadgeCheck size={16} />
+                                                        )}
+                                                    </button>
+                                                ) : null}
                                                 <button
                                                     type="button"
                                                     onClick={(e) => {
@@ -302,7 +353,9 @@ export default function ReviewPage() {
                                                             : canPublish
                                                               ? "نشر التقرير"
                                                               : !report.isApproved
-                                                                ? "اعتماد التقرير من صفحة المستثمر أولاً"
+                                                                ? canApproveReport
+                                                                    ? "اعتماد التقرير أولاً"
+                                                                    : "اعتماد التقرير من صفحة المستثمر أولاً"
                                                                 : ""
                                                     }
                                                 >
@@ -365,6 +418,26 @@ export default function ReviewPage() {
                                 </div>
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
+                                {canApproveReport && !selectedReport.isApproved ? (
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            void handleApproveReport(
+                                                selectedReport.id,
+                                                selectedReport.user.id
+                                            )
+                                        }
+                                        disabled={approving === selectedReport.id}
+                                        className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                                    >
+                                        {approving === selectedReport.id ? (
+                                            <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        ) : (
+                                            <BadgeCheck size={14} />
+                                        )}
+                                        اعتماد التقرير
+                                    </button>
+                                ) : null}
                                 {selectedReport.isPublished ? (
                                     <button
                                         type="button"
@@ -389,7 +462,9 @@ export default function ReviewPage() {
                                         className="px-4 py-2 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5 disabled:opacity-50 bg-green-500 hover:bg-green-600 disabled:bg-gray-400"
                                         title={
                                             !selectedReport.isApproved
-                                                ? "يجب اعتماد التقرير من صفحة المستثمر أولاً"
+                                                ? canApproveReport
+                                                    ? "اعتماد التقرير أولاً"
+                                                    : "يجب اعتماد التقرير من صفحة المستثمر أولاً"
                                                 : undefined
                                         }
                                     >
