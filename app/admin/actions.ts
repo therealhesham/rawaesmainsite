@@ -90,6 +90,52 @@ export async function getInvestors(search?: string) {
     }
 }
 
+/** صفحة واحدة من المستثمرين — للتمرير اللانهائي في لوحة الإدارة */
+export async function getInvestorsPaged(
+    search: string | undefined,
+    skip: number,
+    take: number
+): Promise<{
+    investors: Awaited<ReturnType<typeof getInvestors>>;
+    total: number;
+    hasMore: boolean;
+}> {
+    await requirePageView("");
+    try {
+        const where = search
+            ? {
+                  OR: [
+                      { name: { contains: search } },
+                      { phoneNumber: { contains: search } },
+                      { nationalId: { contains: search } },
+                  ],
+              }
+            : {};
+
+        const [investors, total] = await Promise.all([
+            prisma.user.findMany({
+                where,
+                skip: Math.max(0, skip),
+                take: Math.min(100, Math.max(1, take)),
+                include: {
+                    _count: {
+                        select: { reports: true },
+                    },
+                },
+                orderBy: { createdAt: "desc" },
+            }),
+            prisma.user.count({ where }),
+        ]);
+
+        const safeSkip = Math.max(0, skip);
+        const hasMore = safeSkip + investors.length < total;
+        return { investors, total, hasMore };
+    } catch (error) {
+        console.error("Failed to fetch investors page:", error);
+        return { investors: [], total: 0, hasMore: false };
+    }
+}
+
 export async function getInvestorReportsForAdmin(userId: number) {
     await requirePageView("");
     try {

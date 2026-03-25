@@ -1,13 +1,15 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { AnimatePresence } from "framer-motion";
 import { Plus, RefreshCw, Users, FileText, List, Search, ArrowLeft, SearchX, X, ChevronDown, ChevronUp, ExternalLink, ShieldAlert, Send, BadgeCheck } from "lucide-react";
-import { getInvestors, getStats, createInvestor, checkAdminPermission, getInvestorReportsForAdmin } from "./actions";
+import { getInvestorsPaged, getStats, createInvestor, checkAdminPermission, getInvestorReportsForAdmin } from "./actions";
 import { reportTypeLabelAr } from "@/lib/reportTypeAr";
 import { AlertModal } from "@/app/components/AlertModal";
+
+const INVESTORS_PAGE_SIZE = 40;
 
 export default function AdminDashboard() {
     const [stats, setStats] = useState({
@@ -19,27 +21,97 @@ export default function AdminDashboard() {
         recentReports: [] as unknown[],
     });
     const [investors, setInvestors] = useState<any[]>([]);
+    const [investorsTotal, setInvestorsTotal] = useState(0);
+    const [hasMoreInvestors, setHasMoreInvestors] = useState(true);
     const [search, setSearch] = useState("");
     const [isLoading, setIsLoading] = useState(true);
+    const [isLoadingMoreInvestors, setIsLoadingMoreInvestors] = useState(false);
+    const nextInvestorsSkipRef = useRef(0);
+    const loadingMoreInvestorsRef = useRef(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [canManageInvestors, setCanManageInvestors] = useState(false);
     const [currentTime, setCurrentTime] = useState("");
 
     useEffect(() => {
         setCurrentTime(new Date().toLocaleTimeString("ar-EG"));
-        async function fetchData() {
-            const [statsData, investorsData, hasPermission] = await Promise.all([
+    }, []);
+
+    useEffect(() => {
+        let cancelled = false;
+        async function fetchStatsAndPermission() {
+            const [statsData, hasPermission] = await Promise.all([
                 getStats(),
-                getInvestors(search),
-                checkAdminPermission("investors-manage", "edit")
+                checkAdminPermission("investors-manage", "edit"),
             ]);
+            if (cancelled) return;
             setStats(statsData as any);
-            setInvestors(investorsData);
             setCanManageInvestors(hasPermission);
+        }
+        fetchStatsAndPermission();
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
+    useEffect(() => {
+        let cancelled = false;
+        async function fetchFirstInvestorsPage() {
+            setIsLoading(true);
+            setInvestors([]);
+            nextInvestorsSkipRef.current = 0;
+            const { investors: page, total, hasMore } = await getInvestorsPaged(
+                search,
+                0,
+                INVESTORS_PAGE_SIZE
+            );
+            if (cancelled) return;
+            setInvestors(page);
+            nextInvestorsSkipRef.current = page.length;
+            setInvestorsTotal(total);
+            setHasMoreInvestors(hasMore);
             setIsLoading(false);
         }
-        fetchData();
-    }, [search]); // Re-run when search changes
+        fetchFirstInvestorsPage();
+        return () => {
+            cancelled = true;
+        };
+    }, [search]);
+
+    const loadMoreInvestors = useCallback(async () => {
+        if (loadingMoreInvestorsRef.current || !hasMoreInvestors) return;
+        loadingMoreInvestorsRef.current = true;
+        setIsLoadingMoreInvestors(true);
+        try {
+            const { investors: page, hasMore } = await getInvestorsPaged(
+                search,
+                nextInvestorsSkipRef.current,
+                INVESTORS_PAGE_SIZE
+            );
+            setInvestors((prev) => [...prev, ...page]);
+            nextInvestorsSkipRef.current += page.length;
+            setHasMoreInvestors(hasMore);
+        } finally {
+            loadingMoreInvestorsRef.current = false;
+            setIsLoadingMoreInvestors(false);
+        }
+    }, [search, hasMoreInvestors]);
+
+    const investorsScrollSentinelRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const node = investorsScrollSentinelRef.current;
+        if (!node || isLoading || !hasMoreInvestors) return;
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                const hit = entries.some((e) => e.isIntersecting);
+                if (hit) void loadMoreInvestors();
+            },
+            { root: null, rootMargin: "120px", threshold: 0 }
+        );
+        observer.observe(node);
+        return () => observer.disconnect();
+    }, [isLoading, hasMoreInvestors, loadMoreInvestors, investors.length]);
 
     return (
         <div className="space-y-8">
@@ -138,7 +210,7 @@ export default function AdminDashboard() {
                     <table className="w-full">
                         <thead className="bg-gray-50 dark:bg-gray-800/50 text-gray-500 dark:text-gray-400 text-sm">
                             <tr>
-                                <th className="px-6 py-4 text-right font-medium">ID</th>
+                                {/* <th className="px-6 py-4 text-right font-medium">ID</th> */}
                                 <th className="px-6 py-4 text-right font-medium">المستثمر</th>
                                 <th className="px-6 py-4 text-right font-medium">رقم الهوية</th>
                                 <th className="px-6 py-4 text-right font-medium">رقم الجوال</th>
@@ -151,7 +223,7 @@ export default function AdminDashboard() {
                             {isLoading ? (
                                 [...Array(5)].map((_, i) => (
                                     <tr key={i} className="animate-pulse">
-                                        <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-32"></div></td>
+                                        {/* <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-32"></div></td> */}
                                         <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-24"></div></td>
                                         <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-24"></div></td>
                                         <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-8 mx-auto"></div></td>
@@ -175,13 +247,25 @@ export default function AdminDashboard() {
                     </table>
                 </div>
 
-                {/* Pagination (Visual only for now) */}
-                <div className="p-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between text-sm text-gray-500">
-                    <span>عرض {investors.length} مستثمر</span>
-                    <div className="flex gap-2">
-                        <button disabled className="px-3 py-1 border rounded hover:bg-gray-50 disabled:opacity-50">السابق</button>
-                        <button disabled className="px-3 py-1 border rounded hover:bg-gray-50 disabled:opacity-50">التالي</button>
-                    </div>
+                <div
+                    ref={investorsScrollSentinelRef}
+                    className="h-px w-full shrink-0"
+                    aria-hidden
+                />
+                <div className="p-4 border-t border-gray-100 dark:border-gray-800 flex flex-wrap items-center justify-between gap-2 text-sm text-gray-500">
+                    <span>
+                        {isLoading
+                            ? "…"
+                            : investorsTotal > investors.length
+                              ? `عرض ${investors.length} من ${investorsTotal} مستثمر`
+                              : `عرض ${investors.length} مستثمر`}
+                    </span>
+                    {isLoadingMoreInvestors ? (
+                        <span className="text-primary flex items-center gap-2">
+                            <RefreshCw size={14} className="animate-spin" />
+                            جاري تحميل المزيد…
+                        </span>
+                    ) : null}
                 </div>
             </div>
 
@@ -234,9 +318,9 @@ function InvestorRowWithReports({ investor }: { investor: InvestorListItem }) {
     return (
         <>
             <tr className="group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                <td className="px-6 py-4 text-gray-600 dark:text-gray-300 font-mono text-sm">
+                {/* <td className="px-6 py-4 text-gray-600 dark:text-gray-300 font-mono text-sm">
                     {investor.nationalId || "-"}
-                </td>
+                </td> */}
                 <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-lg">
