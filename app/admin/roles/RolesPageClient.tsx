@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState, useEffect, Fragment } from "react";
+import { useActionState, useState, useEffect, useRef, Fragment } from "react";
 import { useRouter } from "next/navigation";
 import {
   createRole,
@@ -12,7 +12,11 @@ import {
   deleteAdminUser,
 } from "./actions";
 import { ADMIN_PAGE_KEYS } from "../lib/permissions";
-import { UserPlus, X, ShieldCheck, Users, PencilLine, Trash2, Eye, Edit3, Plus } from "lucide-react";
+import { UserPlus, X, ShieldCheck, Users, PencilLine, Trash2, Eye, Edit3, Plus, AlertTriangle } from "lucide-react";
+
+type ConfirmDelete =
+  | { kind: "role"; id: number; name: string }
+  | { kind: "user"; id: number; name: string };
 
 /** الكاتيجوري الأم لكل صفحة (كما في السايدبار) */
 const PAGE_CATEGORY: Record<string, string> = {
@@ -80,6 +84,9 @@ export function RolesPageClient({
   const [isAddRoleModalOpen, setIsAddRoleModalOpen] = useState(false);
   const [editingRoleId, setEditingRoleId] = useState<number | null>(null);
   const [permRole, setPermRole] = useState<RoleWithPerms | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<ConfirmDelete | null>(null);
+  const deleteRoleFormRef = useRef<HTMLFormElement>(null);
+  const deleteUserFormRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -201,16 +208,14 @@ export function RolesPageClient({
                           </button>
 
                           {/* حذف */}
-                          <form action={asFormAction(deleteRole)} className="inline-block">
-                            <input type="hidden" name="roleId" value={role.id} />
-                            <button
-                              type="submit"
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 dark:border-red-800/60 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 text-xs font-medium transition-colors"
-                            >
-                              <Trash2 size={13} />
-                              حذف
-                            </button>
-                          </form>
+                          <button
+                            type="button"
+                            onClick={() => setConfirmDelete({ kind: "role", id: role.id, name: role.name })}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 dark:border-red-800/60 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 text-xs font-medium transition-colors"
+                          >
+                            <Trash2 size={13} />
+                            حذف
+                          </button>
                         </div>
                       ) : (
                         <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#003B46]/60 dark:text-[#4db8cc]/60 bg-[#003B46]/5 dark:bg-[#4db8cc]/5 px-2.5 py-1 rounded-lg">
@@ -304,25 +309,15 @@ export function RolesPageClient({
                         </button>
                       </form>
 
-                      <form
-                        action={deleteUserAction}
-                        className="inline"
-                        onSubmit={(e) => {
-                          if (!window.confirm("حذف هذا المستخدم من لوحة التحكم نهائياً؟")) {
-                            e.preventDefault();
-                          }
-                        }}
+                      <button
+                        type="button"
+                        onClick={() => setConfirmDelete({ kind: "user", id: user.id, name: user.name })}
+                        disabled={isDeleteUserPending}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 dark:border-red-800/60 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 text-xs font-medium disabled:opacity-50 transition-colors"
                       >
-                        <input type="hidden" name="userId" value={user.id} />
-                        <button
-                          type="submit"
-                          disabled={isDeleteUserPending}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 dark:border-red-800/60 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 text-xs font-medium disabled:opacity-50 transition-colors"
-                        >
-                          <Trash2 size={12} />
-                          {isDeleteUserPending ? "جاري الحذف..." : "حذف"}
-                        </button>
-                      </form>
+                        <Trash2 size={12} />
+                        {isDeleteUserPending ? "جاري الحذف..." : "حذف"}
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -502,6 +497,14 @@ export function RolesPageClient({
           </div>
         </div>
       )}
+      {/* hidden forms for delete — outside the map so refs are stable */}
+      <form ref={deleteRoleFormRef} action={asFormAction(deleteRole)} className="hidden">
+        <input type="hidden" name="roleId" value={confirmDelete?.kind === "role" ? confirmDelete.id : ""} />
+      </form>
+      <form ref={deleteUserFormRef} action={deleteUserAction} className="hidden">
+        <input type="hidden" name="userId" value={confirmDelete?.kind === "user" ? confirmDelete.id : ""} />
+      </form>
+
       {/* ── مودال الصلاحيات ── */}
       {permRole && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="perm-modal-title">
@@ -640,6 +643,69 @@ export function RolesPageClient({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* ── مودال تأكيد الحذف ── */}
+      {confirmDelete && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" role="dialog" aria-modal="true">
+          <button
+            type="button"
+            onClick={() => setConfirmDelete(null)}
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            aria-label="إغلاق"
+          />
+          <div className="relative w-full max-w-sm bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+            {/* red top bar */}
+            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-red-500 via-red-400 to-red-500" />
+
+            <div className="px-6 pt-7 pb-6 flex flex-col items-center text-center gap-4">
+              {/* icon */}
+              <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20">
+                <AlertTriangle size={26} className="text-red-500" />
+              </span>
+
+              {/* title */}
+              <div>
+                <h3 className="text-base font-bold text-gray-900 dark:text-white mb-1">
+                  تأكيد الحذف
+                </h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+                  هل أنت متأكد من حذف{" "}
+                  {confirmDelete.kind === "role" ? "الرتبة" : "المستخدم"}{" "}
+                  <span className="font-semibold text-gray-800 dark:text-gray-200">
+                    «{confirmDelete.name}»
+                  </span>
+                  ؟ لا يمكن التراجع عن هذا الإجراء.
+                </p>
+              </div>
+
+              {/* buttons */}
+              <div className="flex w-full gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (confirmDelete.kind === "role") {
+                      deleteRoleFormRef.current?.requestSubmit();
+                    } else {
+                      deleteUserFormRef.current?.requestSubmit();
+                    }
+                    setConfirmDelete(null);
+                  }}
+                  className="flex-1 inline-flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5 px-4 rounded-xl transition-colors text-sm shadow-sm"
+                >
+                  <Trash2 size={14} />
+                  نعم، احذف
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmDelete(null)}
+                  className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-sm"
+                >
+                  إلغاء
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
