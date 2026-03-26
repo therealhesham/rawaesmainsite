@@ -329,11 +329,12 @@ export function RolesPageClient({
 
       {/* ── مودال إضافة مستخدم ── */}
       {isAddUserModalOpen && (
+
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="add-user-modal-title">
           <button
             type="button"
             onClick={() => setIsAddUserModalOpen(false)}
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm -z-10"
             aria-label="إغلاق"
           />
           <div className="relative w-full max-w-md bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -433,7 +434,7 @@ export function RolesPageClient({
           <button
             type="button"
             onClick={() => setIsAddRoleModalOpen(false)}
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm -z-10"
             aria-label="إغلاق"
           />
           <div className="relative w-full max-w-sm bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -511,7 +512,7 @@ export function RolesPageClient({
           <button
             type="button"
             onClick={() => setPermRole(null)}
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm -z-10"
             aria-label="إغلاق"
           />
           <div className="relative w-full max-w-lg bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col max-h-[90vh]">
@@ -652,7 +653,7 @@ export function RolesPageClient({
           <button
             type="button"
             onClick={() => setConfirmDelete(null)}
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm -z-10"
             aria-label="إغلاق"
           />
           <div className="relative w-full max-w-sm bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
