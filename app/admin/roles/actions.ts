@@ -79,11 +79,14 @@ export async function updateRoleName(prev: unknown, formDataMaybe?: FormData) {
 export async function deleteRole(prev: unknown, formDataMaybe?: FormData) {
   const formData = getFormData(prev, formDataMaybe);
   if (!formData) return { error: "طلب غير صالح" };
-  await requirePageEdit("roles");
+  const admin = await requirePageEdit("roles");
   const id = parseInt(String(formData.get("roleId")), 10);
   if (!id) return { error: "معرف الرتبة مطلوب" };
   const role = await prisma.role.findUnique({ where: { id } });
   if (!role || role.name === "admin") return { error: "لا يمكن حذف رتبة admin" };
+  // منع حذف الرتبة الحالية للمستخدم
+  const currentUser = await prisma.user.findUnique({ where: { id: admin.id } });
+  if (currentUser?.roleId === id) return { error: "لا يمكن حذف رتبتك الحالية" };
   try {
     await prisma.role.delete({ where: { id } });
     revalidatePath("/admin/roles");
