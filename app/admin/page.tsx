@@ -140,7 +140,7 @@ export default function AdminDashboard() {
 
             <div>
                 <h2 className="text-lg font-bold text-secondary dark:text-white mb-4">الإحصائيات</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 items-stretch">
                     <StatsCard
                         title=" المستثمرين"
                         value={stats.totalInvestors}
@@ -481,20 +481,25 @@ function StatsCard({
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`bg-white dark:bg-card-dark p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 relative overflow-hidden group ${
+            className={`bg-white dark:bg-card-dark p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 relative overflow-hidden group h-full min-h-0 ${
                 href
                     ? "cursor-pointer transition-all hover:border-primary/35 hover:shadow-md dark:hover:border-primary/30"
                     : ""
             }`}
         >
             <div className="relative z-0 pe-14">
-                <div className="text-gray-500 font-medium mb-1 flex flex-wrap items-baseline gap-x-1.5 gap-y-0">
-                    <span>{title}</span>
+                <div
+                    className="text-gray-500 font-medium mb-1 flex min-h-[2.75rem] flex-col gap-0.5 leading-snug sm:min-h-[3rem]"
+                    title={titleHint ? `${title} ${titleHint}` : title}
+                >
+                    <span className="line-clamp-2 break-words">{title}</span>
                     {titleHint ? (
-                        <span className="text-xs font-normal text-gray-400 dark:text-gray-500">{titleHint}</span>
+                        <span className="line-clamp-1 text-xs font-normal text-gray-400 dark:text-gray-500">
+                            {titleHint}
+                        </span>
                     ) : null}
                 </div>
-                <div className="text-3xl font-bold text-secondary dark:text-white">{value}</div>
+                <div className="text-3xl font-bold tabular-nums text-secondary dark:text-white">{value}</div>
             </div>
             <div
                 className={`absolute top-4 left-4 z-10 w-12 h-12 rounded-xl flex items-center justify-center ${accent.iconBox}`}
@@ -511,7 +516,7 @@ function StatsCard({
         return (
             <Link
                 href={href}
-                className="block rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900"
+                className="block h-full min-h-0 rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900"
             >
                 {card}
             </Link>
