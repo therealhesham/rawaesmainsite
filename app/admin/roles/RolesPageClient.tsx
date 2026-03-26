@@ -515,22 +515,26 @@ export function RolesPageClient({
             <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#003B46] via-[#0a6375] to-[#003B46]" />
 
             {/* header */}
-            <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100 dark:border-gray-800 shrink-0">
-              <div className="flex items-center gap-2.5">
-                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#003B46]/10 dark:bg-[#003B46]/20">
-                  <ShieldCheck size={15} className="text-[#003B46] dark:text-[#4db8cc]" />
+            <div className="flex items-center justify-between px-6 pt-6 pb-5 border-b border-gray-100 dark:border-gray-800 shrink-0">
+              <div className="flex items-start gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#003B46] to-[#0a6375] shadow-sm shrink-0">
+                  <ShieldCheck size={18} className="text-white" />
                 </span>
                 <div>
-                  <h3 id="perm-modal-title" className="text-base font-bold text-[#003B46] dark:text-white leading-tight">
-                    صلاحيات الرتبة
+                  <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">صلاحيات الرتبة</p>
+                  <h3 id="perm-modal-title" className="text-xl font-bold text-[#003B46] dark:text-white leading-tight flex items-center gap-2">
+                    {permRole.name}
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#003B46]/10 dark:bg-[#4db8cc]/15 text-[#003B46] dark:text-[#4db8cc] border border-[#003B46]/15 dark:border-[#4db8cc]/25">
+                      <Users size={10} />
+                      {permRole._count.users} مستخدم
+                    </span>
                   </h3>
-                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{permRole.name}</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setPermRole(null)}
-                className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-200 transition-colors shrink-0"
                 aria-label="إغلاق"
               >
                 <X size={18} />
