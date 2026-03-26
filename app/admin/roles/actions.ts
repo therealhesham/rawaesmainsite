@@ -168,6 +168,26 @@ export async function assignUserRole(prev: unknown, formDataMaybe?: FormData) {
   }
 }
 
+/** حذف مستخدم من لوحة التحكم (لا يمكن حذف نفسك) */
+export async function deleteAdminUser(prev: unknown, formDataMaybe?: FormData) {
+  const formData = getFormData(prev, formDataMaybe);
+  if (!formData) return { error: "طلب غير صالح" };
+  const admin = await requirePageEdit("roles");
+  const userIdRaw = getFormString(formData, "userId");
+  const userId = userIdRaw ? parseInt(userIdRaw, 10) : NaN;
+  if (!userIdRaw || isNaN(userId)) return { error: "معرف المستخدم مطلوب" };
+  if (userId === admin.id) return { error: "لا يمكن حذف حسابك الحالي" };
+  const target = await prisma.user.findUnique({ where: { id: userId } });
+  if (!target || !target.isAdmin) return { error: "المستخدم غير موجود أو ليس من لوحة التحكم" };
+  try {
+    await prisma.user.delete({ where: { id: userId } });
+    revalidatePath("/admin/roles");
+    return { success: true };
+  } catch {
+    return { error: "فشل الحذف (قد يكون المستخدم مرتبطاً بتقارير أو بيانات أخرى)" };
+  }
+}
+
 /** إضافة مستخدم جديد للوحة التحكم مع تحديد رتبته */
 export async function createAdminUser(prev: unknown, formDataMaybe?: FormData) {
   const formData = getFormData(prev, formDataMaybe);

@@ -9,6 +9,7 @@ import {
   updateRolePermissions,
   assignUserRole,
   createAdminUser,
+  deleteAdminUser,
 } from "./actions";
 import { ADMIN_PAGE_KEYS } from "../lib/permissions";
 import { UserPlus, X } from "lucide-react";
@@ -73,6 +74,8 @@ export function RolesPageClient({
   const [state, createAction, isCreatePending] = useActionState(createRole, null);
   const [addUserState, addUserAction, isAddUserPending] = useActionState(createAdminUser, null);
   const [permState, permAction, isPermPending] = useActionState(updateRolePermissions, null);
+  const [assignState, assignAction, isAssignPending] = useActionState(assignUserRole, null);
+  const [deleteUserState, deleteUserAction, isDeleteUserPending] = useActionState(deleteAdminUser, null);
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
   const [editingRoleId, setEditingRoleId] = useState<number | null>(null);
   const [permRoleId, setPermRoleId] = useState<number | null>(null);
@@ -90,6 +93,12 @@ export function RolesPageClient({
       router.refresh();
     }
   }, [permState?.success, router]);
+
+  useEffect(() => {
+    if (assignState?.success || deleteUserState?.success) {
+      router.refresh();
+    }
+  }, [assignState?.success, deleteUserState?.success, router]);
 
   const pageKeysForPerms = ADMIN_PAGE_KEYS.map((p) => p.key).filter((k) => k !== "roles");
 
@@ -304,6 +313,11 @@ export function RolesPageClient({
           </button>
         </div>
         <div className="p-6 pt-0 overflow-x-auto">
+          {(assignState?.error || deleteUserState?.error) && (
+            <p className="mb-3 text-red-600 dark:text-red-400 text-sm">
+              {assignState?.error ?? deleteUserState?.error}
+            </p>
+          )}
           <table className="w-full text-right">
             <thead>
               <tr className="border-b border-gray-200 dark:border-gray-700">
@@ -320,27 +334,49 @@ export function RolesPageClient({
                   <td className="py-3 px-2">{user.phoneNumber ?? "—"}</td>
                   <td className="py-3 px-2">{user.role?.name ?? "—"}</td>
                   <td className="py-3 px-2">
-                    <form action={asFormAction(assignUserRole)} className="inline-flex items-center gap-2">
-                      <input type="hidden" name="userId" value={user.id} />
-                      <select
-                        name="roleId"
-                        defaultValue={user.roleId ?? ""}
-                        className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-[#003B46] dark:text-white py-1 px-2"
+                    <div className="inline-flex flex-wrap items-center gap-2">
+                      <form action={assignAction} className="inline-flex items-center gap-2">
+                        <input type="hidden" name="userId" value={user.id} />
+                        <select
+                          key={`role-select-${user.id}-${user.roleId ?? "none"}`}
+                          name="roleId"
+                          defaultValue={user.roleId != null ? String(user.roleId) : ""}
+                          className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-[#003B46] dark:text-white py-1 px-2"
+                        >
+                          <option value="">بدون رتبة</option>
+                          {initialRoles.map((r) => (
+                            <option key={r.id} value={r.id}>
+                              {r.name}
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          type="submit"
+                          disabled={isAssignPending}
+                          className="bg-[#003B46] text-white text-sm py-1 px-3 rounded-lg disabled:opacity-50"
+                        >
+                          {isAssignPending ? "جاري..." : "تعيين"}
+                        </button>
+                      </form>
+                      <form
+                        action={deleteUserAction}
+                        className="inline"
+                        onSubmit={(e) => {
+                          if (!window.confirm("حذف هذا المستخدم من لوحة التحكم نهائياً؟")) {
+                            e.preventDefault();
+                          }
+                        }}
                       >
-                        <option value="">بدون رتبة</option>
-                        {initialRoles.map((r) => (
-                          <option key={r.id} value={r.id}>
-                            {r.name}
-                          </option>
-                        ))}
-                      </select>
-                      <button
-                        type="submit"
-                        className="bg-[#003B46] text-white text-sm py-1 px-3 rounded-lg"
-                      >
-                        تعيين
-                      </button>
-                    </form>
+                        <input type="hidden" name="userId" value={user.id} />
+                        <button
+                          type="submit"
+                          disabled={isDeleteUserPending}
+                          className="px-3 py-1.5 rounded-lg border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm font-medium disabled:opacity-50"
+                        >
+                          {isDeleteUserPending ? "جاري الحذف..." : "حذف"}
+                        </button>
+                      </form>
+                    </div>
                   </td>
                 </tr>
               ))}
