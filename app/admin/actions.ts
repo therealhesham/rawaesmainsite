@@ -121,6 +121,9 @@ export async function getInvestorsPaged(
                     _count: {
                         select: { reports: true },
                     },
+                    investmentSectors: {
+                        include: { sector: true },
+                    },
                 },
                 orderBy: { createdAt: "desc" },
             }),
@@ -161,23 +164,38 @@ export async function getInvestorReportsForAdmin(userId: number) {
     }
 }
 
-/** بحث عن مستثمر بالاسم — exact أولاً، ثم fuzzy بالكلمات */
-export async function searchInvestorByName(excelName: string) {
+/** بحث عن مستثمر بالاسم — exact أولاً، ثم fuzzy بالكلمات.
+ *  إذا وُجدت `restrictToUserIds` فتُقيَّد المطابقة والاقتراحات بهؤلاء فقط (مثلاً بعد تحديد نطاق من صفحة الاستخراج). */
+export async function searchInvestorByName(
+    excelName: string,
+    restrictToUserIds?: number[] | null
+) {
     await requirePageView("extract-reports");
     try {
         const trimmed = excelName.trim();
         if (!trimmed) return { exact: null, suggestions: [] };
 
+        const restrict =
+            restrictToUserIds &&
+            Array.isArray(restrictToUserIds) &&
+            restrictToUserIds.length > 0
+                ? [...new Set(restrictToUserIds.filter((id) => Number.isFinite(id) && id > 0))]
+                : null;
+
         // 1) Exact match
         const exact = await prisma.user.findFirst({
-            where: { name: trimmed },
+            where: restrict
+                ? { name: trimmed, id: { in: restrict } }
+                : { name: trimmed },
             select: { id: true, name: true },
         });
         if (exact) return { exact, suggestions: [] };
 
-        // 2) Fuzzy: جيب كل المستثمرين وقارن بالكلمات
+        // 2) Fuzzy: مقارنة بالكلمات — إما كل المستثمرين أو المحددين فقط
         const allUsers = await prisma.user.findMany({
-            where: { isAdmin: false },
+            where: restrict
+                ? { isAdmin: false, id: { in: restrict } }
+                : { isAdmin: false },
             select: { id: true, name: true },
         });
 
@@ -221,7 +239,10 @@ export async function getInvestor(id: number) {
             include: {
                 reports: {
                     orderBy: { createdAt: 'desc' }
-                }
+                },
+                investmentSectors: {
+                    include: { sector: true },
+                },
             }
         });
         return investor;
@@ -316,6 +337,73 @@ export async function uploadReport(formData: FormData) {
     }
 }
 
+/** رفع ملف واحد لعدة مستثمرين (رفع جماعي) */
+export async function bulkUploadReport(formData: FormData) {
+    await requirePageEdit("extract-reports");
+    try {
+        const type = formData.get("type") as string;
+        const file = formData.get("file") as File;
+        const investorIdsRaw = formData.get("investorIds") as string;
+        const yearRaw = formData.get("year") as string;
+
+        const investorIds = investorIdsRaw
+            ? investorIdsRaw.split(",").map(Number).filter((n) => n > 0)
+            : [];
+
+        if (!type || !file || file.size === 0 || investorIds.length === 0) {
+            return { error: "بيانات غير صالحة." };
+        }
+
+        const baseYear =
+            yearRaw && !isNaN(Number(yearRaw)) && Number(yearRaw) > 1900
+                ? Number(yearRaw)
+                : new Date().getFullYear() - 1;
+
+        const buffer = Buffer.from(await file.arrayBuffer());
+        const timestamp = Date.now();
+        const uid = Math.random().toString(36).slice(2, 10);
+        const safeFileName = file.name.replace(/\s+/g, "-");
+        const storageKey = `reports/bulk/${timestamp}-${uid}-${safeFileName}`;
+
+        await s3Client.send(
+            new PutObjectCommand({
+                Bucket: process.env.DO_SPACES_BUCKET,
+                Key: storageKey,
+                Body: buffer,
+                ACL: "public-read",
+                ContentType: file.type || "application/pdf",
+            })
+        );
+
+        const endpoint = process.env.DO_SPACES_ENDPOINT || "";
+        const bucket = process.env.DO_SPACES_BUCKET || "";
+        const endpointUrl = new URL(endpoint);
+        const publicUrl = `${endpointUrl.protocol}//${bucket}.${endpointUrl.host}/${storageKey}`;
+
+        const displayFileName = file.name;
+        const releaseDate = new Date(baseYear, 0, 1);
+
+        const { count: created } = await prisma.reports.createMany({
+            data: investorIds.map((userId) => ({
+                userId,
+                type,
+                linkUrl: publicUrl,
+                fileName: displayFileName,
+                isPublished: false,
+                releaseDate,
+            })),
+            skipDuplicates: true,
+        });
+
+        revalidatePath("/admin");
+        revalidatePath("/admin/extract-reports");
+        return { success: true, created };
+    } catch (error) {
+        console.error("Failed to bulk upload report:", error);
+        return { error: "فشل الرفع الجماعي." };
+    }
+}
+
 export async function deleteReport(reportId: number, userId: number) {
     await requirePageEdit("investor-delete-file");
     try {
@@ -331,6 +419,66 @@ export async function deleteReport(reportId: number, userId: number) {
     }
 }
 
+/** قائمة قطاعات الاستثمار — للنماذج (لوحة التحكم أو صفحة المستثمر) */
+export async function getInvestmentSectors() {
+    const admin = await getAdminUser(false);
+    if (!admin) return [];
+    if (
+        !canViewPage(admin, "") &&
+        !canViewPage(admin, "investor-page") &&
+        !canViewPage(admin, "investors-manage")
+    ) {
+        return [];
+    }
+    try {
+        return await prisma.investmentSector.findMany({
+            orderBy: { id: "asc" },
+        });
+    } catch (error) {
+        console.error("getInvestmentSectors:", error);
+        return [];
+    }
+}
+
+/** تحديث قطاعات مستثمر (يستبدل الربط بالكامل) */
+export async function setInvestorInvestmentSectors(userId: number, sectorIds: number[]) {
+    await requirePageEdit("investors-manage");
+    try {
+        if (!userId || Number.isNaN(userId)) {
+            return { error: "معرف غير صالح" };
+        }
+        const target = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { id: true, isAdmin: true },
+        });
+        if (!target) return { error: "المستثمر غير موجود" };
+        if (target.isAdmin) return { error: "لا يمكن تعديل حساب إداري" };
+
+        const unique = [...new Set(sectorIds)].filter((id) => Number.isInteger(id) && id > 0);
+        const valid = await prisma.investmentSector.findMany({
+            where: { id: { in: unique } },
+            select: { id: true },
+        });
+        const validIds = valid.map((s) => s.id);
+
+        await prisma.$transaction(async (tx) => {
+            await tx.userInvestmentSector.deleteMany({ where: { userId } });
+            if (validIds.length > 0) {
+                await tx.userInvestmentSector.createMany({
+                    data: validIds.map((sectorId) => ({ userId, sectorId })),
+                });
+            }
+        });
+
+        revalidatePath("/admin");
+        revalidatePath(`/admin/investors/${userId}`);
+        return { success: true };
+    } catch (error) {
+        console.error("setInvestorInvestmentSectors:", error);
+        return { error: "فشل حفظ القطاعات" };
+    }
+}
+
 export async function createInvestor(formData: FormData) {
     await requirePageEdit("investors-manage");
     try {
@@ -338,6 +486,11 @@ export async function createInvestor(formData: FormData) {
         const phoneNumber = formData.get("phoneNumber") as string;
         const password = formData.get("password") as string;
         const nationalId = formData.get("nationalId") as string || null;
+
+        const rawSectorIds = formData.getAll("sectorIds");
+        const requestedSectorIds = rawSectorIds
+            .map((s) => parseInt(String(s), 10))
+            .filter((n) => !Number.isNaN(n) && n > 0);
 
         if (!name || !phoneNumber || !password) {
             return { error: "Missing required fields" };
@@ -357,7 +510,16 @@ export async function createInvestor(formData: FormData) {
             return { error: "المستخدم موجود بالفعل (رقم الهاتف أو الهوية)" };
         }
 
-        await prisma.user.create({
+        const validSectors =
+            requestedSectorIds.length > 0
+                ? await prisma.investmentSector.findMany({
+                      where: { id: { in: [...new Set(requestedSectorIds)] } },
+                      select: { id: true },
+                  })
+                : [];
+        const validSectorIds = validSectors.map((s) => s.id);
+
+        const user = await prisma.user.create({
             data: {
                 name,
                 phoneNumber,
@@ -366,6 +528,15 @@ export async function createInvestor(formData: FormData) {
                 isAdmin: false,
             }
         });
+
+        if (validSectorIds.length > 0) {
+            await prisma.userInvestmentSector.createMany({
+                data: validSectorIds.map((sectorId) => ({
+                    userId: user.id,
+                    sectorId,
+                })),
+            });
+        }
 
         revalidatePath("/admin");
         return { success: true };

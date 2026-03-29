@@ -20,11 +20,13 @@ export default async function InvestorDetailsPage({ params }: Props) {
     canDeleteFile: admin ? canEditPage(admin, "investor-delete-file") : false,
     canPublish: admin ? canEditPage(admin, "investor-publish") : false,
   };
+  const canManageInvestors = admin ? canEditPage(admin, "investors-manage") : false;
 
   return (
     <InvestorDetailsClient
       investorId={investorId}
       permissions={permissions}
+      canManageInvestors={canManageInvestors}
     />
   );
 }

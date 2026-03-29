@@ -6,6 +6,7 @@ export const REPORT_TYPE_OPTIONS: { id: string; label: string }[] = [
     { id: "hotel", label: "عقد استثمار فنادق" },
     { id: "real_estate", label: "عقد استثمار عقاري" },
     { id: "installment", label: "عقد استثمار تقسيط" },
+    { id: "attachment", label: "مرفق" },
 ];
 
 export const REPORT_TYPE_LABELS_AR: Record<string, string> = Object.fromEntries(

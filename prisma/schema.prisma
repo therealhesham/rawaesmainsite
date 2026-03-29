@@ -32,6 +32,29 @@ model user {
   createdAt                   DateTime                      @default(now())
   updatedAt                   DateTime                      @updatedAt
   emailLogs                   EmailLog[]
+  investmentSectors           UserInvestmentSector[]
+}
+
+// قطاع استثمار (تأجير، توظيف، ضيافة، …)
+model InvestmentSector {
+  id        Int                    @id @default(autoincrement())
+  key       String                 @unique // مثلاً: cars | recruitment | hospitality
+  nameAr    String?
+  createdAt DateTime               @default(now())
+  updatedAt DateTime               @updatedAt
+  investors UserInvestmentSector[]
+}
+
+// ربط مستثمر ↔ قطاعات (many-to-many)
+model UserInvestmentSector {
+  userId    Int
+  sectorId  Int
+  user      user             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sector    InvestmentSector @relation(fields: [sectorId], references: [id], onDelete: Cascade)
+  createdAt DateTime         @default(now())
+
+  @@id([userId, sectorId])
+  @@index([sectorId])
 }
 
 // OTP للتحقق عند تسجيل الدخول (يُخزَّن في الـ API لأسباب أمنية)

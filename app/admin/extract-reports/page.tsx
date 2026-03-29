@@ -2,9 +2,9 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
-import { getInvestors, getInvestor, saveInvestorReports, searchInvestorByName } from "../actions";
+import { getInvestors, getInvestor, saveInvestorReports, searchInvestorByName, bulkUploadReport } from "../actions";
 import { REPORT_TYPE_OPTIONS, reportTypeLabelAr } from "@/lib/reportTypeAr";
-import { FileSpreadsheet, Upload, CheckCircle, FileOutput, AlertCircle, AlertTriangle, User, Save, X, FileText, Info, Search, FolderOpen, ExternalLink, Archive } from "lucide-react";
+import { FileSpreadsheet, Upload, CheckCircle, FileOutput, AlertCircle, AlertTriangle, User, Save, X, FileText, Info, Search, FolderOpen, ExternalLink, Archive, Users } from "lucide-react";
 
 type ExtractResult = {
     status: string;
@@ -46,6 +46,14 @@ export default function ExtractReportsPage() {
     const [autoMatchedExact, setAutoMatchedExact] = useState(false);
     const [year, setYear] = useState<string>("");
 
+    /** حدد مستثمرين في النظام — تُقارَن أسماء Excel فقط معهم (تطابق + اقتراحات ضمن القائمة). فارغ = كل المستثمرين كالسابق */
+    const [scopeInvestorIds, setScopeInvestorIds] = useState<number[]>([]);
+    const [investorCatalog, setInvestorCatalog] = useState<{ id: number; name: string }[]>([]);
+    const [scopePickerSearch, setScopePickerSearch] = useState("");
+    const [scopeModalOpen, setScopeModalOpen] = useState(false);
+
+    const matchScopeParam = scopeInvestorIds.length > 0 ? scopeInvestorIds : undefined;
+
     /** حالة حفظ الكل: المستثمرون الذين لا يوجد لهم تطابق تام */
     type UnmatchedItem = { excelName: string; urls: string[]; suggestions: { id: number; name: string }[] };
     const [saveAllModalOpen, setSaveAllModalOpen] = useState(false);
@@ -62,6 +70,16 @@ export default function ExtractReportsPage() {
     const [saveAllSearchResults, setSaveAllSearchResults] = useState<Record<string, { id: number; name: string }[]>>({});
     const [saveAllSearching, setSaveAllSearching] = useState<string | null>(null);
     const saveAllAutocompleteRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        getInvestors("").then((list) => {
+            setInvestorCatalog(
+                list
+                    .filter((u: { isAdmin?: boolean }) => !u.isAdmin)
+                    .map((u: { id: number; name: string }) => ({ id: u.id, name: u.name }))
+            );
+        });
+    }, []);
 
     const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault();
@@ -99,8 +117,38 @@ export default function ExtractReportsPage() {
                 body: formData,
             });
             const data: ExtractResult = await res.json();
-            setResult(data);
             if (!res.ok) throw new Error(data.message || "فشل الطلب");
+
+            if (
+                data.investors_files &&
+                scopeInvestorIds.length > 0
+            ) {
+                const scopeNames = scopeInvestorIds
+                    .map((id) => investorCatalog.find((x) => x.id === id)?.name)
+                    .filter(Boolean) as string[];
+
+                const filtered: Record<string, string[]> = {};
+                for (const [excelName, urls] of Object.entries(data.investors_files)) {
+                    const trimmed = excelName.trim();
+                    const isMatch = scopeNames.some((sName) => {
+                        if (sName === trimmed) return true;
+                        const excelWords = trimmed.split(/\s+/).filter((w) => w.length > 1);
+                        const scopeWords = sName.split(/\s+/).filter((w) => w.length > 1);
+                        let hits = 0;
+                        for (const w of excelWords) {
+                            if (sName.includes(w)) hits++;
+                        }
+                        for (const w of scopeWords) {
+                            if (trimmed.includes(w)) hits++;
+                        }
+                        return hits >= 2;
+                    });
+                    if (isMatch) filtered[excelName] = urls;
+                }
+                data.investors_files = filtered;
+            }
+
+            setResult(data);
         } catch (err) {
             setResult({
                 status: "error",
@@ -123,7 +171,7 @@ export default function ExtractReportsPage() {
 
             // Auto-search the DB with the Excel name
             setIsSearching(true);
-            searchInvestorByName(saveModal.excelName).then((res) => {
+            searchInvestorByName(saveModal.excelName, matchScopeParam).then((res) => {
                 if (res.exact) {
                     // Exact match found — auto-select
                     setSelectedUserId(String(res.exact.id));
@@ -136,12 +184,17 @@ export default function ExtractReportsPage() {
                 }
             }).finally(() => setIsSearching(false));
 
-            // Also load all investors for manual search fallback
+            // Also load investors for manual search fallback (مقيّد بالنطاق إن وُجد)
             getInvestors("").then((list) => {
-                setInvestors(list.map((u: { id: number; name: string }) => ({ id: u.id, name: u.name })));
+                const mapped = list.map((u: { id: number; name: string }) => ({ id: u.id, name: u.name }));
+                setInvestors(
+                    scopeInvestorIds.length > 0
+                        ? mapped.filter((u) => scopeInvestorIds.includes(u.id))
+                        : mapped
+                );
             });
         }
-    }, [saveModal]);
+    }, [saveModal, scopeInvestorIds.join(",")]);
 
     // Close autocomplete dropdown on outside click
     useEffect(() => {
@@ -168,7 +221,7 @@ export default function ExtractReportsPage() {
             return;
         }
         setIsSearching(true);
-        const res = await searchInvestorByName(value);
+        const res = await searchInvestorByName(value, matchScopeParam);
         if (res.exact) {
             setSearchResults([res.exact]);
         } else {
@@ -261,7 +314,7 @@ export default function ExtractReportsPage() {
         const searchResults = await Promise.all(
             entries.map(async (e) => ({
                 ...e,
-                search: await searchInvestorByName(e.excelName),
+                search: await searchInvestorByName(e.excelName, matchScopeParam),
             }))
         );
 
@@ -376,7 +429,7 @@ export default function ExtractReportsPage() {
             return;
         }
         setSaveAllSearching(excelName);
-        const res = await searchInvestorByName(value);
+        const res = await searchInvestorByName(value, matchScopeParam);
         const list = res.exact ? [res.exact] : res.suggestions;
         setSaveAllSearchResults((prev) => ({ ...prev, [excelName]: list }));
         if (res.exact) {
@@ -387,8 +440,53 @@ export default function ExtractReportsPage() {
         setSaveAllSearching(null);
     };
 
+    /** رفع جماعي */
+    const [bulkModalOpen, setBulkModalOpen] = useState(false);
+    const [bulkFile, setBulkFile] = useState<File | null>(null);
+    const [bulkReportType, setBulkReportType] = useState("");
+    const [bulkYear, setBulkYear] = useState("");
+    const [isBulkUploading, setIsBulkUploading] = useState(false);
+    const [bulkResult, setBulkResult] = useState<{ success?: boolean; created?: number; error?: string } | null>(null);
+
+    const handleBulkUpload = async () => {
+        if (!bulkFile) return;
+        const targetIds = scopeInvestorIds.length > 0
+            ? scopeInvestorIds
+            : investorCatalog.map((u) => u.id);
+        if (targetIds.length === 0) return;
+
+        setIsBulkUploading(true);
+        setBulkResult(null);
+        try {
+            const fd = new FormData();
+            fd.append("file", bulkFile);
+            fd.append("type", "attachment");
+            fd.append("investorIds", targetIds.join(","));
+            if (bulkYear) fd.append("year", bulkYear);
+            const res = await bulkUploadReport(fd);
+            if (res.success) {
+                setBulkFile(null);
+                setBulkModalOpen(false);
+                setBulkResult(res);
+            } else {
+                setBulkResult(res);
+            }
+        } catch {
+            setBulkResult({ error: "حدث خطأ أثناء الرفع." });
+        } finally {
+            setIsBulkUploading(false);
+        }
+    };
+
     const investorsFiles = result?.investors_files && Object.keys(result.investors_files).length > 0;
     const previousYear = new Date().getFullYear() - 1;
+
+    const scopePickerOptions = investorCatalog.filter((u) => {
+        if (scopeInvestorIds.includes(u.id)) return false;
+        if (!scopePickerSearch.trim()) return true;
+        const q = scopePickerSearch.trim().toLowerCase();
+        return u.name.toLowerCase().includes(q) || String(u.id).includes(q);
+    });
 
     return (
         <div className="space-y-8" dir="rtl">
@@ -472,23 +570,50 @@ export default function ExtractReportsPage() {
                         </select>
                     </div>
 
-                    <button
-                        type="submit"
-                        disabled={isExtracting || !file || !reportType}
-                        className="w-full md:w-auto px-6 py-2.5 bg-primary hover:bg-primary/90 text-white font-medium rounded-xl flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        {isExtracting ? (
-                            <>
-                                <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                جاري الاستخراج...
-                            </>
-                        ) : (
-                            <>
-                                <FileOutput size={20} />
-                                استخراج PDF من Excel
-                            </>
-                        )}
-                    </button>
+                    <div className="flex flex-wrap items-center gap-3">
+                        <button
+                            type="submit"
+                            disabled={isExtracting || !file || !reportType}
+                            className="px-6 py-2.5 bg-primary hover:bg-primary/90 text-white font-medium rounded-xl flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {isExtracting ? (
+                                <>
+                                    <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                    جاري الاستخراج...
+                                </>
+                            ) : (
+                                <>
+                                    <FileOutput size={20} />
+                                    استخراج PDF من Excel
+                                </>
+                            )}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => { setScopePickerSearch(""); setScopeModalOpen(true); }}
+                            className={`inline-flex items-center gap-2 px-4 py-2.5 border text-sm font-medium rounded-xl transition-colors ${
+                                scopeInvestorIds.length > 0
+                                    ? "border-primary/30 bg-primary/5 hover:bg-primary/10 text-primary"
+                                    : "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-secondary dark:text-white"
+                            }`}
+                        >
+                            <Users size={18} />
+                            تحديد مستثمرين
+                            {scopeInvestorIds.length > 0 && (
+                                <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1 rounded-full bg-primary text-white text-[11px] font-bold">
+                                    {scopeInvestorIds.length}
+                                </span>
+                            )}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => { setBulkResult(null); setBulkModalOpen(true); }}
+                            className="inline-flex items-center gap-2 px-4 py-2.5 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm font-medium text-secondary dark:text-white rounded-xl transition-colors"
+                        >
+                            <Upload size={18} />
+                            إضافة مرفق
+                        </button>
+                    </div>
                 </form>
             </motion.div>
 
@@ -550,7 +675,14 @@ export default function ExtractReportsPage() {
                                         <h3 className="text-lg font-bold text-secondary dark:text-white">
                                             الملفات حسب المستثمر
                                         </h3>
-                                        <span className="text-sm text-gray-500">تم اختيار نوع التقرير: {reportTypeLabelAr(reportType)}. اضغط حفظ بجانب كل مستثمر لربطه بمستثمر في النظام.</span>
+                                        <span className="text-sm text-gray-500">
+                                            تم اختيار نوع التقرير: {reportTypeLabelAr(reportType)}. اضغط حفظ بجانب كل مستثمر لربطه بمستثمر في النظام.
+                                            {scopeInvestorIds.length > 0 && (
+                                                <span className="block mt-1 text-amber-700 dark:text-amber-300">
+                                                    المطابقة تتم ضمن {scopeInvestorIds.length} مستثمرًا محددًا من القائمة أعلاه.
+                                                </span>
+                                            )}
+                                        </span>
                                     </div>
                                     <div className="space-y-6">
                                         {Object.entries(result.investors_files!)
@@ -1064,7 +1196,7 @@ export default function ExtractReportsPage() {
                                     </motion.div>
                                 )}
 
-                                {successSaveModal && (
+                                                {successSaveModal && (
                                     <motion.div
                                         key="success-save-modal"
                                         initial={{ opacity: 0 }}
@@ -1105,6 +1237,297 @@ export default function ExtractReportsPage() {
                     )}
                 </motion.div>
             )}
+            <AnimatePresence>
+                {scopeModalOpen && (
+                    <motion.div
+                        key="scope-modal"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4"
+                    >
+                        <div
+                            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                            onClick={() => setScopeModalOpen(false)}
+                            aria-hidden
+                        />
+                        <motion.div
+                            initial={{ scale: 0.95 }}
+                            animate={{ scale: 1 }}
+                            exit={{ scale: 0.95 }}
+                            className="relative w-full max-w-lg max-h-[85vh] overflow-hidden rounded-2xl bg-white dark:bg-card-dark shadow-xl border border-gray-200 dark:border-gray-700 flex flex-col"
+                            dir="rtl"
+                        >
+                            <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-800 shrink-0">
+                                <h3 className="text-lg font-bold text-secondary dark:text-white flex items-center gap-2">
+                                    <Users className="text-primary" size={22} />
+                                    تحديد مستثمرين للمطابقة
+                                </h3>
+                                <button
+                                    type="button"
+                                    onClick={() => setScopeModalOpen(false)}
+                                    className="p-1 text-gray-400 hover:text-red-500"
+                                >
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            <div className="p-5 space-y-4 overflow-y-auto flex-1">
+                                <p className="text-sm text-gray-500 leading-relaxed">
+                                    اختر المستثمرين اللي عايز تقارن أسماء Excel معاهم. لو ما حددت حد، هيتم المقارنة مع كل المستثمرين في النظام.
+                                </p>
+
+                                {scopeInvestorIds.length > 0 && (
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-xs font-medium text-gray-500">
+                                                تم تحديد {scopeInvestorIds.length} مستثمر
+                                            </span>
+                                            <button
+                                                type="button"
+                                                onClick={() => { setScopeInvestorIds([]); setScopePickerSearch(""); }}
+                                                className="text-xs text-red-500 hover:text-red-700 underline underline-offset-2"
+                                            >
+                                                مسح الكل
+                                            </button>
+                                        </div>
+                                        <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto">
+                                            {scopeInvestorIds.map((id) => {
+                                                const inv = investorCatalog.find((x) => x.id === id);
+                                                return (
+                                                    <span
+                                                        key={id}
+                                                        className="inline-flex items-center gap-1 pl-2 pr-1 py-1 rounded-lg bg-primary/10 text-primary text-sm border border-primary/20"
+                                                    >
+                                                        <span className="truncate max-w-[180px]">{inv?.name ?? id}</span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setScopeInvestorIds((prev) => prev.filter((x) => x !== id))}
+                                                            className="p-0.5 rounded hover:bg-primary/20"
+                                                            aria-label="إزالة"
+                                                        >
+                                                            <X size={14} />
+                                                        </button>
+                                                    </span>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        value={scopePickerSearch}
+                                        onChange={(e) => setScopePickerSearch(e.target.value)}
+                                        placeholder="ابحث باسم المستثمر..."
+                                        className="w-full p-2.5 pe-10 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                        autoComplete="off"
+                                    />
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                                </div>
+
+                                <ul className="max-h-56 overflow-y-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/50 text-sm divide-y divide-gray-100 dark:divide-gray-700">
+                                    {scopePickerOptions.length === 0 ? (
+                                        <li className="p-4 text-center text-gray-500 text-xs">
+                                            {investorCatalog.length === 0
+                                                ? "جاري تحميل قائمة المستثمرين..."
+                                                : "لا يوجد مستثمرون مطابقون أو تمت إضافة الجميع."}
+                                        </li>
+                                    ) : (
+                                        scopePickerOptions.slice(0, 100).map((u) => (
+                                            <li key={u.id}>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setScopeInvestorIds((prev) =>
+                                                            prev.includes(u.id) ? prev : [...prev, u.id]
+                                                        );
+                                                        setScopePickerSearch("");
+                                                    }}
+                                                    className="w-full text-right px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700/80 transition-colors flex items-center gap-2"
+                                                >
+                                                    <User size={16} className="opacity-50 shrink-0" />
+                                                    <span className="truncate">{u.name}</span>
+                                                </button>
+                                            </li>
+                                        ))
+                                    )}
+                                </ul>
+                            </div>
+
+                            <div className="p-5 border-t border-gray-100 dark:border-gray-800 shrink-0">
+                                <button
+                                    type="button"
+                                    onClick={() => setScopeModalOpen(false)}
+                                    className="w-full py-2.5 bg-primary text-white font-medium rounded-xl hover:bg-primary/90 flex items-center justify-center gap-2"
+                                >
+                                    <CheckCircle size={18} />
+                                    تم ({scopeInvestorIds.length} مستثمر)
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {bulkModalOpen && (
+                    <motion.div
+                        key="bulk-upload-modal"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4"
+                    >
+                        <div
+                            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                            onClick={() => !isBulkUploading && setBulkModalOpen(false)}
+                            aria-hidden
+                        />
+                        <motion.div
+                            initial={{ scale: 0.95 }}
+                            animate={{ scale: 1 }}
+                            exit={{ scale: 0.95 }}
+                            className="relative w-full max-w-lg max-h-[85vh] overflow-hidden rounded-2xl bg-white dark:bg-card-dark shadow-xl border border-gray-200 dark:border-gray-700 flex flex-col"
+                            dir="rtl"
+                        >
+                            <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-800 shrink-0">
+                                <h3 className="text-lg font-bold text-secondary dark:text-white flex items-center gap-2">
+                                    <Upload className="text-primary" size={22} />
+                                    إضافة مرفق
+                                </h3>
+                                <button
+                                    type="button"
+                                    onClick={() => !isBulkUploading && setBulkModalOpen(false)}
+                                    className="p-1 text-gray-400 hover:text-red-500"
+                                >
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            <div className="p-5 space-y-5 overflow-y-auto flex-1">
+                                <p className="text-sm text-gray-500 leading-relaxed">
+                                    ارفع ملف واحد (PDF) وسيتم إضافته كمرفق لـ{" "}
+                                    <strong className="text-secondary dark:text-white">
+                                        {scopeInvestorIds.length > 0
+                                            ? `${scopeInvestorIds.length} مستثمر محدد`
+                                            : `كل المستثمرين (${investorCatalog.length})`}
+                                    </strong>
+                                    .
+                                    {scopeInvestorIds.length === 0 && (
+                                        <span className="block mt-1 text-amber-600 dark:text-amber-400 text-xs">
+                                            لم تحدد مستثمرين — سيتم الرفع لجميع المستثمرين في النظام. لو عايز تحدد، اقفل واضغط &quot;تحديد مستثمرين&quot; الأول.
+                                        </span>
+                                    )}
+                                </p>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                                        الملف (PDF)
+                                    </label>
+                                    <label
+                                        className={`flex items-center gap-3 p-4 rounded-xl border-2 border-dashed cursor-pointer transition-colors ${
+                                            bulkFile
+                                                ? "border-green-300 bg-green-50/50 dark:border-green-600 dark:bg-green-500/10"
+                                                : "border-gray-200 dark:border-gray-700 hover:border-primary/50 hover:bg-gray-50 dark:hover:bg-gray-800"
+                                        }`}
+                                    >
+                                        <input
+                                            type="file"
+                                            accept=".pdf"
+                                            className="sr-only"
+                                            onChange={(e) => {
+                                                const f = e.target.files?.[0];
+                                                if (f) { setBulkFile(f); setBulkResult(null); }
+                                            }}
+                                        />
+                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${bulkFile ? "bg-green-100 text-green-600 dark:bg-green-500/20" : "bg-primary/10 text-primary"}`}>
+                                            {bulkFile ? <CheckCircle size={22} /> : <FileText size={22} />}
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-sm font-medium text-secondary dark:text-white truncate">
+                                                {bulkFile ? bulkFile.name : "اضغط لاختيار ملف PDF"}
+                                            </p>
+                                            {bulkFile && (
+                                                <p className="text-xs text-gray-500">{(bulkFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                                            )}
+                                        </div>
+                                        {bulkFile && (
+                                            <button
+                                                type="button"
+                                                onClick={(e) => { e.preventDefault(); setBulkFile(null); setBulkResult(null); }}
+                                                className="mr-auto p-1 text-gray-400 hover:text-red-500"
+                                            >
+                                                <X size={18} />
+                                            </button>
+                                        )}
+                                    </label>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                                        سنة المرفق
+                                    </label>
+                                    <select
+                                        value={bulkYear}
+                                        onChange={(e) => setBulkYear(e.target.value)}
+                                        className="w-full p-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                    >
+                                        <option value="">
+                                            {previousYear} (افتراضي)
+                                        </option>
+                                        {[0, 1, 2, 3, 4].map((offset) => {
+                                            const y = previousYear - offset;
+                                            return <option key={y} value={y}>{y}</option>;
+                                        })}
+                                    </select>
+                                </div>
+
+                                {bulkResult && (
+                                    <div className={`p-3 rounded-xl text-sm ${
+                                        bulkResult.error
+                                            ? "bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-300"
+                                            : "bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-300"
+                                    }`}>
+                                        {bulkResult.error
+                                            ? bulkResult.error
+                                            : `تم إضافة المرفق بنجاح لـ ${bulkResult.created} مستثمر.`}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="p-5 border-t border-gray-100 dark:border-gray-800 flex gap-3 shrink-0">
+                                <button
+                                    type="button"
+                                    onClick={() => !isBulkUploading && setBulkModalOpen(false)}
+                                    className="flex-1 py-2.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium rounded-xl"
+                                >
+                                    إغلاق
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleBulkUpload}
+                                    disabled={isBulkUploading || !bulkFile}
+                                    className="flex-1 py-2.5 bg-primary text-white font-medium rounded-xl hover:bg-primary/90 disabled:opacity-50 flex items-center justify-center gap-2"
+                                >
+                                    {isBulkUploading ? (
+                                        <>
+                                            <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            جاري الرفع...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Upload size={18} />
+                                            إضافة مرفق لـ {scopeInvestorIds.length > 0 ? scopeInvestorIds.length : investorCatalog.length} مستثمر
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

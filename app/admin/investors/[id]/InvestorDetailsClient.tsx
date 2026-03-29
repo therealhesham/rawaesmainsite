@@ -2,10 +2,18 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { ArrowRight, Phone, IdCard, Calendar, Plus, FolderOpen, FolderX, FileText, Settings, X, UploadCloud, CheckCircle2, Trash2, FileOutput, AlertCircle, Loader2 } from "lucide-react";
+import { ArrowRight, Phone, IdCard, Calendar, Plus, FolderOpen, FolderX, FileText, Settings, X, UploadCloud, CheckCircle2, Trash2, FileOutput, AlertCircle, Loader2, Briefcase, Save, Paperclip, ExternalLink } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { getInvestor, uploadReport, deleteReport, toggleReportPublish, updateReportApproval } from "../../actions";
+import {
+  getInvestor,
+  uploadReport,
+  deleteReport,
+  toggleReportPublish,
+  updateReportApproval,
+  getInvestmentSectors,
+  setInvestorInvestmentSectors,
+} from "../../actions";
 import { REPORT_TYPE_OPTIONS, reportTypeLabelAr } from "@/lib/reportTypeAr";
 import dynamic from "next/dynamic";
 
@@ -21,9 +29,11 @@ export type InvestorPagePermissions = {
 export default function InvestorDetailsClient({
   investorId,
   permissions,
+  canManageInvestors,
 }: {
   investorId: number;
   permissions: InvestorPagePermissions;
+  canManageInvestors: boolean;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -41,7 +51,44 @@ export default function InvestorDetailsClient({
   const [openMenuReportId, setOpenMenuReportId] = useState<number | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
+  const [investmentSectorsList, setInvestmentSectorsList] = useState<
+    { id: number; key: string; nameAr: string | null }[]
+  >([]);
+  const [sectorSelection, setSectorSelection] = useState<number[]>([]);
+  const [sectorsSaving, setSectorsSaving] = useState(false);
+
   const hasAnyReportAction = permissions.canApprove || permissions.canPublish || permissions.canDeleteFile;
+
+  useEffect(() => {
+    getInvestmentSectors().then(setInvestmentSectorsList);
+  }, []);
+
+  useEffect(() => {
+    if (investor?.investmentSectors) {
+      setSectorSelection(
+        (investor.investmentSectors as { sectorId: number }[]).map((x) => x.sectorId)
+      );
+    }
+  }, [investor]);
+
+  function toggleSector(sectorId: number) {
+    setSectorSelection((prev) =>
+      prev.includes(sectorId) ? prev.filter((id) => id !== sectorId) : [...prev, sectorId]
+    );
+  }
+
+  async function saveSectors() {
+    setSectorsSaving(true);
+    try {
+      const result = await setInvestorInvestmentSectors(investorId, sectorSelection);
+      if ("success" in result && result.success) {
+        const data = await getInvestor(investorId);
+        setInvestor(data);
+      }
+    } finally {
+      setSectorsSaving(false);
+    }
+  }
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -165,6 +212,9 @@ export default function InvestorDetailsClient({
     setUpdatingReportId(null);
   };
 
+  const regularReports = (investor?.reports ?? []).filter((r: any) => r.type !== "attachment");
+  const attachments = (investor?.reports ?? []).filter((r: any) => r.type === "attachment");
+
   if (isLoading) return <div className="p-8 text-center">Loading...</div>;
   if (!investor) return <div className="p-8 text-center text-red-500">Investor not found</div>;
 
@@ -208,23 +258,84 @@ export default function InvestorDetailsClient({
           )}
         </div>
 
+        {(canManageInvestors || (investor.investmentSectors?.length ?? 0) > 0) && (
+          <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-card-dark p-5 shadow-sm">
+            <h3 className="text-sm font-bold text-secondary dark:text-white flex items-center gap-2 mb-3">
+              <Briefcase className="w-4 h-4 text-primary" />
+              قطاعات الاستثمار
+            </h3>
+            {canManageInvestors ? (
+              <div className="space-y-4">
+                {investmentSectorsList.length === 0 ? (
+                  <p className="text-sm text-gray-500">لا توجد قطاعات معرّفة في النظام.</p>
+                ) : (
+                  <>
+                    <div className="flex flex-wrap gap-x-6 gap-y-2">
+                      {investmentSectorsList.map((s) => (
+                        <label
+                          key={s.id}
+                          className="inline-flex items-center gap-2 cursor-pointer text-sm text-gray-700 dark:text-gray-300"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={sectorSelection.includes(s.id)}
+                            onChange={() => toggleSector(s.id)}
+                            className="rounded border-gray-300 text-primary focus:ring-primary"
+                          />
+                          <span>{s.nameAr || s.key}</span>
+                        </label>
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => void saveSectors()}
+                      disabled={sectorsSaving}
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary/90 disabled:opacity-50 transition-colors"
+                    >
+                      {sectorsSaving ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Save className="w-4 h-4" />
+                      )}
+                      حفظ القطاعات
+                    </button>
+                  </>
+                )}
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {(investor.investmentSectors as { sectorId: number; sector: { nameAr: string | null; key: string } }[])?.map(
+                  (row) => (
+                    <span
+                      key={row.sectorId}
+                      className="px-2.5 py-1 rounded-lg bg-primary/10 text-primary text-sm"
+                    >
+                      {row.sector?.nameAr || row.sector?.key}
+                    </span>
+                  )
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="flex flex-col lg:flex-row gap-6">
           <div className="w-full lg:w-[350px] shrink-0">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-bold text-secondary dark:text-white flex items-center gap-2">
                 <FolderOpen className="w-5 h-5 text-primary" />
-                التقارير ({investor.reports.length})
+                التقارير ({regularReports.length})
               </h2>
             </div>
 
-            {investor.reports.length === 0 ? (
+            {regularReports.length === 0 ? (
               <div className="text-center py-12 bg-white dark:bg-card-dark rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
                 <FolderX className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                 <p className="text-gray-500">لا توجد تقارير لهذا المستثمر</p>
               </div>
             ) : (
               <div className="grid gap-2">
-                {investor.reports.map((report: any) => (
+                {regularReports.map((report: any) => (
                   <motion.div
                     key={report.id}
                     initial={{ opacity: 0, y: 10 }}
@@ -338,6 +449,43 @@ export default function InvestorDetailsClient({
             </div>
           </div>
         </div>
+
+        {attachments.length > 0 && (
+          <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-card-dark shadow-sm overflow-hidden">
+            <div className="p-5 border-b border-gray-100 dark:border-gray-800">
+              <h2 className="text-lg font-bold text-secondary dark:text-white flex items-center gap-2">
+                <Paperclip className="w-5 h-5 text-primary" />
+                المرفقات ({attachments.length})
+              </h2>
+            </div>
+            <div className="p-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {attachments.map((att: any) => (
+                  <a
+                    key={att.id}
+                    href={att.linkUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group flex items-center gap-3 p-3 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-primary hover:shadow-md bg-gray-50 dark:bg-gray-800/50 transition-all"
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                      <Paperclip className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-secondary dark:text-gray-200 truncate" title={att.fileName || "مرفق"}>
+                        {att.fileName || "مرفق"}
+                      </p>
+                      <p className="text-[11px] text-gray-400">
+                        {new Date(att.createdAt).toLocaleDateString("ar-EG")}
+                      </p>
+                    </div>
+                    <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-primary shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </a>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {permissions.canUpload && (

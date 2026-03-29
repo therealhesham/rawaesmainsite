@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import Link from "next/link";
 import { AnimatePresence } from "framer-motion";
 import { Plus, RefreshCw, Users, FileText, List, Search, ArrowLeft, SearchX, X, ChevronDown, ChevronUp, ExternalLink, ShieldAlert, Send, BadgeCheck } from "lucide-react";
-import { getInvestorsPaged, getStats, createInvestor, checkAdminPermission, getInvestorReportsForAdmin } from "./actions";
+import { getInvestorsPaged, getStats, createInvestor, checkAdminPermission, getInvestorReportsForAdmin, getInvestmentSectors } from "./actions";
 import { reportTypeLabelAr } from "@/lib/reportTypeAr";
 import { AlertModal } from "@/app/components/AlertModal";
 
@@ -214,6 +214,7 @@ export default function AdminDashboard() {
                                 <th className="px-6 py-4 text-right font-medium">المستثمر</th>
                                 <th className="px-6 py-4 text-right font-medium">رقم الهوية</th>
                                 <th className="px-6 py-4 text-right font-medium">رقم الجوال</th>
+                                <th className="px-6 py-4 text-right font-medium">قطاعات الاستثمار</th>
                                 <th className="px-6 py-4 text-center font-medium">التقارير</th>
                                 <th className="px-6 py-4 text-center font-medium">تاريخ الانضمام</th>
                                 <th className="px-6 py-4 text-center font-medium">إجراءات</th>
@@ -223,9 +224,10 @@ export default function AdminDashboard() {
                             {isLoading ? (
                                 [...Array(5)].map((_, i) => (
                                     <tr key={i} className="animate-pulse">
-                                        {/* <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-32"></div></td> */}
                                         <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-24"></div></td>
                                         <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-24"></div></td>
+                                        <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-24"></div></td>
+                                        <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-20"></div></td>
                                         <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-8 mx-auto"></div></td>
                                         <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-20 mx-auto"></div></td>
                                         <td className="px-6 py-4"><div className="h-8 bg-gray-200 rounded w-20 mx-auto"></div></td>
@@ -237,7 +239,7 @@ export default function AdminDashboard() {
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                                    <td colSpan={8} className="px-6 py-12 text-center text-gray-500">
                                         <div className="flex justify-center mb-2 opacity-20"><SearchX size={36} /></div>
                                         <p>لم يتم العثور على مستثمرين</p>
                                     </td>
@@ -286,6 +288,7 @@ type InvestorListItem = {
     phoneNumber: string;
     createdAt: Date;
     _count: { reports: number };
+    investmentSectors?: { sector: { id: number; key: string; nameAr: string | null } }[];
 };
 
 function InvestorRowWithReports({ investor }: { investor: InvestorListItem }) {
@@ -337,6 +340,22 @@ function InvestorRowWithReports({ investor }: { investor: InvestorListItem }) {
                 <td className="px-6 py-4 text-gray-600 dark:text-gray-300 dir-ltr text-right font-mono text-sm">
                     {investor.phoneNumber}
                 </td>
+                <td className="px-6 py-4 text-right">
+                    <div className="flex flex-wrap gap-1 justify-end max-w-[220px] ms-auto">
+                        {investor.investmentSectors && investor.investmentSectors.length > 0 ? (
+                            investor.investmentSectors.map((row) => (
+                                <span
+                                    key={row.sector.id}
+                                    className="inline-block px-2 py-0.5 rounded-md bg-primary/10 text-primary text-xs"
+                                >
+                                    {row.sector.nameAr || row.sector.key}
+                                </span>
+                            ))
+                        ) : (
+                            <span className="text-xs text-gray-400">—</span>
+                        )}
+                    </div>
+                </td>
                 <td className="px-6 py-4 text-center">
                     <button
                         type="button"
@@ -369,7 +388,7 @@ function InvestorRowWithReports({ investor }: { investor: InvestorListItem }) {
             </tr>
             {open && (
                 <tr className="bg-gray-50/80 dark:bg-gray-900/40">
-                    <td colSpan={7} className="px-6 py-0 border-b border-gray-100 dark:border-gray-800">
+                    <td colSpan={8} className="px-6 py-0 border-b border-gray-100 dark:border-gray-800">
                         <motion.div
                             initial={{ opacity: 0, y: -6 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -529,6 +548,11 @@ function StatsCard({
 function AddInvestorModal({ onClose }: { onClose: () => void }) {
     const [isLoading, setIsLoading] = useState(false);
     const [formError, setFormError] = useState<string | null>(null);
+    const [sectors, setSectors] = useState<{ id: number; key: string; nameAr: string | null }[]>([]);
+
+    useEffect(() => {
+        getInvestmentSectors().then(setSectors);
+    }, []);
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
@@ -600,6 +624,31 @@ function AddInvestorModal({ onClose }: { onClose: () => void }) {
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">كلمة المرور <span className="text-red-500">*</span></label>
                         <input name="password" required type="password" className="w-full p-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:ring-2 focus:ring-primary/20" />
                     </div>
+
+                    {sectors.length > 0 && (
+                        <div>
+                            <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                قطاعات الاستثمار
+                            </span>
+                            <p className="text-xs text-gray-500 mb-2">يمكن اختيار أكثر من قطاع واحد.</p>
+                            <div className="flex flex-wrap gap-x-6 gap-y-2 p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
+                                {sectors.map((s) => (
+                                    <label
+                                        key={s.id}
+                                        className="inline-flex items-center gap-2 cursor-pointer text-sm text-gray-700 dark:text-gray-300"
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            name="sectorIds"
+                                            value={s.id}
+                                            className="rounded border-gray-300 text-primary focus:ring-primary"
+                                        />
+                                        <span>{s.nameAr || s.key}</span>
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     <div className="pt-4 flex gap-3">
                         <button
