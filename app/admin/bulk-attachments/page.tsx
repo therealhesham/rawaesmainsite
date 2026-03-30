@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import { Paperclip, Upload, FileText, X, CheckCircle, Loader2, Users, Search, User } from "lucide-react";
-import { getInvestors, getInvestmentSectors, bulkUploadReport } from "../actions";
+import { getInvestors, getInvestmentSectors, getInvestorsBySector, bulkUploadReport } from "../actions";
 
 type Investor = { id: number; name: string };
 
@@ -22,6 +22,9 @@ export default function BulkAttachmentsPage() {
     const [pickerOpen, setPickerOpen] = useState(false);
     const [pickerSearch, setPickerSearch] = useState("");
 
+    const [sectorInvestors, setSectorInvestors] = useState<Investor[]>([]);
+    const [sectorLoading, setSectorLoading] = useState(false);
+
     const previousYear = new Date().getFullYear() - 1;
 
     useEffect(() => {
@@ -33,8 +36,24 @@ export default function BulkAttachmentsPage() {
         );
     }, []);
 
+    useEffect(() => {
+        if (!sectorId) {
+            setSectorInvestors([]);
+            return;
+        }
+        setSectorLoading(true);
+        getInvestorsBySector(Number(sectorId)).then((list) => {
+            setSectorInvestors(list);
+            setSectorLoading(false);
+            setScopeMode("all");
+            setSelectedIds([]);
+        });
+    }, [sectorId]);
+
+    const activeCatalog = sectorId ? sectorInvestors : investorCatalog;
+
     const targetIds = scopeMode === "all"
-        ? investorCatalog.map((u) => u.id)
+        ? activeCatalog.map((u) => u.id)
         : selectedIds;
 
     const handleUpload = async () => {
@@ -58,7 +77,7 @@ export default function BulkAttachmentsPage() {
         }
     };
 
-    const pickerOptions = investorCatalog.filter((u) => {
+    const pickerOptions = activeCatalog.filter((u) => {
         if (selectedIds.includes(u.id)) return false;
         if (!pickerSearch.trim()) return true;
         const q = pickerSearch.trim().toLowerCase();
@@ -137,7 +156,9 @@ export default function BulkAttachmentsPage() {
                             }`}
                         >
                             <Users size={16} />
-                            كل المستثمرين ({investorCatalog.length})
+                            {sectorId
+                                ? `مستثمرين القطاع (${sectorLoading ? "..." : activeCatalog.length})`
+                                : `كل المستثمرين (${investorCatalog.length})`}
                         </button>
                         <button
                             type="button"
@@ -167,7 +188,7 @@ export default function BulkAttachmentsPage() {
                             {selectedIds.length > 0 && (
                                 <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto p-2 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
                                     {selectedIds.map((id) => {
-                                        const inv = investorCatalog.find((x) => x.id === id);
+                                        const inv = activeCatalog.find((x) => x.id === id) ?? investorCatalog.find((x) => x.id === id);
                                         return (
                                             <span
                                                 key={id}
@@ -213,7 +234,11 @@ export default function BulkAttachmentsPage() {
                             ))}
                         </select>
                         <p className="text-[11px] text-gray-400 mt-1">
-                            لو اخترت قطاع، المرفق هيترفع بس لمستثمري القطاع ده.
+                            {sectorId
+                                ? sectorLoading
+                                    ? "جاري تحميل مستثمري القطاع..."
+                                    : `المرفق هيترفع لـ ${sectorInvestors.length} مستثمر في القطاع ده.`
+                                : "لو اخترت قطاع، المرفق هيترفع بس لمستثمري القطاع ده."}
                         </p>
                     </div>
                     <div>
@@ -267,7 +292,9 @@ export default function BulkAttachmentsPage() {
                     ) : (
                         <>
                             <Upload size={20} />
-                            إضافة مرفق لـ {scopeMode === "all" ? `${investorCatalog.length} مستثمر` : `${selectedIds.length} مستثمر محدد`}
+                            إضافة مرفق لـ {scopeMode === "all"
+                                ? `${activeCatalog.length} مستثمر${sectorId ? " (القطاع)" : ""}`
+                                : `${selectedIds.length} مستثمر محدد`}
                         </>
                     )}
                 </button>
@@ -340,8 +367,8 @@ export default function BulkAttachmentsPage() {
                                 <ul className="max-h-64 overflow-y-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/50 text-sm divide-y divide-gray-100 dark:divide-gray-700">
                                     {pickerOptions.length === 0 ? (
                                         <li className="p-4 text-center text-gray-500 text-xs">
-                                            {investorCatalog.length === 0
-                                                ? "جاري تحميل القائمة..."
+                                            {activeCatalog.length === 0
+                                                ? (sectorLoading ? "جاري تحميل مستثمري القطاع..." : sectorId ? "لا يوجد مستثمرون في هذا القطاع." : "جاري تحميل القائمة...")
                                                 : "لا يوجد مستثمرون مطابقون أو تمت إضافة الجميع."}
                                         </li>
                                     ) : (

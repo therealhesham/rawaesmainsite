@@ -404,7 +404,8 @@ export async function bulkUploadReport(formData: FormData) {
                 type,
                 linkUrl: publicUrl,
                 fileName: displayFileName,
-                isPublished: false,
+                isPublished: true,
+                isApproved: true,
                 releaseDate,
             })),
             skipDuplicates: true,
@@ -451,6 +452,26 @@ export async function getInvestmentSectors() {
         });
     } catch (error) {
         console.error("getInvestmentSectors:", error);
+        return [];
+    }
+}
+
+/** جلب مستثمري قطاع معيّن (id + name فقط) */
+export async function getInvestorsBySector(sectorId: number) {
+    const admin = await getAdminUser(false);
+    if (!admin) return [];
+    try {
+        const rows = await prisma.userInvestmentSector.findMany({
+            where: { sectorId },
+            select: {
+                user: { select: { id: true, name: true, isAdmin: true } },
+            },
+        });
+        return rows
+            .filter((r) => !r.user.isAdmin)
+            .map((r) => ({ id: r.user.id, name: r.user.name }));
+    } catch (error) {
+        console.error("getInvestorsBySector:", error);
         return [];
     }
 }

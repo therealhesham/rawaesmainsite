@@ -174,6 +174,47 @@ export default async function PrivateInvestorPage({
               <QuickContact settings={quickContactSettings} />
             </div>
 
+            {/* Attachments */}
+            {investor.reports.filter((r: any) => r.type === "attachment").length > 0 && (
+              <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+                <div className="flex items-center gap-3 mb-4 border-b border-gray-100 dark:border-gray-700 pb-3">
+                  <div className="w-10 h-10 shrink-0 rounded-full bg-gold/15 flex items-center justify-center text-[#003B46] dark:text-gold">
+                    <span className="material-icons text-[22px]">attach_file</span>
+                  </div>
+                  <h3 className="font-bold text-[#003B46] dark:text-white text-base leading-snug min-w-0 break-words">
+                    المرفقات ({investor.reports.filter((r: any) => r.type === "attachment").length})
+                  </h3>
+                </div>
+                <div className="space-y-3">
+                  {investor.reports.filter((r: any) => r.type === "attachment").map((report: any) => (
+                    <div key={report.id} className="flex justify-between items-center group">
+                      <div className="flex flex-col gap-0.5 mt-2">
+                        <div className="flex items-center gap-2 overflow-hidden">
+                          <span className="material-icons text-gold text-sm">description</span>
+                          <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 max-w-[200px] truncate">
+                            {report.fileName || "مرفق"}
+                          </span>
+                        </div>
+                        <div className="mt-1.5 ms-6">
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[14px] font-bold bg-gold/10 text-[#b8860b] dark:text-gold border border-gold/20">
+                            {new Date(report.releaseDate || report.createdAt).getFullYear()}
+                          </span>
+                        </div>
+                      </div>
+                      <a
+                        href={report.linkUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs bg-gray-100 dark:bg-gray-800 hover:bg-gold hover:text-[#003B46] text-gray-600 dark:text-gray-300 px-3 py-1.5 rounded-lg transition-colors"
+                      >
+                        عرض
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Categorized Reports */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {[
