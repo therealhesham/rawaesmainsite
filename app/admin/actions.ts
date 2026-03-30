@@ -345,13 +345,28 @@ export async function bulkUploadReport(formData: FormData) {
         const file = formData.get("file") as File;
         const investorIdsRaw = formData.get("investorIds") as string;
         const yearRaw = formData.get("year") as string;
+        const sectorIdRaw = formData.get("sectorId") as string;
 
-        const investorIds = investorIdsRaw
+        let investorIds = investorIdsRaw
             ? investorIdsRaw.split(",").map(Number).filter((n) => n > 0)
             : [];
 
+        if (sectorIdRaw) {
+            const sectorId = Number(sectorIdRaw);
+            if (sectorId > 0) {
+                const sectorInvestors = await prisma.userInvestmentSector.findMany({
+                    where: { sectorId },
+                    select: { userId: true },
+                });
+                const sectorUserIds = sectorInvestors.map((s) => s.userId);
+                investorIds = investorIds.length > 0
+                    ? investorIds.filter((id) => sectorUserIds.includes(id))
+                    : sectorUserIds;
+            }
+        }
+
         if (!type || !file || file.size === 0 || investorIds.length === 0) {
-            return { error: "بيانات غير صالحة." };
+            return { error: investorIds.length === 0 && sectorIdRaw ? "لا يوجد مستثمرون في هذا القطاع." : "بيانات غير صالحة." };
         }
 
         const baseYear =
@@ -476,6 +491,42 @@ export async function setInvestorInvestmentSectors(userId: number, sectorIds: nu
     } catch (error) {
         console.error("setInvestorInvestmentSectors:", error);
         return { error: "فشل حفظ القطاعات" };
+    }
+}
+
+/** إضافة قطاع استثمار جديد */
+export async function createInvestmentSector(key: string, nameAr: string) {
+    await requirePageEdit("investors-manage");
+    try {
+        const trimKey = key.trim();
+        const trimName = nameAr.trim();
+        if (!trimKey) return { error: "المفتاح مطلوب" };
+
+        const exists = await prisma.investmentSector.findUnique({ where: { key: trimKey } });
+        if (exists) return { error: "القطاع موجود بالفعل" };
+
+        const sector = await prisma.investmentSector.create({
+            data: { key: trimKey, nameAr: trimName || null },
+        });
+        revalidatePath("/admin");
+        return { success: true, sector };
+    } catch (error) {
+        console.error("createInvestmentSector:", error);
+        return { error: "فشل إنشاء القطاع" };
+    }
+}
+
+/** حذف قطاع استثمار (يحذف الربط مع المستثمرين تلقائياً بسبب onDelete: Cascade) */
+export async function deleteInvestmentSector(sectorId: number) {
+    await requirePageEdit("investors-manage");
+    try {
+        if (!sectorId || !Number.isFinite(sectorId)) return { error: "معرف غير صالح" };
+        await prisma.investmentSector.delete({ where: { id: sectorId } });
+        revalidatePath("/admin");
+        return { success: true };
+    } catch (error) {
+        console.error("deleteInvestmentSector:", error);
+        return { error: "فشل حذف القطاع" };
     }
 }
 

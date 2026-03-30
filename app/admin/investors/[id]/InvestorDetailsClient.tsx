@@ -532,7 +532,7 @@ export default function InvestorDetailsClient({
                       onChange={(e) => setReportType(e.target.value)}
                       className="w-full p-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:ring-2 focus:ring-primary/20"
                     >
-                      {REPORT_TYPE_OPTIONS.map(t => (
+                      {REPORT_TYPE_OPTIONS.filter(t => t.id !== "attachment").map(t => (
                         <option key={t.id} value={t.id}>{t.label}</option>
                       ))}
                     </select>

@@ -4,8 +4,8 @@ import { motion } from "framer-motion";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { AnimatePresence } from "framer-motion";
-import { Plus, RefreshCw, Users, FileText, List, Search, ArrowLeft, SearchX, X, ChevronDown, ChevronUp, ExternalLink, ShieldAlert, Send, BadgeCheck } from "lucide-react";
-import { getInvestorsPaged, getStats, createInvestor, checkAdminPermission, getInvestorReportsForAdmin, getInvestmentSectors } from "./actions";
+import { Plus, RefreshCw, Users, FileText, List, Search, ArrowLeft, SearchX, X, ChevronDown, ChevronUp, ExternalLink, ShieldAlert, Send, BadgeCheck, Briefcase, Trash2, Loader2 } from "lucide-react";
+import { getInvestorsPaged, getStats, createInvestor, checkAdminPermission, getInvestorReportsForAdmin, getInvestmentSectors, createInvestmentSector, deleteInvestmentSector } from "./actions";
 import { reportTypeLabelAr } from "@/lib/reportTypeAr";
 import { AlertModal } from "@/app/components/AlertModal";
 
@@ -32,6 +32,14 @@ export default function AdminDashboard() {
     const [canManageInvestors, setCanManageInvestors] = useState(false);
     const [currentTime, setCurrentTime] = useState("");
 
+    const [sectors, setSectors] = useState<{ id: number; key: string; nameAr: string | null }[]>([]);
+    const [newSectorKey, setNewSectorKey] = useState("");
+    const [newSectorName, setNewSectorName] = useState("");
+    const [sectorAdding, setSectorAdding] = useState(false);
+    const [sectorDeleting, setSectorDeleting] = useState<number | null>(null);
+    const [sectorError, setSectorError] = useState("");
+    const [sectorsModalOpen, setSectorsModalOpen] = useState(false);
+
     useEffect(() => {
         setCurrentTime(new Date().toLocaleTimeString("ar-EG"));
     }, []);
@@ -46,6 +54,9 @@ export default function AdminDashboard() {
             if (cancelled) return;
             setStats(statsData as any);
             setCanManageInvestors(hasPermission);
+            if (hasPermission) {
+                getInvestmentSectors().then(setSectors);
+            }
         }
         fetchStatsAndPermission();
         return () => {
@@ -96,6 +107,33 @@ export default function AdminDashboard() {
         }
     }, [search, hasMoreInvestors]);
 
+    const handleAddSector = async () => {
+        if (!newSectorKey.trim()) return;
+        setSectorAdding(true);
+        setSectorError("");
+        const res = await createInvestmentSector(newSectorKey, newSectorName);
+        if (res.error) {
+            setSectorError(res.error);
+        } else {
+            setNewSectorKey("");
+            setNewSectorName("");
+            getInvestmentSectors().then(setSectors);
+        }
+        setSectorAdding(false);
+    };
+
+    const handleDeleteSector = async (id: number) => {
+        setSectorDeleting(id);
+        setSectorError("");
+        const res = await deleteInvestmentSector(id);
+        if (res.error) {
+            setSectorError(res.error);
+        } else {
+            setSectors((prev) => prev.filter((s) => s.id !== id));
+        }
+        setSectorDeleting(null);
+    };
+
     const investorsScrollSentinelRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -123,13 +161,27 @@ export default function AdminDashboard() {
                 </div>
                 <div className="flex items-center gap-3">
                     {canManageInvestors && (
-                        <button
-                            onClick={() => setIsModalOpen(true)}
-                            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors shadow-sm"
-                        >
-                            <Plus size={18} />
-                            <span>إضافة مستثمر</span>
-                        </button>
+                        <>
+                            <button
+                                onClick={() => setIsModalOpen(true)}
+                                className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors shadow-sm"
+                            >
+                                <Plus size={18} />
+                                <span>إضافة مستثمر</span>
+                            </button>
+                            <button
+                                onClick={() => { setSectorError(""); setSectorsModalOpen(true); }}
+                                className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-700 text-secondary dark:text-white rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors shadow-sm text-sm"
+                            >
+                                <Briefcase size={18} className="text-primary" />
+                                القطاعات
+                                {sectors.length > 0 && (
+                                    <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1 rounded-full bg-primary/10 text-primary text-[11px] font-bold">
+                                        {sectors.length}
+                                    </span>
+                                )}
+                            </button>
+                        </>
                     )}
                     <span className="text-sm text-gray-500">آخر تحديث: {currentTime}</span>
                     <button onClick={() => window.location.reload()} className="p-2 bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-700 rounded-lg text-gray-500 hover:text-primary transition-colors">
@@ -274,6 +326,114 @@ export default function AdminDashboard() {
             <AnimatePresence>
                 {isModalOpen && (
                     <AddInvestorModal onClose={() => setIsModalOpen(false)} />
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {sectorsModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                            onClick={() => setSectorsModalOpen(false)}
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="relative bg-white dark:bg-card-dark rounded-2xl shadow-xl w-full max-w-lg max-h-[85vh] overflow-y-auto"
+                        >
+                            <div className="p-5 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between sticky top-0 bg-white dark:bg-card-dark z-10">
+                                <h2 className="text-lg font-bold text-secondary dark:text-white flex items-center gap-2">
+                                    <Briefcase size={20} className="text-primary" />
+                                    قطاعات الاستثمار
+                                </h2>
+                                <button
+                                    onClick={() => setSectorsModalOpen(false)}
+                                    className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                                >
+                                    <X size={18} />
+                                </button>
+                            </div>
+
+                            <div className="p-5 space-y-4">
+                                <div className="flex flex-wrap gap-2">
+                                    {sectors.length === 0 ? (
+                                        <p className="text-sm text-gray-500">لا توجد قطاعات حالياً.</p>
+                                    ) : (
+                                        sectors.map((s) => (
+                                            <div
+                                                key={s.id}
+                                                className="inline-flex items-center gap-2 pl-3 pr-1.5 py-1.5 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm"
+                                            >
+                                                <span className="font-medium text-secondary dark:text-white">{s.nameAr || s.key}</span>
+                                                <span className="text-[10px] text-gray-400 font-mono">{s.key}</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleDeleteSector(s.id)}
+                                                    disabled={sectorDeleting === s.id}
+                                                    className="p-1 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors disabled:opacity-50"
+                                                    title="حذف القطاع"
+                                                >
+                                                    {sectorDeleting === s.id ? (
+                                                        <Loader2 size={14} className="animate-spin" />
+                                                    ) : (
+                                                        <Trash2 size={14} />
+                                                    )}
+                                                </button>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+
+                                {sectorError && (
+                                    <p className="text-sm text-red-600 dark:text-red-400">{sectorError}</p>
+                                )}
+
+                                <div className="border-t border-gray-100 dark:border-gray-800 pt-4">
+                                    <p className="text-xs font-medium text-gray-500 mb-3">إضافة قطاع جديد</p>
+                                    <div className="flex flex-wrap items-end gap-3">
+                                        <div className="flex-1 min-w-[120px]">
+                                            <label className="block text-xs font-medium text-gray-500 mb-1">المفتاح (إنجليزي)</label>
+                                            <input
+                                                type="text"
+                                                value={newSectorKey}
+                                                onChange={(e) => setNewSectorKey(e.target.value)}
+                                                placeholder="مثال: cars"
+                                                className="w-full p-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+                                                dir="ltr"
+                                            />
+                                        </div>
+                                        <div className="flex-1 min-w-[140px]">
+                                            <label className="block text-xs font-medium text-gray-500 mb-1">الاسم بالعربي</label>
+                                            <input
+                                                type="text"
+                                                value={newSectorName}
+                                                onChange={(e) => setNewSectorName(e.target.value)}
+                                                placeholder="مثال: تأجير سيارات"
+                                                className="w-full p-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+                                            />
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={handleAddSector}
+                                            disabled={sectorAdding || !newSectorKey.trim()}
+                                            className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 disabled:opacity-50 transition-colors"
+                                        >
+                                            {sectorAdding ? (
+                                                <Loader2 size={16} className="animate-spin" />
+                                            ) : (
+                                                <Plus size={16} />
+                                            )}
+                                            إضافة
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
                 )}
             </AnimatePresence>
         </div>

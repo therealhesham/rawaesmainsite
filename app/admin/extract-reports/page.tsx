@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
-import { getInvestors, getInvestor, saveInvestorReports, searchInvestorByName, bulkUploadReport } from "../actions";
+import { getInvestors, getInvestor, saveInvestorReports, searchInvestorByName, bulkUploadReport, getInvestmentSectors } from "../actions";
 import { REPORT_TYPE_OPTIONS, reportTypeLabelAr } from "@/lib/reportTypeAr";
 import { FileSpreadsheet, Upload, CheckCircle, FileOutput, AlertCircle, AlertTriangle, User, Save, X, FileText, Info, Search, FolderOpen, ExternalLink, Archive, Users } from "lucide-react";
 
@@ -79,6 +79,7 @@ export default function ExtractReportsPage() {
                     .map((u: { id: number; name: string }) => ({ id: u.id, name: u.name }))
             );
         });
+        getInvestmentSectors().then(setSectorsList);
     }, []);
 
     const handleDragOver = (e: React.DragEvent) => {
@@ -445,8 +446,10 @@ export default function ExtractReportsPage() {
     const [bulkFile, setBulkFile] = useState<File | null>(null);
     const [bulkReportType, setBulkReportType] = useState("");
     const [bulkYear, setBulkYear] = useState("");
+    const [bulkSectorId, setBulkSectorId] = useState("");
     const [isBulkUploading, setIsBulkUploading] = useState(false);
     const [bulkResult, setBulkResult] = useState<{ success?: boolean; created?: number; error?: string } | null>(null);
+    const [sectorsList, setSectorsList] = useState<{ id: number; key: string; nameAr: string | null }[]>([]);
 
     const handleBulkUpload = async () => {
         if (!bulkFile) return;
@@ -463,6 +466,7 @@ export default function ExtractReportsPage() {
             fd.append("type", "attachment");
             fd.append("investorIds", targetIds.join(","));
             if (bulkYear) fd.append("year", bulkYear);
+            if (bulkSectorId) fd.append("sectorId", bulkSectorId);
             const res = await bulkUploadReport(fd);
             if (res.success) {
                 setBulkFile(null);
@@ -607,7 +611,7 @@ export default function ExtractReportsPage() {
                         </button>
                         <button
                             type="button"
-                            onClick={() => { setBulkResult(null); setBulkModalOpen(true); }}
+                            onClick={() => { setBulkResult(null); setBulkSectorId(""); setBulkModalOpen(true); }}
                             className="inline-flex items-center gap-2 px-4 py-2.5 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm font-medium text-secondary dark:text-white rounded-xl transition-colors"
                         >
                             <Upload size={18} />
@@ -1412,14 +1416,9 @@ export default function ExtractReportsPage() {
                                     <strong className="text-secondary dark:text-white">
                                         {scopeInvestorIds.length > 0
                                             ? `${scopeInvestorIds.length} مستثمر محدد`
-                                            : `كل المستثمرين (${investorCatalog.length})`}
+                                            : `كل المستثمرين`}
                                     </strong>
-                                    .
-                                    {scopeInvestorIds.length === 0 && (
-                                        <span className="block mt-1 text-amber-600 dark:text-amber-400 text-xs">
-                                            لم تحدد مستثمرين — سيتم الرفع لجميع المستثمرين في النظام. لو عايز تحدد، اقفل واضغط &quot;تحديد مستثمرين&quot; الأول.
-                                        </span>
-                                    )}
+                                    . يمكنك تحديد قطاع معين لتقييد الرفع بمستثمري القطاع ده فقط.
                                 </p>
 
                                 <div>
@@ -1465,23 +1464,43 @@ export default function ExtractReportsPage() {
                                     </label>
                                 </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                                        سنة المرفق
-                                    </label>
-                                    <select
-                                        value={bulkYear}
-                                        onChange={(e) => setBulkYear(e.target.value)}
-                                        className="w-full p-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                                    >
-                                        <option value="">
-                                            {previousYear} (افتراضي)
-                                        </option>
-                                        {[0, 1, 2, 3, 4].map((offset) => {
-                                            const y = previousYear - offset;
-                                            return <option key={y} value={y}>{y}</option>;
-                                        })}
-                                    </select>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                                            القطاع (اختياري)
+                                        </label>
+                                        <select
+                                            value={bulkSectorId}
+                                            onChange={(e) => setBulkSectorId(e.target.value)}
+                                            className="w-full p-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                        >
+                                            <option value="">كل القطاعات</option>
+                                            {sectorsList.map((s) => (
+                                                <option key={s.id} value={s.id}>{s.nameAr || s.key}</option>
+                                            ))}
+                                        </select>
+                                        <p className="text-[11px] text-gray-400 mt-1">
+                                            لو اخترت قطاع، المرفق هيترفع بس لمستثمري القطاع ده.
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                                            سنة المرفق
+                                        </label>
+                                        <select
+                                            value={bulkYear}
+                                            onChange={(e) => setBulkYear(e.target.value)}
+                                            className="w-full p-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                        >
+                                            <option value="">
+                                                {previousYear} (افتراضي)
+                                            </option>
+                                            {[0, 1, 2, 3, 4].map((offset) => {
+                                                const y = previousYear - offset;
+                                                return <option key={y} value={y}>{y}</option>;
+                                            })}
+                                        </select>
+                                    </div>
                                 </div>
 
                                 {bulkResult && (
