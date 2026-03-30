@@ -4,8 +4,8 @@ import { motion } from "framer-motion";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { AnimatePresence } from "framer-motion";
-import { Plus, RefreshCw, Users, FileText, List, Search, ArrowLeft, SearchX, X, ChevronDown, ChevronUp, ExternalLink, ShieldAlert, Send, BadgeCheck, Briefcase, Trash2, Loader2 } from "lucide-react";
-import { getInvestorsPaged, getStats, createInvestor, checkAdminPermission, getInvestorReportsForAdmin, getInvestmentSectors, createInvestmentSector, deleteInvestmentSector } from "./actions";
+import { Plus, RefreshCw, Users, FileText, List, Search, ArrowLeft, SearchX, X, ChevronDown, ChevronUp, ExternalLink, ShieldAlert, Send, BadgeCheck, Briefcase, Loader2, Pencil, Check } from "lucide-react";
+import { getInvestorsPaged, getStats, createInvestor, checkAdminPermission, getInvestorReportsForAdmin, getInvestmentSectors, createInvestmentSector, updateInvestmentSector } from "./actions";
 import { reportTypeLabelAr } from "@/lib/reportTypeAr";
 import { AlertModal } from "@/app/components/AlertModal";
 
@@ -36,7 +36,9 @@ export default function AdminDashboard() {
     const [newSectorKey, setNewSectorKey] = useState("");
     const [newSectorName, setNewSectorName] = useState("");
     const [sectorAdding, setSectorAdding] = useState(false);
-    const [sectorDeleting, setSectorDeleting] = useState<number | null>(null);
+    const [editingSectorId, setEditingSectorId] = useState<number | null>(null);
+    const [editingSectorName, setEditingSectorName] = useState("");
+    const [sectorSaving, setSectorSaving] = useState(false);
     const [sectorError, setSectorError] = useState("");
     const [sectorsModalOpen, setSectorsModalOpen] = useState(false);
 
@@ -122,16 +124,18 @@ export default function AdminDashboard() {
         setSectorAdding(false);
     };
 
-    const handleDeleteSector = async (id: number) => {
-        setSectorDeleting(id);
+    const handleSaveSectorName = async (id: number) => {
+        if (!editingSectorName.trim()) return;
+        setSectorSaving(true);
         setSectorError("");
-        const res = await deleteInvestmentSector(id);
+        const res = await updateInvestmentSector(id, editingSectorName);
         if (res.error) {
             setSectorError(res.error);
         } else {
-            setSectors((prev) => prev.filter((s) => s.id !== id));
+            setSectors((prev) => prev.map((s) => s.id === id ? { ...s, nameAr: editingSectorName.trim() } : s));
+            setEditingSectorId(null);
         }
-        setSectorDeleting(null);
+        setSectorSaving(false);
     };
 
     const investorsScrollSentinelRef = useRef<HTMLDivElement>(null);
@@ -359,30 +363,57 @@ export default function AdminDashboard() {
                             </div>
 
                             <div className="p-5 space-y-4">
-                                <div className="flex flex-wrap gap-2">
+                                <div className="space-y-2">
                                     {sectors.length === 0 ? (
                                         <p className="text-sm text-gray-500">لا توجد قطاعات حالياً.</p>
                                     ) : (
                                         sectors.map((s) => (
                                             <div
                                                 key={s.id}
-                                                className="inline-flex items-center gap-2 pl-3 pr-1.5 py-1.5 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm"
+                                                className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
                                             >
-                                                <span className="font-medium text-secondary dark:text-white">{s.nameAr || s.key}</span>
-                                                <span className="text-[10px] text-gray-400 font-mono">{s.key}</span>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleDeleteSector(s.id)}
-                                                    disabled={sectorDeleting === s.id}
-                                                    className="p-1 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors disabled:opacity-50"
-                                                    title="حذف القطاع"
-                                                >
-                                                    {sectorDeleting === s.id ? (
-                                                        <Loader2 size={14} className="animate-spin" />
-                                                    ) : (
-                                                        <Trash2 size={14} />
-                                                    )}
-                                                </button>
+                                                <span className="text-[11px] text-gray-400 font-mono shrink-0 min-w-[60px]">{s.key}</span>
+                                                {editingSectorId === s.id ? (
+                                                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                                                        <input
+                                                            type="text"
+                                                            value={editingSectorName}
+                                                            onChange={(e) => setEditingSectorName(e.target.value)}
+                                                            className="flex-1 p-1.5 bg-white dark:bg-gray-900 border border-primary/40 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+                                                            autoFocus
+                                                            onKeyDown={(e) => { if (e.key === "Enter") handleSaveSectorName(s.id); if (e.key === "Escape") setEditingSectorId(null); }}
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleSaveSectorName(s.id)}
+                                                            disabled={sectorSaving || !editingSectorName.trim()}
+                                                            className="p-1.5 rounded-lg text-white bg-primary hover:bg-primary/90 disabled:opacity-50 transition-colors"
+                                                            title="حفظ"
+                                                        >
+                                                            {sectorSaving ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setEditingSectorId(null)}
+                                                            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                                                            title="إلغاء"
+                                                        >
+                                                            <X size={14} />
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <>
+                                                        <span className="font-medium text-secondary dark:text-white text-sm flex-1 min-w-0">{s.nameAr || s.key}</span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => { setEditingSectorId(s.id); setEditingSectorName(s.nameAr || ""); setSectorError(""); }}
+                                                            className="p-1.5 rounded-lg text-gray-400 hover:text-primary hover:bg-primary/10 transition-colors"
+                                                            title="تعديل الاسم"
+                                                        >
+                                                            <Pencil size={14} />
+                                                        </button>
+                                                    </>
+                                                )}
                                             </div>
                                         ))
                                     )}

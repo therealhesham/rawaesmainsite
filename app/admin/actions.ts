@@ -516,17 +516,21 @@ export async function createInvestmentSector(key: string, nameAr: string) {
     }
 }
 
-/** حذف قطاع استثمار (يحذف الربط مع المستثمرين تلقائياً بسبب onDelete: Cascade) */
-export async function deleteInvestmentSector(sectorId: number) {
+export async function updateInvestmentSector(sectorId: number, nameAr: string) {
     await requirePageEdit("investors-manage");
     try {
         if (!sectorId || !Number.isFinite(sectorId)) return { error: "معرف غير صالح" };
-        await prisma.investmentSector.delete({ where: { id: sectorId } });
+        const trimName = nameAr.trim();
+        if (!trimName) return { error: "الاسم مطلوب" };
+        const sector = await prisma.investmentSector.update({
+            where: { id: sectorId },
+            data: { nameAr: trimName },
+        });
         revalidatePath("/admin");
-        return { success: true };
+        return { success: true, sector };
     } catch (error) {
-        console.error("deleteInvestmentSector:", error);
-        return { error: "فشل حذف القطاع" };
+        console.error("updateInvestmentSector:", error);
+        return { error: "فشل تعديل القطاع" };
     }
 }
 
