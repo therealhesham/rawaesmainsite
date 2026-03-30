@@ -551,7 +551,7 @@ export default function ExtractReportsPage() {
                                 </>
                             )}
                         </button>
-                        <button
+                        {/* <button
                             type="button"
                             onClick={() => { setScopePickerSearch(""); setScopeModalOpen(true); }}
                             className={`inline-flex items-center gap-2 px-4 py-2.5 border text-sm font-medium rounded-xl transition-colors ${
@@ -567,7 +567,7 @@ export default function ExtractReportsPage() {
                                     {scopeInvestorIds.length}
                                 </span>
                             )}
-                        </button>
+                        </button> */}
                     </div>
                 </form>
             </motion.div>
