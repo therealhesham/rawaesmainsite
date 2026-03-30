@@ -21,6 +21,7 @@ const MULTI_SEGMENT_KEYS: Record<string, string> = {
   "contact/messages": "contact-messages",
   "investment-register/submissions": "investment-register-submissions",
   investors: "investor-page",
+  "bulk-attachments": "extract-reports",
 };
 
 function pathToPageKey(pathname: string): string {

@@ -37,7 +37,8 @@ export type AdminUser = {
 const MULTI_SEGMENT_KEYS: Record<string, string> = {
   "contact/messages": "contact-messages",
   "investment-register/submissions": "investment-register-submissions",
-  investors: "investor-page", // /admin/investors أو /admin/investors/[id]
+  investors: "investor-page",
+  "bulk-attachments": "extract-reports",
 };
 
 /** تحويل مسار الصفحة إلى pageKey */
