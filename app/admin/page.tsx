@@ -247,7 +247,6 @@ export default function AdminDashboard() {
                         قائمة المستثمرين
                     </h2>
 
-                    {/* Search Bar */}
                     <div className="relative w-full md:w-96">
                         <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
                             <Search size={20} />
@@ -467,6 +466,7 @@ export default function AdminDashboard() {
                     </div>
                 )}
             </AnimatePresence>
+
         </div>
     );
 }

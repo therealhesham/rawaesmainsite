@@ -2,9 +2,10 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
-import { getInvestors, getInvestor, saveInvestorReports, searchInvestorByName, bulkUploadReport, getInvestmentSectors } from "../actions";
+import { getInvestors, getInvestor, saveInvestorReports, searchInvestorByName } from "../actions";
 import { REPORT_TYPE_OPTIONS, reportTypeLabelAr } from "@/lib/reportTypeAr";
 import { FileSpreadsheet, Upload, CheckCircle, FileOutput, AlertCircle, AlertTriangle, User, Save, X, FileText, Info, Search, FolderOpen, ExternalLink, Archive, Users } from "lucide-react";
+
 
 type ExtractResult = {
     status: string;
@@ -79,7 +80,6 @@ export default function ExtractReportsPage() {
                     .map((u: { id: number; name: string }) => ({ id: u.id, name: u.name }))
             );
         });
-        getInvestmentSectors().then(setSectorsList);
     }, []);
 
     const handleDragOver = (e: React.DragEvent) => {
@@ -441,47 +441,6 @@ export default function ExtractReportsPage() {
         setSaveAllSearching(null);
     };
 
-    /** رفع جماعي */
-    const [bulkModalOpen, setBulkModalOpen] = useState(false);
-    const [bulkFile, setBulkFile] = useState<File | null>(null);
-    const [bulkReportType, setBulkReportType] = useState("");
-    const [bulkYear, setBulkYear] = useState("");
-    const [bulkSectorId, setBulkSectorId] = useState("");
-    const [isBulkUploading, setIsBulkUploading] = useState(false);
-    const [bulkResult, setBulkResult] = useState<{ success?: boolean; created?: number; error?: string } | null>(null);
-    const [sectorsList, setSectorsList] = useState<{ id: number; key: string; nameAr: string | null }[]>([]);
-
-    const handleBulkUpload = async () => {
-        if (!bulkFile) return;
-        const targetIds = scopeInvestorIds.length > 0
-            ? scopeInvestorIds
-            : investorCatalog.map((u) => u.id);
-        if (targetIds.length === 0) return;
-
-        setIsBulkUploading(true);
-        setBulkResult(null);
-        try {
-            const fd = new FormData();
-            fd.append("file", bulkFile);
-            fd.append("type", "attachment");
-            fd.append("investorIds", targetIds.join(","));
-            if (bulkYear) fd.append("year", bulkYear);
-            if (bulkSectorId) fd.append("sectorId", bulkSectorId);
-            const res = await bulkUploadReport(fd);
-            if (res.success) {
-                setBulkFile(null);
-                setBulkModalOpen(false);
-                setBulkResult(res);
-            } else {
-                setBulkResult(res);
-            }
-        } catch {
-            setBulkResult({ error: "حدث خطأ أثناء الرفع." });
-        } finally {
-            setIsBulkUploading(false);
-        }
-    };
-
     const investorsFiles = result?.investors_files && Object.keys(result.investors_files).length > 0;
     const previousYear = new Date().getFullYear() - 1;
 
@@ -566,7 +525,7 @@ export default function ExtractReportsPage() {
                             className="w-full p-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors text-sm"
                         >
                             <option value="">اختر نوع التقرير</option>
-                            {REPORT_TYPE_OPTIONS.map((o) => (
+                            {REPORT_TYPE_OPTIONS.filter((o) => o.id !== "attachment").map((o) => (
                                 <option key={o.id} value={o.id}>
                                     {o.label}
                                 </option>
@@ -608,14 +567,6 @@ export default function ExtractReportsPage() {
                                     {scopeInvestorIds.length}
                                 </span>
                             )}
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => { setBulkResult(null); setBulkSectorId(""); setBulkModalOpen(true); }}
-                            className="inline-flex items-center gap-2 px-4 py-2.5 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm font-medium text-secondary dark:text-white rounded-xl transition-colors"
-                        >
-                            <Upload size={18} />
-                            إضافة مرفق
                         </button>
                     </div>
                 </form>
@@ -1375,178 +1326,6 @@ export default function ExtractReportsPage() {
                 )}
             </AnimatePresence>
 
-            <AnimatePresence>
-                {bulkModalOpen && (
-                    <motion.div
-                        key="bulk-upload-modal"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 flex items-center justify-center p-4"
-                    >
-                        <div
-                            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-                            onClick={() => !isBulkUploading && setBulkModalOpen(false)}
-                            aria-hidden
-                        />
-                        <motion.div
-                            initial={{ scale: 0.95 }}
-                            animate={{ scale: 1 }}
-                            exit={{ scale: 0.95 }}
-                            className="relative w-full max-w-lg max-h-[85vh] overflow-hidden rounded-2xl bg-white dark:bg-card-dark shadow-xl border border-gray-200 dark:border-gray-700 flex flex-col"
-                            dir="rtl"
-                        >
-                            <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-800 shrink-0">
-                                <h3 className="text-lg font-bold text-secondary dark:text-white flex items-center gap-2">
-                                    <Upload className="text-primary" size={22} />
-                                    إضافة مرفق
-                                </h3>
-                                <button
-                                    type="button"
-                                    onClick={() => !isBulkUploading && setBulkModalOpen(false)}
-                                    className="p-1 text-gray-400 hover:text-red-500"
-                                >
-                                    <X size={20} />
-                                </button>
-                            </div>
-
-                            <div className="p-5 space-y-5 overflow-y-auto flex-1">
-                                <p className="text-sm text-gray-500 leading-relaxed">
-                                    ارفع ملف واحد (PDF) وسيتم إضافته كمرفق لـ{" "}
-                                    <strong className="text-secondary dark:text-white">
-                                        {scopeInvestorIds.length > 0
-                                            ? `${scopeInvestorIds.length} مستثمر محدد`
-                                            : `كل المستثمرين`}
-                                    </strong>
-                                    . يمكنك تحديد قطاع معين لتقييد الرفع بمستثمري القطاع ده فقط.
-                                </p>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                                        الملف (PDF)
-                                    </label>
-                                    <label
-                                        className={`flex items-center gap-3 p-4 rounded-xl border-2 border-dashed cursor-pointer transition-colors ${
-                                            bulkFile
-                                                ? "border-green-300 bg-green-50/50 dark:border-green-600 dark:bg-green-500/10"
-                                                : "border-gray-200 dark:border-gray-700 hover:border-primary/50 hover:bg-gray-50 dark:hover:bg-gray-800"
-                                        }`}
-                                    >
-                                        <input
-                                            type="file"
-                                            accept=".pdf"
-                                            className="sr-only"
-                                            onChange={(e) => {
-                                                const f = e.target.files?.[0];
-                                                if (f) { setBulkFile(f); setBulkResult(null); }
-                                            }}
-                                        />
-                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${bulkFile ? "bg-green-100 text-green-600 dark:bg-green-500/20" : "bg-primary/10 text-primary"}`}>
-                                            {bulkFile ? <CheckCircle size={22} /> : <FileText size={22} />}
-                                        </div>
-                                        <div className="min-w-0">
-                                            <p className="text-sm font-medium text-secondary dark:text-white truncate">
-                                                {bulkFile ? bulkFile.name : "اضغط لاختيار ملف PDF"}
-                                            </p>
-                                            {bulkFile && (
-                                                <p className="text-xs text-gray-500">{(bulkFile.size / 1024 / 1024).toFixed(2)} MB</p>
-                                            )}
-                                        </div>
-                                        {bulkFile && (
-                                            <button
-                                                type="button"
-                                                onClick={(e) => { e.preventDefault(); setBulkFile(null); setBulkResult(null); }}
-                                                className="mr-auto p-1 text-gray-400 hover:text-red-500"
-                                            >
-                                                <X size={18} />
-                                            </button>
-                                        )}
-                                    </label>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                                            القطاع (اختياري)
-                                        </label>
-                                        <select
-                                            value={bulkSectorId}
-                                            onChange={(e) => setBulkSectorId(e.target.value)}
-                                            className="w-full p-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                                        >
-                                            <option value="">كل القطاعات</option>
-                                            {sectorsList.map((s) => (
-                                                <option key={s.id} value={s.id}>{s.nameAr || s.key}</option>
-                                            ))}
-                                        </select>
-                                        <p className="text-[11px] text-gray-400 mt-1">
-                                            لو اخترت قطاع، المرفق هيترفع بس لمستثمري القطاع ده.
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                                            سنة المرفق
-                                        </label>
-                                        <select
-                                            value={bulkYear}
-                                            onChange={(e) => setBulkYear(e.target.value)}
-                                            className="w-full p-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                                        >
-                                            <option value="">
-                                                {previousYear} (افتراضي)
-                                            </option>
-                                            {[0, 1, 2, 3, 4].map((offset) => {
-                                                const y = previousYear - offset;
-                                                return <option key={y} value={y}>{y}</option>;
-                                            })}
-                                        </select>
-                                    </div>
-                                </div>
-
-                                {bulkResult && (
-                                    <div className={`p-3 rounded-xl text-sm ${
-                                        bulkResult.error
-                                            ? "bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-300"
-                                            : "bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-300"
-                                    }`}>
-                                        {bulkResult.error
-                                            ? bulkResult.error
-                                            : `تم إضافة المرفق بنجاح لـ ${bulkResult.created} مستثمر.`}
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="p-5 border-t border-gray-100 dark:border-gray-800 flex gap-3 shrink-0">
-                                <button
-                                    type="button"
-                                    onClick={() => !isBulkUploading && setBulkModalOpen(false)}
-                                    className="flex-1 py-2.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium rounded-xl"
-                                >
-                                    إغلاق
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={handleBulkUpload}
-                                    disabled={isBulkUploading || !bulkFile}
-                                    className="flex-1 py-2.5 bg-primary text-white font-medium rounded-xl hover:bg-primary/90 disabled:opacity-50 flex items-center justify-center gap-2"
-                                >
-                                    {isBulkUploading ? (
-                                        <>
-                                            <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                            جاري الرفع...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Upload size={18} />
-                                            إضافة مرفق لـ {scopeInvestorIds.length > 0 ? scopeInvestorIds.length : investorCatalog.length} مستثمر
-                                        </>
-                                    )}
-                                </button>
-                            </div>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
         </div>
     );
 }

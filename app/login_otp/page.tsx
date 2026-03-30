@@ -389,6 +389,8 @@ export default function LoginOtpPage() {
                                                 className="w-11 h-14 sm:w-12 sm:h-14 text-center text-xl font-bold bg-white dark:bg-card-dark border-2 border-gray-200 dark:border-gray-600 rounded-xl text-secondary dark:text-white focus:border-primary focus:ring-4 focus:ring-primary/20 outline-none transition-all duration-300 dir-ltr"
                                             />
                                         ))}
+
+                                        sadadsa
                                         <button
                                             type="button"
                                             onClick={handleClearOtp}
