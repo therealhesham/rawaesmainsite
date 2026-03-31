@@ -6,6 +6,7 @@ import { jwtVerify } from "jose";
 import { logoutInvestor } from "../../login/actions";
 import QuickContact from "./QuickContact";
 import FloatingWhatsAppButton from "./FloatingWhatsAppButton";
+import ReportFileActions from "./ReportFileActions";
 const prisma = new PrismaClient();
 
 const getSecretKey = () => {
@@ -201,14 +202,12 @@ export default async function PrivateInvestorPage({
                           </span>
                         </div>
                       </div>
-                      <a
-                        href={report.linkUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs bg-gray-100 dark:bg-gray-800 hover:bg-gold hover:text-[#003B46] text-gray-600 dark:text-gray-300 px-3 py-1.5 rounded-lg transition-colors"
-                      >
-                        عرض
-                      </a>
+                      <ReportFileActions
+                        linkUrl={report.linkUrl}
+                        suggestedName={report.fileName || "مرفق"}
+                        viewClassName="text-xs bg-gray-100 dark:bg-gray-800 hover:bg-gold hover:text-[#003B46] text-gray-600 dark:text-gray-300 px-3 py-1.5 rounded-lg transition-colors"
+                        downloadClassName="text-xs bg-white/90 dark:bg-gray-700 hover:bg-gold/90 dark:hover:bg-gold/25 text-[#003B46] dark:text-gray-100 px-3 py-1.5 rounded-lg transition-colors border border-gray-200 dark:border-gray-600 disabled:opacity-60"
+                      />
                     </div>
                   ))}
                 </div>
@@ -253,14 +252,12 @@ export default async function PrivateInvestorPage({
                                 </span>
                               </div>
                             </div>
-                            <a
-                              href={report.linkUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs bg-gray-100 dark:bg-gray-800 hover:bg-gold hover:text-[#003B46] text-gray-600 dark:text-gray-300 px-3 py-1.5 rounded-lg transition-colors"
-                            >
-                              عرض
-                            </a>
+                            <ReportFileActions
+                              linkUrl={report.linkUrl}
+                              suggestedName={report.fileName || "تقرير استثماري"}
+                              viewClassName="text-xs bg-gray-100 dark:bg-gray-800 hover:bg-gold hover:text-[#003B46] text-gray-600 dark:text-gray-300 px-3 py-1.5 rounded-lg transition-colors"
+                              downloadClassName="text-xs bg-white/90 dark:bg-gray-700 hover:bg-gold/90 dark:hover:bg-gold/25 text-[#003B46] dark:text-gray-100 px-3 py-1.5 rounded-lg transition-colors border border-gray-200 dark:border-gray-600 disabled:opacity-60"
+                            />
                           </div>
                         ))
                       ) : (
@@ -334,14 +331,13 @@ export default async function PrivateInvestorPage({
                           </span>
                         </div>
                       </div>
-                      <a
-                        href={report.linkUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="bg-gold hover:bg-gold/90 hover:text-[#003B46] text-[#003B46] font-bold text-sm py-1.5 px-4 rounded-lg transition-all shadow-lg shadow-black/20"
-                      >
-                        معاينة
-                      </a>
+                      <ReportFileActions
+                        linkUrl={report.linkUrl}
+                        suggestedName={report.fileName || "تقرير استثماري"}
+                        viewLabel="معاينة"
+                        viewClassName="bg-gold hover:bg-gold/90 hover:text-[#003B46] text-[#003B46] font-bold text-sm py-1.5 px-4 rounded-lg transition-all shadow-lg shadow-black/20"
+                        downloadClassName="border-2 border-gold/80 text-gold hover:bg-gold hover:text-[#003B46] font-bold text-sm py-1.5 px-4 rounded-lg transition-all disabled:opacity-60"
+                      />
                     </div>
                   ))
                 ) : (
