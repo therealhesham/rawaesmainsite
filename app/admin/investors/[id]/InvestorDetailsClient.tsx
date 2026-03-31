@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { ArrowRight, Phone, IdCard, Calendar, Plus, FolderOpen, FolderX, FileText, Settings, X, UploadCloud, CheckCircle2, Trash2, FileOutput, AlertCircle, Loader2, Briefcase, Save, Paperclip, ExternalLink } from "lucide-react";
+import { ArrowRight, Phone, IdCard, Calendar, Plus, FolderOpen, FolderX, FileText, Settings, X, UploadCloud, CheckCircle2, Trash2, FileOutput, AlertCircle, Loader2, Briefcase, Save, Paperclip, ExternalLink, Download } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -57,8 +57,34 @@ export default function InvestorDetailsClient({
   >([]);
   const [sectorSelection, setSectorSelection] = useState<number[]>([]);
   const [sectorsSaving, setSectorsSaving] = useState(false);
+  const [downloadingAttachmentId, setDownloadingAttachmentId] = useState<number | null>(null);
 
   const hasAnyReportAction = permissions.canApprove || permissions.canPublish || permissions.canDeleteFile;
+
+  async function downloadAttachmentFile(url: string, attachmentId: number, suggestedName: string) {
+    if (!url || downloadingAttachmentId !== null) return;
+    const baseName = suggestedName?.trim() || "مرفق";
+    const downloadName = /\.[a-z0-9]+$/i.test(baseName) ? baseName : `${baseName}.pdf`;
+    setDownloadingAttachmentId(attachmentId);
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = downloadName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+      toast.success("تم تحميل الملف");
+    } catch {
+      toast.error("تعذر التحميل، جاري فتح الرابط في تبويب جديد");
+      window.open(url, "_blank");
+    } finally {
+      setDownloadingAttachmentId(null);
+    }
+  }
 
   useEffect(() => {
     getInvestmentSectors().then(setInvestmentSectorsList);
@@ -471,26 +497,44 @@ export default function InvestorDetailsClient({
             <div className="p-5">
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {attachments.map((att: any) => (
-                  <a
+                  <div
                     key={att.id}
-                    href={att.linkUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group flex items-center gap-3 p-3 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-primary hover:shadow-md bg-gray-50 dark:bg-gray-800/50 transition-all"
+                    className="group flex items-center gap-2 p-3 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-primary hover:shadow-md bg-gray-50 dark:bg-gray-800/50 transition-all"
                   >
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                      <Paperclip className="w-5 h-5" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-secondary dark:text-gray-200 truncate" title={att.fileName || "مرفق"}>
-                        {att.fileName || "مرفق"}
-                      </p>
-                      <p className="text-[11px] text-gray-400">
-                        {new Date(att.createdAt).toLocaleDateString("ar-EG")}
-                      </p>
-                    </div>
-                    <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-primary shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </a>
+                    <a
+                      href={att.linkUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 min-w-0 flex-1"
+                      title="فتح في تبويب جديد"
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                        <Paperclip className="w-5 h-5" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-secondary dark:text-gray-200 truncate" title={att.fileName || "مرفق"}>
+                          {att.fileName || "مرفق"}
+                        </p>
+                        <p className="text-[11px] text-gray-400">
+                          {new Date(att.createdAt).toLocaleDateString("ar-EG")}
+                        </p>
+                      </div>
+                      <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-primary shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => void downloadAttachmentFile(att.linkUrl, att.id, att.fileName || "مرفق")}
+                      disabled={downloadingAttachmentId !== null}
+                      className="shrink-0 p-2 rounded-lg text-gray-500 hover:text-primary hover:bg-primary/10 dark:hover:bg-primary/15 transition-colors disabled:opacity-50"
+                      title="تحميل الملف"
+                    >
+                      {downloadingAttachmentId === att.id ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <Download className="w-5 h-5" />
+                      )}
+                    </button>
+                  </div>
                 ))}
               </div>
             </div>
