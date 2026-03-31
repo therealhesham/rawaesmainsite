@@ -5,11 +5,22 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import Link from "next/link";
 import { AnimatePresence } from "framer-motion";
 import { Plus, RefreshCw, Users, FileText, List, Search, ArrowLeft, SearchX, X, ChevronDown, ChevronUp, ExternalLink, ShieldAlert, Send, BadgeCheck, Briefcase, Loader2, Pencil, Check } from "lucide-react";
-import { getInvestorsPaged, getStats, createInvestor, checkAdminPermission, getInvestorReportsForAdmin, getInvestmentSectors, createInvestmentSector, updateInvestmentSector } from "./actions";
+import { getInvestorsPaged, getStats, createInvestor, updateInvestor, checkAdminPermission, getInvestorReportsForAdmin, getInvestmentSectors, createInvestmentSector, updateInvestmentSector } from "./actions";
 import { reportTypeLabelAr } from "@/lib/reportTypeAr";
 import { AlertModal } from "@/app/components/AlertModal";
 
 const INVESTORS_PAGE_SIZE = 40;
+
+type InvestorListItem = {
+    id: number;
+    name: string;
+    nationalId: string | null;
+    password: string;
+    phoneNumber: string;
+    createdAt: Date;
+    _count: { reports: number };
+    investmentSectors?: { sector: { id: number; key: string; nameAr: string | null } }[];
+};
 
 export default function AdminDashboard() {
     const [stats, setStats] = useState({
@@ -29,6 +40,7 @@ export default function AdminDashboard() {
     const nextInvestorsSkipRef = useRef(0);
     const loadingMoreInvestorsRef = useRef(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingInvestor, setEditingInvestor] = useState<InvestorListItem | null>(null);
     const [canManageInvestors, setCanManageInvestors] = useState(false);
     const [currentTime, setCurrentTime] = useState("");
 
@@ -290,7 +302,12 @@ export default function AdminDashboard() {
                                 ))
                             ) : investors.length > 0 ? (
                                 investors.map((investor) => (
-                                    <InvestorRowWithReports key={investor.id} investor={investor} />
+                                    <InvestorRowWithReports
+                                        key={investor.id}
+                                        investor={investor as InvestorListItem}
+                                        canManageInvestors={canManageInvestors}
+                                        onEdit={() => setEditingInvestor(investor as InvestorListItem)}
+                                    />
                                 ))
                             ) : (
                                 <tr>
@@ -329,6 +346,12 @@ export default function AdminDashboard() {
             <AnimatePresence>
                 {isModalOpen && (
                     <AddInvestorModal onClose={() => setIsModalOpen(false)} />
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {editingInvestor && (
+                    <EditInvestorModal investor={editingInvestor} onClose={() => setEditingInvestor(null)} />
                 )}
             </AnimatePresence>
 
@@ -471,18 +494,15 @@ export default function AdminDashboard() {
     );
 }
 
-type InvestorListItem = {
-    id: number;
-    name: string;
-    nationalId: string | null;
-    password: string;
-    phoneNumber: string;
-    createdAt: Date;
-    _count: { reports: number };
-    investmentSectors?: { sector: { id: number; key: string; nameAr: string | null } }[];
-};
-
-function InvestorRowWithReports({ investor }: { investor: InvestorListItem }) {
+function InvestorRowWithReports({
+    investor,
+    canManageInvestors,
+    onEdit,
+}: {
+    investor: InvestorListItem;
+    canManageInvestors: boolean;
+    onEdit: () => void;
+}) {
     const [open, setOpen] = useState(false);
     const [reports, setReports] = useState<
         Awaited<ReturnType<typeof getInvestorReportsForAdmin>>
@@ -512,9 +532,6 @@ function InvestorRowWithReports({ investor }: { investor: InvestorListItem }) {
     return (
         <>
             <tr className="group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                {/* <td className="px-6 py-4 text-gray-600 dark:text-gray-300 font-mono text-sm">
-                    {investor.nationalId || "-"}
-                </td> */}
                 <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-lg">
@@ -568,13 +585,26 @@ function InvestorRowWithReports({ investor }: { investor: InvestorListItem }) {
                     {new Date(investor.createdAt).toLocaleDateString("ar-EG")}
                 </td>
                 <td className="px-6 py-4 text-center">
-                    <Link
-                        href={`/admin/investors/${investor.id}`}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary hover:border-primary transition-all shadow-sm"
-                    >
-                        <span>التفاصيل</span>
-                        <ArrowLeft size={16} />
-                    </Link>
+                    <div className="flex items-center justify-center gap-2 flex-wrap">
+                        {canManageInvestors && (
+                            <button
+                                type="button"
+                                onClick={onEdit}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary hover:border-primary transition-all shadow-sm"
+                                title="تعديل بيانات المستثمر"
+                            >
+                                <Pencil size={16} />
+                                <span>تعديل</span>
+                            </button>
+                        )}
+                        <Link
+                            href={`/admin/investors/${investor.id}`}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary hover:border-primary transition-all shadow-sm"
+                        >
+                            <span>التفاصيل</span>
+                            <ArrowLeft size={16} />
+                        </Link>
+                    </div>
                 </td>
             </tr>
             {open && (
@@ -736,6 +766,154 @@ function StatsCard({
     return card;
 }
 
+function EditInvestorModal({ investor, onClose }: { investor: InvestorListItem; onClose: () => void }) {
+    const [isLoading, setIsLoading] = useState(false);
+    const [formError, setFormError] = useState<string | null>(null);
+    const [sectors, setSectors] = useState<{ id: number; key: string; nameAr: string | null }[]>([]);
+
+    useEffect(() => {
+        getInvestmentSectors().then(setSectors);
+    }, []);
+
+    const selectedSectorIds = investor.investmentSectors?.map((x) => x.sector.id) ?? [];
+
+    async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+        e.preventDefault();
+        setIsLoading(true);
+        setFormError(null);
+        const formData = new FormData(e.currentTarget);
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        const result = await updateInvestor(formData);
+        if (result.success) {
+            onClose();
+            window.location.reload();
+        } else {
+            setFormError(result.error ?? "حدث خطأ.");
+        }
+        setIsLoading(false);
+    }
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <AlertModal
+                open={!!formError}
+                onClose={() => setFormError(null)}
+                title="خطأ"
+                message={formError ?? ""}
+                variant="error"
+            />
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={onClose}
+                className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            />
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                className="relative bg-white dark:bg-card-dark w-full max-w-lg rounded-2xl shadow-xl overflow-hidden max-h-[90vh] overflow-y-auto"
+            >
+                <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between sticky top-0 bg-white dark:bg-card-dark z-10">
+                    <h3 className="text-xl font-bold text-secondary dark:text-white">تعديل بيانات المستثمر</h3>
+                    <button type="button" onClick={onClose} className="text-gray-400 hover:text-red-500 transition-colors">
+                        <X size={20} />
+                    </button>
+                </div>
+
+                <form key={investor.id} onSubmit={handleSubmit} className="p-6 space-y-4">
+                    <input type="hidden" name="userId" value={investor.id} />
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            الاسم الكامل <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            name="name"
+                            required
+                            type="text"
+                            defaultValue={investor.name}
+                            className="w-full p-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:ring-2 focus:ring-primary/20"
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                رقم الجوال <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                name="phoneNumber"
+                                required
+                                type="tel"
+                                dir="ltr"
+                                defaultValue={investor.phoneNumber ?? ""}
+                                className="w-full p-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:ring-2 focus:ring-primary/20"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                رقم الهوية <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                name="nationalId"
+                                required
+                                type="text"
+                                autoComplete="off"
+                                defaultValue={investor.password ?? ""}
+                                className="w-full p-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:ring-2 focus:ring-primary/20"
+                            />
+                            {/* <p className="text-xs text-gray-500 mt-1">نفس الرقم المستخدم لتسجيل الدخول مع رقم الجوال (يُخزَّن في النظام كما يظهر).</p> */}
+                        </div>
+                    </div>
+
+                    {sectors.length > 0 && (
+                        <div>
+                            <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">قطاعات الاستثمار</span>
+                            <p className="text-xs text-gray-500 mb-2">يمكن اختيار أكثر من قطاع واحد.</p>
+                            <div className="flex flex-wrap gap-x-6 gap-y-2 p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
+                                {sectors.map((s) => (
+                                    <label
+                                        key={s.id}
+                                        className="inline-flex items-center gap-2 cursor-pointer text-sm text-gray-700 dark:text-gray-300"
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            name="sectorIds"
+                                            value={s.id}
+                                            defaultChecked={selectedSectorIds.includes(s.id)}
+                                            className="rounded border-gray-300 text-primary focus:ring-primary"
+                                        />
+                                        <span>{s.nameAr || s.key}</span>
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="pt-4 flex gap-3">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="flex-1 py-2.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                        >
+                            إلغاء
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={isLoading}
+                            className="flex-1 py-2.5 bg-primary hover:bg-primary/90 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                        >
+                            {isLoading ? "جاري الحفظ..." : "حفظ التعديلات"}
+                        </button>
+                    </div>
+                </form>
+            </motion.div>
+        </div>
+    );
+}
+
 function AddInvestorModal({ onClose }: { onClose: () => void }) {
     const [isLoading, setIsLoading] = useState(false);
     const [formError, setFormError] = useState<string | null>(null);
@@ -806,14 +984,18 @@ function AddInvestorModal({ onClose }: { onClose: () => void }) {
                             <input name="phoneNumber" required type="tel" dir="ltr" className="w-full p-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:ring-2 focus:ring-primary/20" />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">رقم الهوية</label>
-                            <input name="nationalId" type="text" className="w-full p-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:ring-2 focus:ring-primary/20" />
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                رقم الهوية <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                name="nationalId"
+                                required
+                                type="text"
+                                autoComplete="off"
+                                className="w-full p-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:ring-2 focus:ring-primary/20"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">يُستخدم مع رقم الجوال لتسجيل الدخول.</p>
                         </div>
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">كلمة المرور <span className="text-red-500">*</span></label>
-                        <input name="password" required type="password" className="w-full p-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:ring-2 focus:ring-primary/20" />
                     </div>
 
                     {sectors.length > 0 && (

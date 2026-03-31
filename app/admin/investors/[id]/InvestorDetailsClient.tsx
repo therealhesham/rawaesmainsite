@@ -269,10 +269,10 @@ export default function InvestorDetailsClient({
                   <Phone className="w-4 h-4" />
                   <span dir="ltr">{investor.phoneNumber}</span>
                 </span>
-                {investor.nationalId && (
+                {(investor.password || investor.nationalId) && (
                   <span className="flex items-center gap-1">
                     <IdCard className="w-4 h-4" />
-                    <span>{investor.nationalId}</span>
+                    <span>{investor.password || investor.nationalId}</span>
                   </span>
                 )}
                 <span className="flex items-center gap-1">

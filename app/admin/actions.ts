@@ -65,13 +65,16 @@ export async function getStats() {
 export async function getInvestors(search?: string) {
     await requirePageView("");
     try {
-        const where = search ? {
-            OR: [
-                { name: { contains: search } },
-                { phoneNumber: { contains: search } },
-                { nationalId: { contains: search } },
-            ],
-        } : {};
+        const where = search
+            ? {
+                  OR: [
+                      { name: { contains: search } },
+                      { phoneNumber: { contains: search } },
+                      { password: { contains: search } },
+                      { nationalId: { contains: search } },
+                  ],
+              }
+            : {};
 
         const investors = await prisma.user.findMany({
             where,
@@ -107,6 +110,7 @@ export async function getInvestorsPaged(
                   OR: [
                       { name: { contains: search } },
                       { phoneNumber: { contains: search } },
+                      { password: { contains: search } },
                       { nationalId: { contains: search } },
                   ],
               }
@@ -558,28 +562,24 @@ export async function updateInvestmentSector(sectorId: number, nameAr: string) {
 export async function createInvestor(formData: FormData) {
     await requirePageEdit("investors-manage");
     try {
-        const name = formData.get("name") as string;
-        const phoneNumber = formData.get("phoneNumber") as string;
-        const password = formData.get("password") as string;
-        const nationalId = formData.get("nationalId") as string || null;
+        const name = String(formData.get("name") ?? "").trim();
+        const phoneNumber = String(formData.get("phoneNumber") ?? "").trim();
+        /** رقم الهوية — يُخزَّن فقط في عمود `user.password` (تسجيل الدخول مع الجوال) */
+        const identity = String(formData.get("nationalId") ?? "").trim();
 
         const rawSectorIds = formData.getAll("sectorIds");
         const requestedSectorIds = rawSectorIds
             .map((s) => parseInt(String(s), 10))
             .filter((n) => !Number.isNaN(n) && n > 0);
 
-        if (!name || !phoneNumber || !password) {
-            return { error: "Missing required fields" };
+        if (!name || !phoneNumber || !identity) {
+            return { error: "الاسم والجوال ورقم الهوية مطلوبة" };
         }
 
-        // Check if user already exists
         const existingUser = await prisma.user.findFirst({
             where: {
-                OR: [
-                    { phoneNumber },
-                    { nationalId: nationalId || undefined }
-                ]
-            }
+                OR: [{ phoneNumber }, { password: identity }],
+            },
         });
 
         if (existingUser) {
@@ -599,10 +599,9 @@ export async function createInvestor(formData: FormData) {
             data: {
                 name,
                 phoneNumber,
-                password, // Note: Storing plain text as per existing seed/auth logic
-                nationalId,
+                password: identity,
                 isAdmin: false,
-            }
+            },
         });
 
         if (validSectorIds.length > 0) {
@@ -619,6 +618,86 @@ export async function createInvestor(formData: FormData) {
     } catch (error) {
         console.error("Failed to create investor:", error);
         return { error: "Failed to create investor" };
+    }
+}
+
+export async function updateInvestor(formData: FormData) {
+    await requirePageEdit("investors-manage");
+    try {
+        const userId = parseInt(String(formData.get("userId") ?? ""), 10);
+        const name = String(formData.get("name") ?? "").trim();
+        const phoneNumber = String(formData.get("phoneNumber") ?? "").trim();
+        /** رقم الهوية — عمود `user.password` فقط */
+        const identity = String(formData.get("nationalId") ?? "").trim();
+
+        if (!userId || Number.isNaN(userId)) {
+            return { error: "معرف المستثمر غير صالح" };
+        }
+        if (!name || !phoneNumber) {
+            return { error: "الاسم ورقم الجوال مطلوبان" };
+        }
+        if (!identity) {
+            return { error: "رقم الهوية مطلوب" };
+        }
+
+        const target = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { id: true, isAdmin: true },
+        });
+        if (!target || target.isAdmin) {
+            return { error: "المستثمر غير موجود" };
+        }
+
+        const duplicate = await prisma.user.findFirst({
+            where: {
+                id: { not: userId },
+                OR: [{ phoneNumber }, { password: identity }],
+            },
+        });
+        if (duplicate) {
+            return { error: "رقم الهاتف أو الهوية مستخدم مسبقاً لمستثمر آخر" };
+        }
+
+        const rawSectorIds = formData.getAll("sectorIds");
+        const requestedSectorIds = rawSectorIds
+            .map((s) => parseInt(String(s), 10))
+            .filter((n) => !Number.isNaN(n) && n > 0);
+
+        const validSectors =
+            requestedSectorIds.length > 0
+                ? await prisma.investmentSector.findMany({
+                      where: { id: { in: [...new Set(requestedSectorIds)] } },
+                      select: { id: true },
+                  })
+                : [];
+        const validSectorIds = validSectors.map((s) => s.id);
+
+        const userUpdate = {
+            name,
+            phoneNumber,
+            password: identity,
+        };
+
+        await prisma.$transaction(async (tx) => {
+            await tx.user.update({
+                where: { id: userId },
+                data: userUpdate,
+            });
+            await tx.userInvestmentSector.deleteMany({ where: { userId } });
+            if (validSectorIds.length > 0) {
+                await tx.userInvestmentSector.createMany({
+                    data: validSectorIds.map((sectorId) => ({ userId, sectorId })),
+                });
+            }
+        });
+
+        revalidatePath("/admin");
+        revalidatePath(`/admin/investors/${userId}`);
+        revalidatePath(`/privatepage/${userId}`);
+        return { success: true };
+    } catch (error) {
+        console.error("updateInvestor:", error);
+        return { error: "فشل تحديث بيانات المستثمر" };
     }
 }
 

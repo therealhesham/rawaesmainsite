@@ -20,6 +20,7 @@ model user {
   reports        reports[]
   profilepicture String?
 
+  /// للمستثمرين: رقم الهوية المستخدم مع الجوال في تسجيل الدخول (يُعرض في الواجهات باسم «رقم الهوية»)
   password                    String
   isAdmin                     Boolean                       @default(false)
   roleId                      Int?
@@ -28,6 +29,7 @@ model user {
   email                       String?
   phoneNumber                 String?
   notfications                notifications[]
+  /// قديم/اختياري؛ رقم هوية المستثمر الحقيقي في `password`
   nationalId                  String?
   createdAt                   DateTime                      @default(now())
   updatedAt                   DateTime                      @updatedAt
