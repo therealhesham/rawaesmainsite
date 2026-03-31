@@ -16,6 +16,7 @@ import {
 } from "../../actions";
 import { REPORT_TYPE_OPTIONS, reportTypeLabelAr } from "@/lib/reportTypeAr";
 import dynamic from "next/dynamic";
+import { toast } from "sonner";
 
 const PdfViewer = dynamic(() => import("./PdfViewer"), { ssr: false });
 
@@ -84,7 +85,16 @@ export default function InvestorDetailsClient({
       if ("success" in result && result.success) {
         const data = await getInvestor(investorId);
         setInvestor(data);
+        toast.success("تم حفظ القطاعات بنجاح");
+      } else {
+        const msg =
+          "error" in result && typeof result.error === "string"
+            ? result.error
+            : "فشل حفظ القطاعات";
+        toast.error(msg);
       }
+    } catch {
+      toast.error("فشل حفظ القطاعات");
     } finally {
       setSectorsSaving(false);
     }

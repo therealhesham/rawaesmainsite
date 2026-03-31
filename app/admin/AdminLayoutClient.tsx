@@ -1,5 +1,7 @@
 "use client";
 
+import { Toaster } from "sonner";
+import "sonner/dist/styles.css";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -103,6 +105,7 @@ export default function AdminLayoutClient({
   );
 
   return (
+    <>
     <div className="min-h-screen bg-gray-50 dark:bg-background-dark flex" dir="rtl">
       <motion.aside
         initial={false}
@@ -306,5 +309,7 @@ export default function AdminLayoutClient({
         <main className="flex-1 p-4 md:p-8 overflow-y-auto">{children}</main>
       </div>
     </div>
+    <Toaster position="top-center" dir="rtl" richColors closeButton />
+    </>
   );
 }
