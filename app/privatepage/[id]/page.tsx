@@ -7,6 +7,7 @@ import { logoutInvestor } from "../../login/actions";
 import QuickContact from "./QuickContact";
 import FloatingWhatsAppButton from "./FloatingWhatsAppButton";
 import ReportFileActions from "./ReportFileActions";
+import ProfileSwitcher from "./ProfileSwitcher";
 const prisma = new PrismaClient();
 
 const getSecretKey = () => {
@@ -36,6 +37,34 @@ async function getInvestorData(id: string) {
   });
 
   return user;
+}
+
+async function getSiblingProfiles(userId: number) {
+  const currentUser = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { password: true, phoneNumber: true },
+  });
+  if (!currentUser?.password || !currentUser?.phoneNumber) return [];
+
+  const siblings = await prisma.user.findMany({
+    where: { password: currentUser.password, phoneNumber: currentUser.phoneNumber },
+    select: {
+      id: true,
+      name: true,
+      profilepicture: true,
+      investmentSectors: {
+        select: { sector: { select: { nameAr: true, key: true } } },
+      },
+    },
+  });
+  if (siblings.length <= 1) return [];
+
+  return siblings.map((u) => ({
+    id: u.id,
+    name: u.name,
+    profilepicture: u.profilepicture,
+    sectors: u.investmentSectors.map((s) => s.sector.nameAr || s.sector.key),
+  }));
 }
 
 async function getQuickContactSettings() {
@@ -83,7 +112,10 @@ export default async function PrivateInvestorPage({
     notFound();
   }
 
-  const quickContactSettings = await getQuickContactSettings();
+  const [quickContactSettings, siblingProfiles] = await Promise.all([
+    getQuickContactSettings(),
+    getSiblingProfiles(investor.id),
+  ]);
 
   return (
     <div className="min-h-screen flex flex-col transition-colors duration-300 bg-[#F5F7FA] dark:bg-[#121212] text-[#333333] dark:text-[#E0E0E0] font-body">
@@ -306,6 +338,14 @@ export default async function PrivateInvestorPage({
                   </p>
                 </div>
               </div>
+              {siblingProfiles.length > 1 && (
+                <div className="mt-5 pt-5 border-t border-gray-100 dark:border-gray-700">
+                  <ProfileSwitcher
+                    currentProfileId={investor.id}
+                    profiles={siblingProfiles}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Contracts */}

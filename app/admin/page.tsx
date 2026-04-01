@@ -4,8 +4,8 @@ import { motion } from "framer-motion";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { AnimatePresence } from "framer-motion";
-import { Plus, RefreshCw, Users, FileText, List, Search, ArrowLeft, SearchX, X, ChevronDown, ChevronUp, ExternalLink, ShieldAlert, Send, BadgeCheck, Briefcase, Loader2, Pencil, Check, ArrowUpDown, Filter } from "lucide-react";
-import { getInvestorsPaged, getStats, createInvestor, updateInvestor, checkAdminPermission, getInvestorReportsForAdmin, getInvestmentSectors, createInvestmentSector, updateInvestmentSector } from "./actions";
+import { Plus, RefreshCw, Users, FileText, List, Search, ArrowLeft, SearchX, X, ChevronDown, ChevronUp, ExternalLink, ShieldAlert, Send, BadgeCheck, Briefcase, Loader2, Pencil, Check, ArrowUpDown, Filter, Trash2 } from "lucide-react";
+import { getInvestorsPaged, getStats, createInvestor, updateInvestor, deleteInvestor, checkAdminPermission, getInvestorReportsForAdmin, getInvestmentSectors, createInvestmentSector, updateInvestmentSector } from "./actions";
 import { reportTypeLabelAr } from "@/lib/reportTypeAr";
 import { AlertModal } from "@/app/components/AlertModal";
 
@@ -41,6 +41,9 @@ export default function AdminDashboard() {
     const loadingMoreInvestorsRef = useRef(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingInvestor, setEditingInvestor] = useState<InvestorListItem | null>(null);
+    const [deletingInvestor, setDeletingInvestor] = useState<InvestorListItem | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [deleteError, setDeleteError] = useState<string | null>(null);
     const [canManageInvestors, setCanManageInvestors] = useState(false);
     const [currentTime, setCurrentTime] = useState("");
 
@@ -172,6 +175,21 @@ export default function AdminDashboard() {
         setSectorFilterIds([]);
         setSortField(null);
     }, []);
+
+    const handleDeleteInvestor = useCallback(async () => {
+        if (!deletingInvestor) return;
+        setIsDeleting(true);
+        setDeleteError(null);
+        const result = await deleteInvestor(deletingInvestor.id);
+        if (result.success) {
+            setDeletingInvestor(null);
+            setInvestors((prev) => prev.filter((inv) => inv.id !== deletingInvestor.id));
+            setInvestorsTotal((prev) => prev - 1);
+        } else {
+            setDeleteError(result.error ?? "حدث خطأ أثناء الحذف.");
+        }
+        setIsDeleting(false);
+    }, [deletingInvestor]);
 
     const openFilterModal = useCallback((col: keyof typeof colFilters) => {
         setActiveFilterCol(col);
@@ -390,9 +408,9 @@ export default function AdminDashboard() {
                                         </button>
                                     </div>
                                 </th>
-                                <th className="px-6 py-4 text-center font-medium">
+                                <th className="px-4 py-4 text-center font-medium whitespace-nowrap w-0">
                                     <div className="flex items-center justify-center gap-2">
-                                        <span>قطاعات الاستثمار</span>
+                                        <span>القطاعات</span>
                                         <button type="button" onClick={() => setSectorFilterOpen(true)} className={`p-1 rounded-md transition-colors relative ${sectorFilterIds.length > 0 ? "text-primary bg-primary/10" : "text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800"}`} title="تصفية">
                                             <Filter size={14} />
                                             {sectorFilterIds.length > 0 && <span className="absolute -top-1 -left-1 w-3.5 h-3.5 rounded-full bg-primary text-white text-[9px] flex items-center justify-center font-bold">{sectorFilterIds.length}</span>}
@@ -410,7 +428,8 @@ export default function AdminDashboard() {
                                         </button>
                                     </div>
                                 </th>
-                                <th className="px-6 py-4 text-center font-medium">
+                                {/* عمود تاريخ الانضمام — يظهر الآن تحت اسم المستثمر */}
+                                {/*<th className="px-6 py-4 text-center font-medium">
                                     <div className="flex items-center justify-center gap-2">
                                         <div className="flex items-center gap-1.5 cursor-pointer select-none" onClick={() => handleSort("createdAt")}>
                                             <span>تاريخ الانضمام</span>
@@ -420,7 +439,7 @@ export default function AdminDashboard() {
                                             <Filter size={14} />
                                         </button>
                                     </div>
-                                </th>
+                                </th>*/}
                                 <th className="px-6 py-4 text-center font-medium">إجراءات</th>
                             </tr>
                         </thead>
@@ -444,11 +463,12 @@ export default function AdminDashboard() {
                                         investor={investor}
                                         canManageInvestors={canManageInvestors}
                                         onEdit={() => setEditingInvestor(investor)}
+                                        onDelete={() => setDeletingInvestor(investor)}
                                     />
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan={8} className="px-6 py-12 text-center text-gray-500">
+                                    <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
                                         <div className="flex justify-center mb-2 opacity-20"><SearchX size={36} /></div>
                                         <p>لم يتم العثور على مستثمرين</p>
                                     </td>
@@ -749,6 +769,83 @@ export default function AdminDashboard() {
                 )}
             </AnimatePresence>
 
+            <AnimatePresence>
+                {deletingInvestor && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                            onClick={() => { if (!isDeleting) setDeletingInvestor(null); }}
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="relative bg-white dark:bg-card-dark rounded-2xl shadow-xl w-full max-w-sm"
+                        >
+                            <div className="p-5 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                                <h3 className="font-bold text-secondary dark:text-white flex items-center gap-2">
+                                    <Trash2 size={18} className="text-red-500" />
+                                    حذف مستثمر
+                                </h3>
+                                <button
+                                    type="button"
+                                    onClick={() => { if (!isDeleting) setDeletingInvestor(null); }}
+                                    className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                                >
+                                    <X size={16} />
+                                </button>
+                            </div>
+                            <div className="p-5 text-center space-y-3">
+                                <div className="w-14 h-14 mx-auto rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                                    <Trash2 size={28} className="text-red-500" />
+                                </div>
+                                <p className="text-secondary dark:text-white font-medium">
+                                    هل أنت متأكد من حذف المستثمر
+                                </p>
+                                <p className="text-primary font-bold text-lg">{deletingInvestor.name}</p>
+                                <p className="text-sm text-gray-500">
+                                    سيتم حذف جميع بيانات المستثمر وتقاريره بشكل نهائي ولا يمكن التراجع عن هذا الإجراء.
+                                </p>
+                                {deleteError && (
+                                    <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-lg p-2">{deleteError}</p>
+                                )}
+                            </div>
+                            <div className="p-4 border-t border-gray-100 dark:border-gray-800 flex gap-3">
+                                <button
+                                    type="button"
+                                    disabled={isDeleting}
+                                    onClick={() => setDeletingInvestor(null)}
+                                    className="flex-1 py-2.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+                                >
+                                    إلغاء
+                                </button>
+                                <button
+                                    type="button"
+                                    disabled={isDeleting}
+                                    onClick={handleDeleteInvestor}
+                                    className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                                >
+                                    {isDeleting ? (
+                                        <>
+                                            <Loader2 size={16} className="animate-spin" />
+                                            جاري الحذف...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Trash2 size={16} />
+                                            تأكيد الحذف
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
         </div>
     );
 }
@@ -757,10 +854,12 @@ function InvestorRowWithReports({
     investor,
     canManageInvestors,
     onEdit,
+    onDelete,
 }: {
     investor: InvestorListItem;
     canManageInvestors: boolean;
     onEdit: () => void;
+    onDelete: () => void;
 }) {
     const [open, setOpen] = useState(false);
     const [reports, setReports] = useState<
@@ -798,6 +897,7 @@ function InvestorRowWithReports({
                         </div>
                         <div>
                             <div className="font-bold text-secondary dark:text-white">{investor.name}</div>
+                            <div className="text-xs text-gray-400 mt-0.5">{new Date(investor.createdAt).toLocaleDateString("ar-EG")}</div>
                         </div>
                     </div>
                 </td>
@@ -807,8 +907,8 @@ function InvestorRowWithReports({
                 <td className="px-6 py-4 text-gray-600 dark:text-gray-300 dir-ltr text-right font-mono text-sm">
                     {investor.phoneNumber}
                 </td>
-                <td className="px-6 py-4 text-right">
-                    <div className="flex flex-wrap gap-1 justify-end max-w-[220px] ms-auto">
+                <td className="px-4 py-4 text-right">
+                    <div className="flex flex-wrap gap-1 justify-end max-w-[150px] ms-auto">
                         {investor.investmentSectors && investor.investmentSectors.length > 0 ? (
                             investor.investmentSectors.map((row) => (
                                 <span
@@ -840,21 +940,30 @@ function InvestorRowWithReports({
                         {count}
                     </button>
                 </td>
-                <td className="px-6 py-4 text-center text-sm text-gray-500">
-                    {new Date(investor.createdAt).toLocaleDateString("ar-EG")}
-                </td>
+                {/* تاريخ الانضمام — يظهر الآن تحت اسم المستثمر */}
                 <td className="px-6 py-4 text-center">
                     <div className="flex items-center justify-center gap-2 flex-wrap">
                         {canManageInvestors && (
-                            <button
-                                type="button"
-                                onClick={onEdit}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary hover:border-primary transition-all shadow-sm"
-                                title="تعديل بيانات المستثمر"
-                            >
-                                <Pencil size={16} />
-                                <span>تعديل</span>
-                            </button>
+                            <>
+                                <button
+                                    type="button"
+                                    onClick={onEdit}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary hover:border-primary transition-all shadow-sm"
+                                    title="تعديل بيانات المستثمر"
+                                >
+                                    <Pencil size={16} />
+                                    <span>تعديل</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={onDelete}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-card-dark border border-red-200 dark:border-red-900/50 rounded-lg text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-300 dark:hover:border-red-800 transition-all shadow-sm"
+                                    title="حذف المستثمر"
+                                >
+                                    <Trash2 size={16} />
+                                    <span>حذف</span>
+                                </button>
+                            </>
                         )}
                         <Link
                             href={`/admin/investors/${investor.id}`}
@@ -868,7 +977,7 @@ function InvestorRowWithReports({
             </tr>
             {open && (
                 <tr className="bg-gray-50/80 dark:bg-gray-900/40">
-                    <td colSpan={8} className="px-6 py-0 border-b border-gray-100 dark:border-gray-800">
+                    <td colSpan={7} className="px-6 py-0 border-b border-gray-100 dark:border-gray-800">
                         <motion.div
                             initial={{ opacity: 0, y: -6 }}
                             animate={{ opacity: 1, y: 0 }}

@@ -623,6 +623,37 @@ export async function createInvestor(formData: FormData) {
     }
 }
 
+export async function deleteInvestor(userId: number) {
+    await requirePageEdit("investors-manage");
+    try {
+        if (!userId || Number.isNaN(userId)) {
+            return { error: "معرف المستثمر غير صالح" };
+        }
+
+        const target = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { id: true, isAdmin: true },
+        });
+        if (!target) return { error: "المستثمر غير موجود" };
+        if (target.isAdmin) return { error: "لا يمكن حذف حساب إداري" };
+
+        await prisma.$transaction(async (tx) => {
+            await tx.reports.deleteMany({ where: { userId } });
+            await tx.rentalcarfundReportsDetails.deleteMany({ where: { investorId: userId } });
+            await tx.notifications.deleteMany({ where: { userId } });
+            await tx.emailLog.updateMany({ where: { recipientId: userId }, data: { recipientId: null } });
+            await tx.userInvestmentSector.deleteMany({ where: { userId } });
+            await tx.user.delete({ where: { id: userId } });
+        });
+
+        revalidatePath("/admin");
+        return { success: true };
+    } catch (error) {
+        console.error("deleteInvestor:", error);
+        return { error: "فشل حذف المستثمر" };
+    }
+}
+
 export async function updateInvestor(formData: FormData) {
     await requirePageEdit("investors-manage");
     try {

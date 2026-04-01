@@ -126,6 +126,56 @@ export async function loginWithNationalIdAndPhone(nationalId: string, phoneNumbe
     return { success: true, userId: user.id };
 }
 
+export async function switchProfile(targetUserId: number) {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("investor_session")?.value;
+    if (!token) {
+        return { success: false, error: "غير مصرح" };
+    }
+
+    let currentUserId: number;
+    try {
+        const { payload } = await jwtVerify(token, getSecretKey());
+        currentUserId = payload.userId as number;
+    } catch {
+        return { success: false, error: "انتهت الجلسة" };
+    }
+
+    const currentUser = await prisma.user.findUnique({
+        where: { id: currentUserId },
+        select: { password: true, phoneNumber: true },
+    });
+    if (!currentUser) return { success: false, error: "المستخدم غير موجود" };
+
+    const targetUser = await prisma.user.findUnique({
+        where: { id: targetUserId },
+        select: { id: true, password: true, phoneNumber: true },
+    });
+    if (
+        !targetUser ||
+        targetUser.password !== currentUser.password ||
+        targetUser.phoneNumber !== currentUser.phoneNumber
+    ) {
+        return { success: false, error: "لا يمكنك التبديل لهذا الملف" };
+    }
+
+    const secretKey = getSecretKey();
+    const jwt = await new SignJWT({ userId: targetUser.id })
+        .setProtectedHeader({ alg: "HS256" })
+        .setIssuedAt()
+        .setExpirationTime("7d")
+        .sign(secretKey);
+
+    cookieStore.set("investor_session", jwt, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 60 * 60 * 24 * 7,
+        path: "/",
+    });
+
+    return { success: true, userId: targetUser.id };
+}
+
 export async function logoutInvestor() {
     const cookieStore = await cookies();
     cookieStore.delete("investor_session");
