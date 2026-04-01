@@ -576,6 +576,10 @@ export async function createInvestor(formData: FormData) {
             return { error: "الاسم والجوال ورقم الهوية مطلوبة" };
         }
 
+        if (!/^5\d{7,9}$/.test(phoneNumber)) {
+            return { error: "رقم الجوال يجب أن يبدأ بـ 5 ويتكون من 8 إلى 10 أرقام" };
+        }
+
         const existingUser = await prisma.user.findFirst({
             where: {
                 OR: [{ phoneNumber }, { password: identity }],
@@ -640,11 +644,15 @@ export async function updateInvestor(formData: FormData) {
             return { error: "رقم الهوية مطلوب" };
         }
 
+        if (!/^5\d{7,9}$/.test(phoneNumber)) {
+            return { error: "رقم الجوال يجب أن يبدأ بـ 5 ويتكون من 8 إلى 10 أرقام" };
+        }
+
         const target = await prisma.user.findUnique({
             where: { id: userId },
-            select: { id: true, isAdmin: true },
+            select: { id: true },
         });
-        if (!target || target.isAdmin) {
+        if (!target ) {
             return { error: "المستثمر غير موجود" };
         }
 

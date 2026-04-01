@@ -766,6 +766,30 @@ function StatsCard({
     return card;
 }
 
+function PhoneInput({ defaultValue, className }: { defaultValue?: string; className: string }) {
+    const [value, setValue] = useState(defaultValue ?? "");
+
+    return (
+        <input
+            name="phoneNumber"
+            required
+            type="tel"
+            dir="ltr"
+            inputMode="numeric"
+            maxLength={10}
+            minLength={8}
+            placeholder="5XXXXXXXX"
+            value={value}
+            onChange={(e) => {
+                let v = e.target.value.replace(/\D/g, "");
+                if (v.length > 0 && v[0] !== "5") v = "";
+                setValue(v.slice(0, 10));
+            }}
+            className={className}
+        />
+    );
+}
+
 function EditInvestorModal({ investor, onClose }: { investor: InvestorListItem; onClose: () => void }) {
     const [isLoading, setIsLoading] = useState(false);
     const [formError, setFormError] = useState<string | null>(null);
@@ -843,11 +867,7 @@ function EditInvestorModal({ investor, onClose }: { investor: InvestorListItem; 
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                 رقم الجوال <span className="text-red-500">*</span>
                             </label>
-                            <input
-                                name="phoneNumber"
-                                required
-                                type="tel"
-                                dir="ltr"
+                            <PhoneInput
                                 defaultValue={investor.phoneNumber ?? ""}
                                 className="w-full p-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:ring-2 focus:ring-primary/20"
                             />
@@ -981,7 +1001,7 @@ function AddInvestorModal({ onClose }: { onClose: () => void }) {
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">رقم الجوال <span className="text-red-500">*</span></label>
-                            <input name="phoneNumber" required type="tel" dir="ltr" className="w-full p-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:ring-2 focus:ring-primary/20" />
+                            <PhoneInput className="w-full p-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:ring-2 focus:ring-primary/20" />
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
