@@ -101,7 +101,7 @@ export default async function PrivateInvestorPage({
                 <path d="M120-120v-80h720v80H120Zm70-200 128-364 126 150 148-242 168 456H190Zm140-80h304l-72-194-110 180-122-146-124 354h124Zm0-160Z" />
               </svg>
             </span>
-            <span className="text-center break-words leading-relaxed animate-hero-breathe" style={{ animationDelay: "0.15s" }}>استثمر مع روائس القمم</span>
+            <span className="text-center break-words leading-relaxed animate-hero-breathe" style={{ animationDelay: "0.15s" }}>استثمر مع مجموعة روائس</span>
           </h1>
         </div>
       </div>
