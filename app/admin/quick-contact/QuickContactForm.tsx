@@ -7,6 +7,9 @@ import { CheckCircle, AlertCircle, Phone, Info, Save } from "lucide-react";
 const PHONE_REGEX = /^\+?[0-9]*$/;
 const VALIDATION_MSG = "الرجاء إدخال أرقام وعلامة + فقط";
 
+const stripInvisibleChars = (str: string) =>
+    str.replace(/[\u200E\u200F\u200B\u200C\u200D\u2066\u2067\u2068\u2069\u202A-\u202E\uFEFF]/g, "").trim();
+
 type Settings = {
     legalPhone?: string | null;
     managementPhone?: string | null;
@@ -37,13 +40,17 @@ export function QuickContactForm({ settings }: { settings: Settings }) {
         const form = formRef.current;
         if (!form) return;
 
-        const legalPhone = (form.elements.namedItem("legalPhone") as HTMLInputElement)?.value ?? "";
-        const managementPhone = (form.elements.namedItem("managementPhone") as HTMLInputElement)?.value ?? "";
-        const suggestionsPhone = (form.elements.namedItem("suggestionsPhone") as HTMLInputElement)?.value ?? "";
+        const legalPhoneInput = form.elements.namedItem("legalPhone") as HTMLInputElement;
+        const managementPhoneInput = form.elements.namedItem("managementPhone") as HTMLInputElement;
+        const suggestionsPhoneInput = form.elements.namedItem("suggestionsPhone") as HTMLInputElement;
 
-        if (!validatePhone(legalPhone, "legalPhone")) return;
-        if (!validatePhone(managementPhone, "managementPhone")) return;
-        if (!validatePhone(suggestionsPhone, "suggestionsPhone")) return;
+        legalPhoneInput.value = stripInvisibleChars(legalPhoneInput.value);
+        managementPhoneInput.value = stripInvisibleChars(managementPhoneInput.value);
+        suggestionsPhoneInput.value = stripInvisibleChars(suggestionsPhoneInput.value);
+
+        if (!validatePhone(legalPhoneInput.value, "legalPhone")) return;
+        if (!validatePhone(managementPhoneInput.value, "managementPhone")) return;
+        if (!validatePhone(suggestionsPhoneInput.value, "suggestionsPhone")) return;
 
         const fd = new FormData(form);
         formAction(fd);

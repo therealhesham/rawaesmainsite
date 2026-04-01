@@ -25,9 +25,12 @@ export async function updateQuickContactSettings(
 ): Promise<QuickContactFormState> {
     await requirePageEdit("quick-contact");
     try {
-        const legalPhone = formData.get("legalPhone") as string;
-        const managementPhone = formData.get("managementPhone") as string;
-        const suggestionsPhone = formData.get("suggestionsPhone") as string;
+        const strip = (s: string) =>
+            s.replace(/[\u200E\u200F\u200B\u200C\u200D\u2066\u2067\u2068\u2069\u202A-\u202E\uFEFF]/g, "").trim();
+
+        const legalPhone = strip(formData.get("legalPhone") as string);
+        const managementPhone = strip(formData.get("managementPhone") as string);
+        const suggestionsPhone = strip(formData.get("suggestionsPhone") as string);
 
         const existingSettings = await prisma.quickContactSettings.findFirst();
 
