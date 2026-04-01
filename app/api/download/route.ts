@@ -19,15 +19,13 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ error: "Upstream error" }, { status: 502 });
         }
 
-        const contentType = response.headers.get("content-type") || "application/octet-stream";
         const body = response.body;
-
         const safeName = name.replace(/[^\w\u0600-\u06FF\s.\-()]/g, "_");
 
         return new NextResponse(body, {
             status: 200,
             headers: {
-                "Content-Type": contentType,
+                "Content-Type": "application/octet-stream",
                 "Content-Disposition": `attachment; filename="${encodeURIComponent(safeName)}"; filename*=UTF-8''${encodeURIComponent(safeName)}`,
                 "Cache-Control": "private, no-cache",
             },

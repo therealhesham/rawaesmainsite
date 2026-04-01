@@ -16,6 +16,17 @@ function getDownloadName(name: string): string {
   return /\.[a-z0-9]+$/i.test(baseName) ? baseName : `${baseName}.pdf`;
 }
 
+function triggerProxyDownload(linkUrl: string, downloadName: string) {
+  const proxyUrl = `/api/download?url=${encodeURIComponent(linkUrl)}&name=${encodeURIComponent(downloadName)}`;
+  const a = document.createElement("a");
+  a.href = proxyUrl;
+  a.setAttribute("download", downloadName);
+  a.style.display = "none";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
 export default function ReportFileActions({
   linkUrl,
   suggestedName,
@@ -30,11 +41,10 @@ export default function ReportFileActions({
     if (!linkUrl || loading) return;
 
     const downloadName = getDownloadName(suggestedName);
-    const proxyUrl = `/api/download?url=${encodeURIComponent(linkUrl)}&name=${encodeURIComponent(downloadName)}`;
-
     const isIOS = /iP(ad|hone|od)/.test(navigator.userAgent);
+
     if (isIOS) {
-      window.location.href = proxyUrl;
+      triggerProxyDownload(linkUrl, downloadName);
       return;
     }
 
@@ -53,7 +63,7 @@ export default function ReportFileActions({
         document.body.removeChild(link);
         window.URL.revokeObjectURL(blobUrl);
       } catch {
-        window.location.href = proxyUrl;
+        triggerProxyDownload(linkUrl, downloadName);
       } finally {
         setLoading(false);
       }

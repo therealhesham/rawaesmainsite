@@ -61,15 +61,25 @@ export default function InvestorDetailsClient({
 
   const hasAnyReportAction = permissions.canApprove || permissions.canPublish || permissions.canDeleteFile;
 
+  function triggerProxyDownload(fileUrl: string, name: string) {
+    const proxyUrl = `/api/download?url=${encodeURIComponent(fileUrl)}&name=${encodeURIComponent(name)}`;
+    const a = document.createElement("a");
+    a.href = proxyUrl;
+    a.setAttribute("download", name);
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
   function downloadAttachmentFile(url: string, attachmentId: number, suggestedName: string) {
     if (!url || downloadingAttachmentId !== null) return;
     const baseName = suggestedName?.trim() || "مرفق";
     const downloadName = /\.[a-z0-9]+$/i.test(baseName) ? baseName : `${baseName}.pdf`;
-    const proxyUrl = `/api/download?url=${encodeURIComponent(url)}&name=${encodeURIComponent(downloadName)}`;
 
     const isIOS = /iP(ad|hone|od)/.test(navigator.userAgent);
     if (isIOS) {
-      window.location.href = proxyUrl;
+      triggerProxyDownload(url, downloadName);
       return;
     }
 
@@ -89,7 +99,7 @@ export default function InvestorDetailsClient({
         window.URL.revokeObjectURL(blobUrl);
         toast.success("تم تحميل الملف");
       } catch {
-        window.location.href = proxyUrl;
+        triggerProxyDownload(url, downloadName);
       } finally {
         setDownloadingAttachmentId(null);
       }
