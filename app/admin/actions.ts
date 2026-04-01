@@ -581,13 +581,11 @@ export async function createInvestor(formData: FormData) {
         }
 
         const existingUser = await prisma.user.findFirst({
-            where: {
-                OR: [{ phoneNumber }, { password: identity }],
-            },
+            where: { password: identity },
         });
 
         if (existingUser) {
-            return { error: "المستخدم موجود بالفعل (رقم الهاتف أو الهوية)" };
+            return { error: "رقم الهوية مستخدم مسبقاً لمستثمر آخر" };
         }
 
         const validSectors =
@@ -659,11 +657,11 @@ export async function updateInvestor(formData: FormData) {
         const duplicate = await prisma.user.findFirst({
             where: {
                 id: { not: userId },
-                OR: [{ phoneNumber }, { password: identity }],
+                password: identity,
             },
         });
         if (duplicate) {
-            return { error: "رقم الهاتف أو الهوية مستخدم مسبقاً لمستثمر آخر" };
+            return { error: "رقم الهوية مستخدم مسبقاً لمستثمر آخر" };
         }
 
         const rawSectorIds = formData.getAll("sectorIds");
