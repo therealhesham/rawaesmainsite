@@ -30,6 +30,62 @@ export async function checkUserExists(nationalId: string, phoneNumber: string) {
     return { exists: true };
 }
 
+export async function getMatchingProfiles(nationalId: string, phoneNumber: string) {
+    const nid = nationalId.trim();
+    const phone = phoneNumber.trim();
+    if (!nid || !phone) {
+        return { profiles: [] };
+    }
+    const users = await prisma.user.findMany({
+        where: { password: nid, phoneNumber: phone },
+        select: {
+            id: true,
+            name: true,
+            profilepicture: true,
+            email: true,
+            investmentSectors: {
+                select: { sector: { select: { nameAr: true, key: true } } },
+            },
+        },
+    });
+    return {
+        profiles: users.map((u) => ({
+            id: u.id,
+            name: u.name,
+            profilepicture: u.profilepicture,
+            email: u.email,
+            sectors: u.investmentSectors.map((s) => s.sector.nameAr || s.sector.key),
+        })),
+    };
+}
+
+export async function loginAsProfile(userId: number) {
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { id: true },
+    });
+    if (!user) {
+        return { success: false, error: "الملف الشخصي غير موجود" };
+    }
+
+    const secretKey = getSecretKey();
+    const jwt = await new SignJWT({ userId: user.id })
+        .setProtectedHeader({ alg: "HS256" })
+        .setIssuedAt()
+        .setExpirationTime("7d")
+        .sign(secretKey);
+
+    const cookieStore = await cookies();
+    cookieStore.set("investor_session", jwt, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 60 * 60 * 24 * 7,
+        path: "/",
+    });
+
+    return { success: true, userId: user.id };
+}
+
 export async function loginWithNationalIdAndPhone(nationalId: string, phoneNumber: string) {
     const nid = nationalId.trim();
     const phone = phoneNumber.trim();
@@ -38,31 +94,32 @@ export async function loginWithNationalIdAndPhone(nationalId: string, phoneNumbe
         return { success: false, error: "أدخل رقم الهوية ورقم الجوال" };
     }
 
-    const user = await prisma.user.findFirst({
-        where: {
-            password: nid,
-            phoneNumber: phone,
-        },
+    const users = await prisma.user.findMany({
+        where: { password: nid, phoneNumber: phone },
+        select: { id: true },
     });
 
-    if (!user) {
+    if (users.length === 0) {
         return { success: false, error: "رقم الهوية أو رقم الجوال غير مطابق. تحقق من البيانات أو تواصل مع الدعم." };
     }
 
-    // Create a JWT
+    if (users.length > 1) {
+        return { success: true, multipleProfiles: true, profileCount: users.length };
+    }
+
+    const user = users[0];
     const secretKey = getSecretKey();
     const jwt = await new SignJWT({ userId: user.id })
         .setProtectedHeader({ alg: 'HS256' })
         .setIssuedAt()
-        .setExpirationTime('7d') // 1 week
+        .setExpirationTime('7d')
         .sign(secretKey);
 
-    // Set HTTP-only cookie
     const cookieStore = await cookies();
     cookieStore.set("investor_session", jwt, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        maxAge: 60 * 60 * 24 * 7, // 1 week
+        maxAge: 60 * 60 * 24 * 7,
         path: "/",
     });
 

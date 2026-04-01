@@ -4,7 +4,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { checkUserExists, loginWithNationalIdAndPhone } from "./actions";
+import { checkUserExists, loginWithNationalIdAndPhone, getMatchingProfiles, loginAsProfile } from "./actions";
 import { AlertModal } from "@/app/components/AlertModal";
 
 const OTP_LENGTH = 6;
@@ -14,11 +14,12 @@ export default function LoginPage() {
     const router = useRouter();
     const [nationalId, setNationalId] = useState("");
     const [phoneNumber, setPhoneNumber] = useState("");
-    const [step, setStep] = useState<"credentials" | "otp">("credentials");
+    const [step, setStep] = useState<"credentials" | "otp" | "profiles">("credentials");
     const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
     const [loading, setLoading] = useState(false);
     const [loginError, setLoginError] = useState<string | null>(null);
     const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
+    const [profiles, setProfiles] = useState<{ id: number; name: string; profilepicture: string | null; email: string | null; sectors: string[] }[]>([]);
 
     const handleCredentialsSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -95,6 +96,27 @@ export default function LoginPage() {
         setLoading(true);
         try {
             const result = await loginWithNationalIdAndPhone(nationalId, phoneNumber);
+            if (result.success && result.multipleProfiles) {
+                const profilesResult = await getMatchingProfiles(nationalId, phoneNumber);
+                setProfiles(profilesResult.profiles);
+                setStep("profiles");
+            } else if (result.success && result.userId) {
+                router.push(`/privatepage/${result.userId}`);
+            } else {
+                setLoginError(result.error || "خطأ في تسجيل الدخول");
+            }
+        } catch {
+            setLoginError("حدث خطأ. حاول لاحقاً.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleProfileSelect = async (profileId: number) => {
+        setLoading(true);
+        setLoginError(null);
+        try {
+            const result = await loginAsProfile(profileId);
             if (result.success && result.userId) {
                 router.push(`/privatepage/${result.userId}`);
             } else {
@@ -248,7 +270,7 @@ export default function LoginPage() {
                     </div>
 
                     <AnimatePresence mode="wait">
-                        {step === "credentials" ? (
+                        {step === "credentials" && (
                             <motion.div
                                 key="credentials"
                                 initial={{ opacity: 0, x: 20 }}
@@ -315,7 +337,8 @@ export default function LoginPage() {
                                     </motion.button>
                                 </form>
                             </motion.div>
-                        ) : (
+                        )}
+                        {step === "otp" && (
                             <motion.div
                                 key="otp"
                                 initial={{ opacity: 0, x: 20 }}
@@ -365,18 +388,78 @@ export default function LoginPage() {
                                 </form>
                             </motion.div>
                         )}
+                        {step === "profiles" && (
+                            <motion.div
+                                key="profiles"
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                transition={{ duration: 0.4 }}
+                            >
+                                <motion.div className="mb-8 text-center">
+                                    <button
+                                        type="button"
+                                        onClick={() => { setStep("credentials"); setOtp(Array(OTP_LENGTH).fill("")); setLoginError(null); setProfiles([]); }}
+                                        className="flex items-center gap-2 text-secondary/60 dark:text-gray-400 hover:text-primary mb-4 transition-colors"
+                                    >
+                                        <span className="material-icons">arrow_forward</span>
+                                        <span>رجوع</span>
+                                    </button>
+                                    <h2 className="text-2xl md:text-3xl font-bold text-secondary dark:text-white mb-3">
+                                        اختر ملفك الاستثماري
+                                    </h2>
+                                    <p className="text-secondary/60 dark:text-gray-400 text-sm">
+                                        لديك عدة ملفات استثمارية، اختر الملف الذي تريد الدخول إليه
+                                    </p>
+                                </motion.div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    {profiles.map((profile, index) => (
+                                        <motion.button
+                                            key={profile.id}
+                                            type="button"
+                                            onClick={() => handleProfileSelect(profile.id)}
+                                            disabled={loading}
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ duration: 0.3, delay: index * 0.1 }}
+                                            whileHover={{ scale: 1.04, y: -4 }}
+                                            whileTap={{ scale: 0.97 }}
+                                            className="group relative flex flex-col items-center gap-3 p-5 rounded-2xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-card-dark hover:border-primary hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 cursor-pointer disabled:opacity-60"
+                                        >
+                                            <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                                            <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-[#003B46] to-[#005a6e] flex items-center justify-center text-2xl font-bold text-white shadow-lg group-hover:shadow-primary/30 transition-shadow duration-300 overflow-hidden">
+                                          
+                                                    <span>{profile.name.charAt(0)}</span>
+                                                
+                                                <div className="absolute inset-0 rounded-full border-2 border-transparent group-hover:border-primary transition-colors duration-300" />
+                                            </div>
+
+                                            <div className="relative text-center min-w-0 w-full">
+                                                <p className="font-bold text-secondary dark:text-white text-sm truncate group-hover:text-primary transition-colors duration-300">
+                                                    {profile.name}
+                                                </p>
+                                                {profile.sectors.length > 0 && (
+                                                    <p className="text-xs text-secondary/50 dark:text-gray-500 mt-1 truncate">
+                                                        {profile.sectors.join(" • ")}
+                                                    </p>
+                                                )}
+                                            </div>
+
+                                            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                        </motion.button>
+                                    ))}
+                                </div>
+
+                                {loading && (
+                                    <div className="flex justify-center mt-6">
+                                        <span className="material-icons animate-spin text-primary text-3xl">refresh</span>
+                                    </div>
+                                )}
+                            </motion.div>
+                        )}
                     </AnimatePresence>
-                    {/* 
-                    <motion.div className="my-8 flex items-center gap-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }}>
-                        <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
-                        <span className="text-xs text-gray-400 dark:text-gray-500">أو</span>
-                        <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
-                    </motion.div>
-                    <motion.div className="text-center mb-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.85 }}>
-                        <Link href="/login_otp" className="text-sm text-primary hover:underline">
-                            تسجيل دخول مع OTP حقيقي (إرسال SMS)
-                        </Link>
-                    </motion.div> */}
 
                     {/* Contact support card */}
                     <motion.div
