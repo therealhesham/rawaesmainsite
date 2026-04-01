@@ -685,16 +685,6 @@ export async function updateInvestor(formData: FormData) {
             return { error: "المستثمر غير موجود" };
         }
 
-        const duplicate = await prisma.user.findFirst({
-            where: {
-                id: { not: userId },
-                password: identity,
-            },
-        });
-        if (duplicate) {
-            return { error: "رقم الهوية مستخدم مسبقاً لمستثمر آخر" };
-        }
-
         const rawSectorIds = formData.getAll("sectorIds");
         const requestedSectorIds = rawSectorIds
             .map((s) => parseInt(String(s), 10))
