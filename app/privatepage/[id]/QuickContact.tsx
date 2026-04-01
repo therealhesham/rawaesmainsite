@@ -27,12 +27,12 @@ export default function QuickContact({ settings }: { settings: QuickContactSetti
             <div className="relative w-full flex flex-col items-center">
                 <button
                     onClick={() => setIsOpen(!isOpen)}
-                    className="group flex items-center justify-center gap-3 bg-green-500 hover:bg-green-600 active:scale-95 text-white py-3 px-8 rounded-xl transition-all duration-200 hover:shadow-lg hover:-translate-y-1 w-full md:w-auto"
+                    className="group flex items-center justify-center gap-3 bg-green-500 hover:bg-green-400 active:bg-green-700 active:scale-90 text-white py-3 px-8 rounded-xl transition-all duration-150 hover:shadow-[0_8px_25px_rgba(34,197,94,0.4)] hover:-translate-y-1.5 w-full md:w-auto"
                 >
                     <span className="font-bold text-lg">تواصل معنا</span>
                     <img
                         alt="Whatsapp"
-                        className="w-6 h-6 filter brightness-0 invert group-hover:scale-110 transition-transform duration-200"
+                        className="w-6 h-6 filter brightness-0 invert group-hover:scale-125 group-active:scale-90 transition-transform duration-150"
                         src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"
                     />
                 </button>
@@ -51,15 +51,15 @@ export default function QuickContact({ settings }: { settings: QuickContactSetti
                                         setIsOpen(false);
                                     }
                                 }}
-                                className={`group/item flex items-center justify-between py-3 px-5 rounded-xl border transition-all duration-200 ${item.phone
-                                        ? "bg-gray-50 dark:bg-gray-800 hover:bg-green-50 dark:hover:bg-green-900/30 hover:border-green-300 dark:hover:border-green-700 hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] text-[#003B46] dark:text-gray-200 border-gray-100 dark:border-gray-700"
+                                className={`group/item flex items-center justify-between py-3 px-5 rounded-xl border-2 transition-all duration-150 ${item.phone
+                                        ? "bg-white dark:bg-gray-800 hover:bg-green-500 hover:text-white dark:hover:bg-green-600 hover:shadow-[0_6px_20px_rgba(34,197,94,0.35)] hover:-translate-y-1 active:scale-95 active:shadow-none text-[#003B46] dark:text-gray-200 border-gray-200 dark:border-gray-700 hover:border-green-500 dark:hover:border-green-600"
                                         : "bg-gray-100 dark:bg-gray-900 text-gray-400 border-gray-100 dark:border-gray-800 cursor-not-allowed"
                                     }`}
                             >
-                                <span className={`font-medium transition-colors duration-200 ${item.phone ? "group-hover/item:text-green-700 dark:group-hover/item:text-green-400" : ""}`}>{item.title}</span>
+                                <span className={`font-semibold transition-colors duration-150 ${item.phone ? "group-hover/item:text-white" : ""}`}>{item.title}</span>
                                 <img
                                     alt="Whatsapp"
-                                    className={`w-5 h-5 transition-all duration-200 ${item.phone ? "opacity-70 group-hover/item:opacity-100 group-hover/item:scale-110" : "opacity-30 grayscale"}`}
+                                    className={`w-5 h-5 transition-all duration-150 ${item.phone ? "opacity-60 group-hover/item:opacity-100 group-hover/item:scale-125 group-hover/item:brightness-0 group-hover/item:invert" : "opacity-30 grayscale"}`}
                                     src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"
                                 />
                             </a>
