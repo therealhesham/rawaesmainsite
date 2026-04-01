@@ -61,29 +61,39 @@ export default function InvestorDetailsClient({
 
   const hasAnyReportAction = permissions.canApprove || permissions.canPublish || permissions.canDeleteFile;
 
-  async function downloadAttachmentFile(url: string, attachmentId: number, suggestedName: string) {
+  function downloadAttachmentFile(url: string, attachmentId: number, suggestedName: string) {
     if (!url || downloadingAttachmentId !== null) return;
     const baseName = suggestedName?.trim() || "مرفق";
     const downloadName = /\.[a-z0-9]+$/i.test(baseName) ? baseName : `${baseName}.pdf`;
-    setDownloadingAttachmentId(attachmentId);
-    try {
-      const response = await fetch(url);
-      const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = blobUrl;
-      link.download = downloadName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(blobUrl);
-      toast.success("تم تحميل الملف");
-    } catch {
-      toast.error("تعذر التحميل، جاري فتح الرابط في تبويب جديد");
-      window.open(url, "_blank");
-    } finally {
-      setDownloadingAttachmentId(null);
+    const proxyUrl = `/api/download?url=${encodeURIComponent(url)}&name=${encodeURIComponent(downloadName)}`;
+
+    const isIOS = /iP(ad|hone|od)/.test(navigator.userAgent);
+    if (isIOS) {
+      window.location.href = proxyUrl;
+      return;
     }
+
+    setDownloadingAttachmentId(attachmentId);
+    void (async () => {
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error("fetch failed");
+        const blob = await response.blob();
+        const blobUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = blobUrl;
+        link.download = downloadName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(blobUrl);
+        toast.success("تم تحميل الملف");
+      } catch {
+        window.location.href = proxyUrl;
+      } finally {
+        setDownloadingAttachmentId(null);
+      }
+    })();
   }
 
   useEffect(() => {

@@ -11,10 +11,9 @@ type Props = {
   downloadClassName: string;
 };
 
-/** Safari على iPhone/iPad لا يدعم تنزيل blob عبر <a download> كما على الديسكتوب، ويفقد النقر «user gesture» بعد await فيُحظر فتح نافذة جديدة */
-function isAppleMobile(): boolean {
-  if (typeof navigator === "undefined") return false;
-  return /iP(ad|hone|od)/.test(navigator.userAgent);
+function getDownloadName(name: string): string {
+  const baseName = name?.trim() || "ملف";
+  return /\.[a-z0-9]+$/i.test(baseName) ? baseName : `${baseName}.pdf`;
 }
 
 export default function ReportFileActions({
@@ -29,56 +28,32 @@ export default function ReportFileActions({
 
   function handleDownload() {
     if (!linkUrl || loading) return;
-    const baseName = suggestedName?.trim() || "ملف";
-    const downloadName = /\.[a-z0-9]+$/i.test(baseName) ? baseName : `${baseName}.pdf`;
-    const appleMobile = isAppleMobile();
 
-    /** يجب أن يكون في نفس لحظة النقر حتى لا يحظر Safari النافذة بعد await */
-    const popup = appleMobile ? window.open("about:blank", "_blank", "noopener,noreferrer") : null;
+    const downloadName = getDownloadName(suggestedName);
+    const proxyUrl = `/api/download?url=${encodeURIComponent(linkUrl)}&name=${encodeURIComponent(downloadName)}`;
+
+    const isIOS = /iP(ad|hone|od)/.test(navigator.userAgent);
+    if (isIOS) {
+      window.location.href = proxyUrl;
+      return;
+    }
 
     setLoading(true);
-
     void (async () => {
       try {
         const response = await fetch(linkUrl);
         if (!response.ok) throw new Error("fetch failed");
         const blob = await response.blob();
         const blobUrl = window.URL.createObjectURL(blob);
-
-        if (appleMobile) {
-          if (popup && !popup.closed) {
-            popup.location.href = blobUrl;
-            setTimeout(() => window.URL.revokeObjectURL(blobUrl), 120_000);
-          } else {
-            const a = document.createElement("a");
-            a.href = blobUrl;
-            a.target = "_blank";
-            a.rel = "noopener noreferrer";
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            setTimeout(() => window.URL.revokeObjectURL(blobUrl), 120_000);
-          }
-        } else {
-          const link = document.createElement("a");
-          link.href = blobUrl;
-          link.download = downloadName;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          window.URL.revokeObjectURL(blobUrl);
-        }
+        const link = document.createElement("a");
+        link.href = blobUrl;
+        link.download = downloadName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(blobUrl);
       } catch {
-        if (popup && !popup.closed) {
-          try {
-            popup.location.href = linkUrl;
-          } catch {
-            popup.close();
-            window.open(linkUrl, "_blank", "noopener,noreferrer");
-          }
-        } else {
-          window.open(linkUrl, "_blank", "noopener,noreferrer");
-        }
+        window.location.href = proxyUrl;
       } finally {
         setLoading(false);
       }
