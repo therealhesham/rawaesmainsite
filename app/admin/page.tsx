@@ -1,10 +1,10 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { AnimatePresence } from "framer-motion";
-import { Plus, RefreshCw, Users, FileText, List, Search, ArrowLeft, SearchX, X, ChevronDown, ChevronUp, ExternalLink, ShieldAlert, Send, BadgeCheck, Briefcase, Loader2, Pencil, Check } from "lucide-react";
+import { Plus, RefreshCw, Users, FileText, List, Search, ArrowLeft, SearchX, X, ChevronDown, ChevronUp, ExternalLink, ShieldAlert, Send, BadgeCheck, Briefcase, Loader2, Pencil, Check, ArrowUpDown, Filter } from "lucide-react";
 import { getInvestorsPaged, getStats, createInvestor, updateInvestor, checkAdminPermission, getInvestorReportsForAdmin, getInvestmentSectors, createInvestmentSector, updateInvestmentSector } from "./actions";
 import { reportTypeLabelAr } from "@/lib/reportTypeAr";
 import { AlertModal } from "@/app/components/AlertModal";
@@ -54,6 +54,14 @@ export default function AdminDashboard() {
     const [sectorError, setSectorError] = useState("");
     const [sectorsModalOpen, setSectorsModalOpen] = useState(false);
 
+    const [sortField, setSortField] = useState<string | null>(null);
+    const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+    const [colFilters, setColFilters] = useState({ name: "", nationalId: "", phoneNumber: "", reports: "", createdAt: "" });
+    const [sectorFilterIds, setSectorFilterIds] = useState<number[]>([]);
+    const [sectorFilterOpen, setSectorFilterOpen] = useState(false);
+    const [activeFilterCol, setActiveFilterCol] = useState<keyof typeof colFilters | null>(null);
+    const [filterModalValue, setFilterModalValue] = useState("");
+
     useEffect(() => {
         setCurrentTime(new Date().toLocaleTimeString("ar-EG"));
     }, []);
@@ -68,9 +76,7 @@ export default function AdminDashboard() {
             if (cancelled) return;
             setStats(statsData as any);
             setCanManageInvestors(hasPermission);
-            if (hasPermission) {
-                getInvestmentSectors().then(setSectors);
-            }
+            getInvestmentSectors().then(setSectors);
         }
         fetchStatsAndPermission();
         return () => {
@@ -149,6 +155,80 @@ export default function AdminDashboard() {
         }
         setSectorSaving(false);
     };
+
+    const handleSort = useCallback((field: string) => {
+        if (sortField === field) {
+            setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+        } else {
+            setSortField(field);
+            setSortDir("asc");
+        }
+    }, [sortField]);
+
+    const hasActiveFilters = !!(colFilters.name || colFilters.nationalId || colFilters.phoneNumber || colFilters.reports || colFilters.createdAt || sectorFilterIds.length > 0);
+
+    const clearAllFilters = useCallback(() => {
+        setColFilters({ name: "", nationalId: "", phoneNumber: "", reports: "", createdAt: "" });
+        setSectorFilterIds([]);
+        setSortField(null);
+    }, []);
+
+    const openFilterModal = useCallback((col: keyof typeof colFilters) => {
+        setActiveFilterCol(col);
+        setFilterModalValue(colFilters[col] || "");
+    }, [colFilters]);
+
+    const applyFilterModal = useCallback(() => {
+        if (!activeFilterCol) return;
+        setColFilters((prev) => ({ ...prev, [activeFilterCol]: filterModalValue }));
+        setActiveFilterCol(null);
+    }, [activeFilterCol, filterModalValue]);
+
+    const clearFilterModal = useCallback(() => {
+        if (!activeFilterCol) return;
+        setColFilters((prev) => ({ ...prev, [activeFilterCol]: "" }));
+        setActiveFilterCol(null);
+    }, [activeFilterCol]);
+
+    const filterColLabels: Record<string, string> = { name: "المستثمر", nationalId: "رقم الهوية", phoneNumber: "رقم الجوال", reports: "التقارير", createdAt: "تاريخ الانضمام" };
+
+    const filteredInvestors = useMemo(() => {
+        let result = [...investors] as InvestorListItem[];
+
+        if (colFilters.name) result = result.filter((inv) => inv.name.toLowerCase().includes(colFilters.name.toLowerCase()));
+        if (colFilters.nationalId) result = result.filter((inv) => (inv.password ?? "").includes(colFilters.nationalId));
+        if (colFilters.phoneNumber) result = result.filter((inv) => (inv.phoneNumber ?? "").includes(colFilters.phoneNumber));
+        if (colFilters.reports) {
+            const n = parseInt(colFilters.reports);
+            if (!isNaN(n)) result = result.filter((inv) => inv._count.reports === n);
+        }
+        if (colFilters.createdAt) result = result.filter((inv) => new Date(inv.createdAt).toLocaleDateString("ar-EG").includes(colFilters.createdAt));
+        if (sectorFilterIds.length > 0) {
+            result = result.filter((inv) => {
+                const ids = inv.investmentSectors?.map((s) => s.sector.id) ?? [];
+                return sectorFilterIds.some((id) => ids.includes(id));
+            });
+        }
+
+        if (sortField) {
+            result.sort((a, b) => {
+                let valA: string | number, valB: string | number;
+                switch (sortField) {
+                    case "name": valA = a.name; valB = b.name; break;
+                    case "nationalId": valA = a.password ?? ""; valB = b.password ?? ""; break;
+                    case "phoneNumber": valA = a.phoneNumber ?? ""; valB = b.phoneNumber ?? ""; break;
+                    case "reports": valA = a._count.reports; valB = b._count.reports; break;
+                    case "createdAt": valA = new Date(a.createdAt).getTime(); valB = new Date(b.createdAt).getTime(); break;
+                    default: return 0;
+                }
+                if (valA < valB) return sortDir === "asc" ? -1 : 1;
+                if (valA > valB) return sortDir === "asc" ? 1 : -1;
+                return 0;
+            });
+        }
+
+        return result;
+    }, [investors, colFilters, sectorFilterIds, sortField, sortDir]);
 
     const investorsScrollSentinelRef = useRef<HTMLDivElement>(null);
 
@@ -275,15 +355,72 @@ export default function AdminDashboard() {
 
                 <div className="overflow-x-auto">
                     <table className="w-full">
-                        <thead className="bg-gray-50 dark:bg-gray-800/50 text-gray-500 dark:text-gray-400 text-sm">
+                        <thead className="bg-gray-50 dark:bg-gray-800/50 text-gray-500 dark:text-gray-400 text-sm whitespace-nowrap">
                             <tr>
-                                {/* <th className="px-6 py-4 text-right font-medium">ID</th> */}
-                                <th className="px-6 py-4 text-right font-medium">المستثمر</th>
-                                <th className="px-6 py-4 text-right font-medium">رقم الهوية</th>
-                                <th className="px-6 py-4 text-right font-medium">رقم الجوال</th>
-                                <th className="px-6 py-4 text-right font-medium">قطاعات الاستثمار</th>
-                                <th className="px-6 py-4 text-center font-medium">التقارير</th>
-                                <th className="px-6 py-4 text-center font-medium">تاريخ الانضمام</th>
+                                <th className="px-6 py-4 text-center font-medium">
+                                    <div className="flex items-center justify-center gap-2">
+                                        <div className="flex items-center gap-1.5 cursor-pointer select-none" onClick={() => handleSort("name")}>
+                                            <span>المستثمر</span>
+                                            {sortField === "name" ? (sortDir === "asc" ? <ChevronUp size={14} className="text-primary" /> : <ChevronDown size={14} className="text-primary" />) : <ArrowUpDown size={14} className="opacity-30" />}
+                                        </div>
+                                        <button type="button" onClick={() => openFilterModal("name")} className={`p-1 rounded-md transition-colors ${colFilters.name ? "text-primary bg-primary/10" : "text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800"}`} title="تصفية">
+                                            <Filter size={14} />
+                                        </button>
+                                    </div>
+                                </th>
+                                <th className="px-6 py-4 text-center font-medium">
+                                    <div className="flex items-center justify-center gap-2">
+                                        <div className="flex items-center gap-1.5 cursor-pointer select-none" onClick={() => handleSort("nationalId")}>
+                                            <span>رقم الهوية</span>
+                                            {sortField === "nationalId" ? (sortDir === "asc" ? <ChevronUp size={14} className="text-primary" /> : <ChevronDown size={14} className="text-primary" />) : <ArrowUpDown size={14} className="opacity-30" />}
+                                        </div>
+                                        <button type="button" onClick={() => openFilterModal("nationalId")} className={`p-1 rounded-md transition-colors ${colFilters.nationalId ? "text-primary bg-primary/10" : "text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800"}`} title="تصفية">
+                                            <Filter size={14} />
+                                        </button>
+                                    </div>
+                                </th>
+                                <th className="px-6 py-4 text-center font-medium">
+                                    <div className="flex items-center justify-center gap-2">
+                                        <div className="flex items-center gap-1.5 cursor-pointer select-none" onClick={() => handleSort("phoneNumber")}>
+                                            <span>رقم الجوال</span>
+                                            {sortField === "phoneNumber" ? (sortDir === "asc" ? <ChevronUp size={14} className="text-primary" /> : <ChevronDown size={14} className="text-primary" />) : <ArrowUpDown size={14} className="opacity-30" />}
+                                        </div>
+                                        <button type="button" onClick={() => openFilterModal("phoneNumber")} className={`p-1 rounded-md transition-colors ${colFilters.phoneNumber ? "text-primary bg-primary/10" : "text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800"}`} title="تصفية">
+                                            <Filter size={14} />
+                                        </button>
+                                    </div>
+                                </th>
+                                <th className="px-6 py-4 text-center font-medium">
+                                    <div className="flex items-center justify-center gap-2">
+                                        <span>قطاعات الاستثمار</span>
+                                        <button type="button" onClick={() => setSectorFilterOpen(true)} className={`p-1 rounded-md transition-colors relative ${sectorFilterIds.length > 0 ? "text-primary bg-primary/10" : "text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800"}`} title="تصفية">
+                                            <Filter size={14} />
+                                            {sectorFilterIds.length > 0 && <span className="absolute -top-1 -left-1 w-3.5 h-3.5 rounded-full bg-primary text-white text-[9px] flex items-center justify-center font-bold">{sectorFilterIds.length}</span>}
+                                        </button>
+                                    </div>
+                                </th>
+                                <th className="px-6 py-4 text-center font-medium">
+                                    <div className="flex items-center justify-center gap-2">
+                                        <div className="flex items-center gap-1.5 cursor-pointer select-none" onClick={() => handleSort("reports")}>
+                                            <span>التقارير</span>
+                                            {sortField === "reports" ? (sortDir === "asc" ? <ChevronUp size={14} className="text-primary" /> : <ChevronDown size={14} className="text-primary" />) : <ArrowUpDown size={14} className="opacity-30" />}
+                                        </div>
+                                        <button type="button" onClick={() => openFilterModal("reports")} className={`p-1 rounded-md transition-colors ${colFilters.reports ? "text-primary bg-primary/10" : "text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800"}`} title="تصفية">
+                                            <Filter size={14} />
+                                        </button>
+                                    </div>
+                                </th>
+                                <th className="px-6 py-4 text-center font-medium">
+                                    <div className="flex items-center justify-center gap-2">
+                                        <div className="flex items-center gap-1.5 cursor-pointer select-none" onClick={() => handleSort("createdAt")}>
+                                            <span>تاريخ الانضمام</span>
+                                            {sortField === "createdAt" ? (sortDir === "asc" ? <ChevronUp size={14} className="text-primary" /> : <ChevronDown size={14} className="text-primary" />) : <ArrowUpDown size={14} className="opacity-30" />}
+                                        </div>
+                                        <button type="button" onClick={() => openFilterModal("createdAt")} className={`p-1 rounded-md transition-colors ${colFilters.createdAt ? "text-primary bg-primary/10" : "text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800"}`} title="تصفية">
+                                            <Filter size={14} />
+                                        </button>
+                                    </div>
+                                </th>
                                 <th className="px-6 py-4 text-center font-medium">إجراءات</th>
                             </tr>
                         </thead>
@@ -300,13 +437,13 @@ export default function AdminDashboard() {
                                         <td className="px-6 py-4"><div className="h-8 bg-gray-200 rounded w-20 mx-auto"></div></td>
                                     </tr>
                                 ))
-                            ) : investors.length > 0 ? (
-                                investors.map((investor) => (
+                            ) : filteredInvestors.length > 0 ? (
+                                filteredInvestors.map((investor) => (
                                     <InvestorRowWithReports
                                         key={investor.id}
-                                        investor={investor as InvestorListItem}
+                                        investor={investor}
                                         canManageInvestors={canManageInvestors}
-                                        onEdit={() => setEditingInvestor(investor as InvestorListItem)}
+                                        onEdit={() => setEditingInvestor(investor)}
                                     />
                                 ))
                             ) : (
@@ -330,16 +467,26 @@ export default function AdminDashboard() {
                     <span>
                         {isLoading
                             ? "…"
-                            : investorsTotal > investors.length
-                              ? `عرض ${investors.length} من ${investorsTotal} مستثمر`
-                              : `عرض ${investors.length} مستثمر`}
+                            : hasActiveFilters
+                              ? `عرض ${filteredInvestors.length} من ${investors.length} (مُصفّى) — إجمالي ${investorsTotal}`
+                              : investorsTotal > investors.length
+                                ? `عرض ${investors.length} من ${investorsTotal} مستثمر`
+                                : `عرض ${investors.length} مستثمر`}
                     </span>
-                    {isLoadingMoreInvestors ? (
-                        <span className="text-primary flex items-center gap-2">
-                            <RefreshCw size={14} className="animate-spin" />
-                            جاري تحميل المزيد…
-                        </span>
-                    ) : null}
+                    <div className="flex items-center gap-3">
+                        {hasActiveFilters && (
+                            <button type="button" onClick={clearAllFilters} className="text-xs text-primary hover:underline flex items-center gap-1">
+                                <X size={12} />
+                                مسح التصفية
+                            </button>
+                        )}
+                        {isLoadingMoreInvestors && (
+                            <span className="text-primary flex items-center gap-2">
+                                <RefreshCw size={14} className="animate-spin" />
+                                جاري تحميل المزيد…
+                            </span>
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -352,6 +499,118 @@ export default function AdminDashboard() {
             <AnimatePresence>
                 {editingInvestor && (
                     <EditInvestorModal investor={editingInvestor} onClose={() => setEditingInvestor(null)} />
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {activeFilterCol && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                            onClick={() => setActiveFilterCol(null)}
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="relative bg-white dark:bg-card-dark rounded-2xl shadow-xl w-full max-w-xs"
+                        >
+                            <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                                <h3 className="font-bold text-secondary dark:text-white flex items-center gap-2 text-sm">
+                                    <Search size={16} className="text-primary" />
+                                    بحث في {filterColLabels[activeFilterCol]}
+                                </h3>
+                                <button type="button" onClick={() => setActiveFilterCol(null)} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                                    <X size={16} />
+                                </button>
+                            </div>
+                            <div className="p-4">
+                                <input
+                                    type="text"
+                                    autoFocus
+                                    value={filterModalValue}
+                                    onChange={(e) => setFilterModalValue(e.target.value)}
+                                    onKeyDown={(e) => { if (e.key === "Enter") applyFilterModal(); if (e.key === "Escape") setActiveFilterCol(null); }}
+                                    placeholder={activeFilterCol === "reports" ? "أدخل العدد..." : "أدخل نص البحث..."}
+                                    className="w-full p-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-sm"
+                                />
+                                <p className="text-[11px] text-gray-400 mt-2">اضغط Enter للتطبيق</p>
+                            </div>
+                            <div className="p-4 border-t border-gray-100 dark:border-gray-800 flex gap-2">
+                                <button type="button" onClick={clearFilterModal} className="flex-1 py-2 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-sm font-medium">
+                                    مسح
+                                </button>
+                                <button type="button" onClick={applyFilterModal} className="flex-1 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium">
+                                    تطبيق
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {sectorFilterOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                            onClick={() => setSectorFilterOpen(false)}
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="relative bg-white dark:bg-card-dark rounded-2xl shadow-xl w-full max-w-sm"
+                        >
+                            <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                                <h3 className="font-bold text-secondary dark:text-white flex items-center gap-2">
+                                    <Filter size={18} className="text-primary" />
+                                    تصفية حسب القطاع
+                                </h3>
+                                <button onClick={() => setSectorFilterOpen(false)} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                                    <X size={18} />
+                                </button>
+                            </div>
+                            <div className="p-4 space-y-2">
+                                {sectors.length === 0 ? (
+                                    <p className="text-sm text-gray-500 text-center py-4">لا توجد قطاعات في النظام.</p>
+                                ) : (
+                                    <>
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <button type="button" onClick={() => setSectorFilterIds(sectors.map((s) => s.id))} className="text-xs text-primary hover:underline">تحديد الكل</button>
+                                            <span className="text-gray-300 dark:text-gray-600">|</span>
+                                            <button type="button" onClick={() => setSectorFilterIds([])} className="text-xs text-primary hover:underline">إلغاء الكل</button>
+                                        </div>
+                                        {sectors.map((s) => (
+                                            <label key={s.id} className={`flex items-center gap-3 p-2.5 rounded-xl border cursor-pointer transition-colors ${sectorFilterIds.includes(s.id) ? "bg-primary/5 border-primary/30 dark:bg-primary/10" : "bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-primary/30"}`}>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={sectorFilterIds.includes(s.id)}
+                                                    onChange={(e) => {
+                                                        if (e.target.checked) setSectorFilterIds((prev) => [...prev, s.id]);
+                                                        else setSectorFilterIds((prev) => prev.filter((id) => id !== s.id));
+                                                    }}
+                                                    className="rounded border-gray-300 text-primary focus:ring-primary"
+                                                />
+                                                <span className="text-sm font-medium text-secondary dark:text-white">{s.nameAr || s.key}</span>
+                                            </label>
+                                        ))}
+                                    </>
+                                )}
+                            </div>
+                            <div className="p-4 border-t border-gray-100 dark:border-gray-800">
+                                <button type="button" onClick={() => setSectorFilterOpen(false)} className="w-full py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium">
+                                    تطبيق
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
                 )}
             </AnimatePresence>
 
