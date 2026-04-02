@@ -39,6 +39,7 @@ const MULTI_SEGMENT_KEYS: Record<string, string> = {
   "investment-register/submissions": "investment-register-submissions",
   investors: "investor-page",
   "bulk-attachments": "extract-reports",
+  "add-contract": "investor-upload",
 };
 
 /** تحويل مسار الصفحة إلى pageKey */

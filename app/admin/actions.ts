@@ -333,6 +333,7 @@ export async function uploadReport(formData: FormData) {
         });
 
         revalidatePath(`/admin/investors/${userId}`);
+        revalidatePath(`/privatepage/${userId}`);
         revalidatePath(`/admin`); // Update stats
         return { success: true };
     } catch (error) {

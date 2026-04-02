@@ -16,6 +16,7 @@ import {
   FileCheck,
   ShieldCheck,
   Paperclip,
+  FileSignature,
 } from "lucide-react";
 
 const FULL_MENU: MenuItem[] = [
@@ -44,6 +45,7 @@ const FULL_MENU: MenuItem[] = [
   },
   { label: "استخراج التقارير", icon: <FileBarChart size={22} />, href: "/admin/extract-reports", pageKey: "extract-reports" },
   { label: "إرفاق ملف جماعي", icon: <Paperclip size={22} />, href: "/admin/bulk-attachments", pageKey: "extract-reports" },
+  { label: "إضافة عقد", icon: <FileSignature size={22} />, href: "/admin/add-contract", pageKey: "investor-upload" },
   // { label: "مراجعة التقارير", icon: <FileCheck size={22} />, href: "/admin/review", pageKey: "review" },
   { label: "الصلاحيات والأدوار", icon: <ShieldCheck size={22} />, href: "/admin/roles", pageKey: "roles" },
 ];
