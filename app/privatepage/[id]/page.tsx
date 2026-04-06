@@ -207,6 +207,107 @@ export default async function PrivateInvestorPage({
               )}
             </div>
 
+            {/* Quick Contact - مُخفى؛ يظهر زر العائم (تواصل معنا) في الجوال والديسكتوب */}
+            <div className="hidden">
+              <QuickContact settings={quickContactSettings} />
+            </div>
+
+            {/* Categorized Reports */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {[
+                { id: 'lease', label: 'تقرير الاستثمار في قطاع السيارات', icon: 'car_rental' },
+                { id: 'hotel', label: 'تقرير الاستثمار في قطاع فنادق', icon: 'hotel' },
+                { id: 'real_estate', label: 'تقرير الاستثمار في قطاع عقاري', icon: 'apartment' },
+                { id: 'installment', label: 'تقرير الاستثمار في قطاع تقسيط', icon: 'credit_card' },
+              ].map((type) => {
+                const reports = investor.reports.filter((r) => r.type === type.id);
+                if (reports.length === 0) return null;
+                return (
+                  <div key={type.id} className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+                    <div className="flex items-center gap-3 mb-4 border-b border-gray-100 dark:border-gray-700 pb-3">
+                      <div className="w-10 h-10 shrink-0 rounded-full bg-gold/15 flex items-center justify-center text-[#003B46] dark:text-gold">
+                        <span className="material-icons text-[22px]">{type.icon}</span>
+                      </div>
+                      <h3 className="font-bold text-[#003B46] dark:text-white text-base leading-snug min-w-0 break-words">
+                        {type.label}
+                      </h3>
+                    </div>
+
+                    <div className="space-y-3">
+                      {reports.length > 0 ? (
+                        reports.map((report) => (
+                          <div key={report.id} className="flex justify-between items-center group">
+                            <div className="flex flex-col gap-0.5 mt-2">
+                              <div className="flex items-center gap-2 overflow-hidden">
+                                <span className="material-icons text-gold text-sm">description</span>
+                                <span className="text-sm font-semibold text-gray-800 dark:text-gray-200  max-w-[150px]">
+                                  {report.fileName || "تقرير استثماري"}
+                                </span>
+                              </div>
+                              <div className="mt-1.5 ms-6">
+                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[14px] font-bold bg-gold/10 text-[#b8860b] dark:text-gold border border-gold/20">
+                                  {new Date(report.releaseDate || report.createdAt).getFullYear()}
+                                </span>
+                              </div>
+                            </div>
+                            <ReportFileActions
+                              linkUrl={report.linkUrl}
+                              suggestedName={report.fileName || "تقرير استثماري"}
+                              viewClassName="text-xs bg-gray-100 dark:bg-gray-800 hover:bg-gold hover:text-[#003B46] text-gray-600 dark:text-gray-300 px-3 py-1.5 rounded-lg transition-colors"
+                              downloadClassName="text-xs bg-white/90 dark:bg-gray-700 hover:bg-gold/90 dark:hover:bg-gold/25 text-[#003B46] dark:text-gray-100 px-3 py-1.5 rounded-lg transition-colors border border-gray-200 dark:border-gray-600 disabled:opacity-60"
+                            />
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-sm text-gray-400 text-center py-4">
+                          لا يوجد عقود حالياً
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Attachments */}
+            {investor.reports.filter((r: any) => r.type === "attachment").length > 0 && (
+              <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+                <div className="flex items-center gap-3 mb-4 border-b border-gray-100 dark:border-gray-700 pb-3">
+                  <div className="w-10 h-10 shrink-0 rounded-full bg-gold/15 flex items-center justify-center text-[#003B46] dark:text-gold">
+                    <span className="material-icons text-[22px]">attach_file</span>
+                  </div>
+                  <h3 className="font-bold text-[#003B46] dark:text-white text-base leading-snug min-w-0 break-words">
+                    المرفقات ({investor.reports.filter((r: any) => r.type === "attachment").length})
+                  </h3>
+                </div>
+                <div className="space-y-3">
+                  {investor.reports.filter((r: any) => r.type === "attachment").map((report: any) => (
+                    <div key={report.id} className="flex justify-between items-center group">
+                      <div className="flex flex-col gap-0.5 mt-2">
+                        <div className="flex items-center gap-2 overflow-hidden">
+                          <span className="material-icons text-gold text-sm">description</span>
+                          <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 max-w-[200px] truncate">
+                            {report.fileName || "مرفق"}
+                          </span>
+                        </div>
+                        <div className="mt-1.5 ms-6">
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[14px] font-bold bg-gold/10 text-[#b8860b] dark:text-gold border border-gold/20">
+                            {new Date(report.releaseDate || report.createdAt).getFullYear()}
+                          </span>
+                        </div>
+                      </div>
+                      <ReportFileActions
+                        linkUrl={report.linkUrl}
+                        suggestedName={report.fileName || "مرفق"}
+                        viewClassName="text-xs bg-gray-100 dark:bg-gray-800 hover:bg-gold hover:text-[#003B46] text-gray-600 dark:text-gray-300 px-3 py-1.5 rounded-lg transition-colors"
+                        downloadClassName="text-xs bg-white/90 dark:bg-gray-700 hover:bg-gold/90 dark:hover:bg-gold/25 text-[#003B46] dark:text-gray-100 px-3 py-1.5 rounded-lg transition-colors border border-gray-200 dark:border-gray-600 disabled:opacity-60"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* العمليات المالية */}
             {(() => {
               const ops = investor.investorFinancialOperations;
@@ -344,107 +445,6 @@ export default async function PrivateInvestorPage({
                 </div>
               );
             })()}
-
-            {/* Quick Contact - مُخفى؛ يظهر زر العائم (تواصل معنا) في الجوال والديسكتوب */}
-            <div className="hidden">
-              <QuickContact settings={quickContactSettings} />
-            </div>
-
-            {/* Categorized Reports */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {[
-                { id: 'lease', label: 'تقرير الاستثمار في قطاع السيارات', icon: 'car_rental' },
-                { id: 'hotel', label: 'تقرير الاستثمار في قطاع فنادق', icon: 'hotel' },
-                { id: 'real_estate', label: 'تقرير الاستثمار في قطاع عقاري', icon: 'apartment' },
-                { id: 'installment', label: 'تقرير الاستثمار في قطاع تقسيط', icon: 'credit_card' },
-              ].map((type) => {
-                const reports = investor.reports.filter((r) => r.type === type.id);
-                if (reports.length === 0) return null;
-                return (
-                  <div key={type.id} className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
-                    <div className="flex items-center gap-3 mb-4 border-b border-gray-100 dark:border-gray-700 pb-3">
-                      <div className="w-10 h-10 shrink-0 rounded-full bg-gold/15 flex items-center justify-center text-[#003B46] dark:text-gold">
-                        <span className="material-icons text-[22px]">{type.icon}</span>
-                      </div>
-                      <h3 className="font-bold text-[#003B46] dark:text-white text-base leading-snug min-w-0 break-words">
-                        {type.label}
-                      </h3>
-                    </div>
-
-                    <div className="space-y-3">
-                      {reports.length > 0 ? (
-                        reports.map((report) => (
-                          <div key={report.id} className="flex justify-between items-center group">
-                            <div className="flex flex-col gap-0.5 mt-2">
-                              <div className="flex items-center gap-2 overflow-hidden">
-                                <span className="material-icons text-gold text-sm">description</span>
-                                <span className="text-sm font-semibold text-gray-800 dark:text-gray-200  max-w-[150px]">
-                                  {report.fileName || "تقرير استثماري"}
-                                </span>
-                              </div>
-                              <div className="mt-1.5 ms-6">
-                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[14px] font-bold bg-gold/10 text-[#b8860b] dark:text-gold border border-gold/20">
-                                  {new Date(report.releaseDate || report.createdAt).getFullYear()}
-                                </span>
-                              </div>
-                            </div>
-                            <ReportFileActions
-                              linkUrl={report.linkUrl}
-                              suggestedName={report.fileName || "تقرير استثماري"}
-                              viewClassName="text-xs bg-gray-100 dark:bg-gray-800 hover:bg-gold hover:text-[#003B46] text-gray-600 dark:text-gray-300 px-3 py-1.5 rounded-lg transition-colors"
-                              downloadClassName="text-xs bg-white/90 dark:bg-gray-700 hover:bg-gold/90 dark:hover:bg-gold/25 text-[#003B46] dark:text-gray-100 px-3 py-1.5 rounded-lg transition-colors border border-gray-200 dark:border-gray-600 disabled:opacity-60"
-                            />
-                          </div>
-                        ))
-                      ) : (
-                        <p className="text-sm text-gray-400 text-center py-4">
-                          لا يوجد عقود حالياً
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Attachments */}
-            {investor.reports.filter((r: any) => r.type === "attachment").length > 0 && (
-              <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
-                <div className="flex items-center gap-3 mb-4 border-b border-gray-100 dark:border-gray-700 pb-3">
-                  <div className="w-10 h-10 shrink-0 rounded-full bg-gold/15 flex items-center justify-center text-[#003B46] dark:text-gold">
-                    <span className="material-icons text-[22px]">attach_file</span>
-                  </div>
-                  <h3 className="font-bold text-[#003B46] dark:text-white text-base leading-snug min-w-0 break-words">
-                    المرفقات ({investor.reports.filter((r: any) => r.type === "attachment").length})
-                  </h3>
-                </div>
-                <div className="space-y-3">
-                  {investor.reports.filter((r: any) => r.type === "attachment").map((report: any) => (
-                    <div key={report.id} className="flex justify-between items-center group">
-                      <div className="flex flex-col gap-0.5 mt-2">
-                        <div className="flex items-center gap-2 overflow-hidden">
-                          <span className="material-icons text-gold text-sm">description</span>
-                          <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 max-w-[200px] truncate">
-                            {report.fileName || "مرفق"}
-                          </span>
-                        </div>
-                        <div className="mt-1.5 ms-6">
-                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[14px] font-bold bg-gold/10 text-[#b8860b] dark:text-gold border border-gold/20">
-                            {new Date(report.releaseDate || report.createdAt).getFullYear()}
-                          </span>
-                        </div>
-                      </div>
-                      <ReportFileActions
-                        linkUrl={report.linkUrl}
-                        suggestedName={report.fileName || "مرفق"}
-                        viewClassName="text-xs bg-gray-100 dark:bg-gray-800 hover:bg-gold hover:text-[#003B46] text-gray-600 dark:text-gray-300 px-3 py-1.5 rounded-lg transition-colors"
-                        downloadClassName="text-xs bg-white/90 dark:bg-gray-700 hover:bg-gold/90 dark:hover:bg-gold/25 text-[#003B46] dark:text-gray-100 px-3 py-1.5 rounded-lg transition-colors border border-gray-200 dark:border-gray-600 disabled:opacity-60"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
 
           <div className="lg:col-span-4 space-y-6 order-1 lg:order-1">
