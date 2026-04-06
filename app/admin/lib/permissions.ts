@@ -6,15 +6,16 @@ export const ADMIN_PAGE_KEYS = [
   { key: "investors-manage", labelAr: "الحسابات — إضافة مستثمر" },
   { key: "funds", labelAr: "صناديق الاستثمار" },
   { key: "contact", labelAr: "اتصل بنا" },
-  { key: "quick-contact", labelAr: "التواصل السريع" },
+  { key: "quick-contact", labelAr: "تواصل المستثمرين" },
   { key: "investment-register", labelAr: "سجل اهتمامك" },
-  { key: "contact-messages", labelAr: "رسائل التواصل" },
+  { key: "contact-messages", labelAr: "رسائل المستثمرين" },
   { key: "investment-register-submissions", labelAr: "طلبات سجل اهتمامك" },
   { key: "extract-reports", labelAr: "استخراج التقارير" },
   { key: "review", labelAr: "مراجعة التقارير" },
   { key: "roles", labelAr: "الصلاحيات والأدوار" },
   { key: "investor-mail", labelAr: "مراسلات البريد" },
   { key: "investor-notifications", labelAr: "إرسال التنبيهات" },
+  { key: "investor-financial", labelAr: "العمليات المالية للمستثمرين" },
   // صفحة المستثمر — صلاحيات فرعية
   { key: "investor-page", labelAr: "عرض الصفحة" },
   { key: "investor-approve", labelAr: "اعتماد" },
@@ -40,6 +41,7 @@ const MULTI_SEGMENT_KEYS: Record<string, string> = {
   investors: "investor-page",
   "bulk-attachments": "extract-reports",
   "add-contract": "investor-upload",
+  "investor-financial-operations": "investor-financial",
 };
 
 /** تحويل مسار الصفحة إلى pageKey */

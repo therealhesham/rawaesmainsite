@@ -1,3 +1,4 @@
+import type React from "react";
 import { Header } from "../../components/Header";
 import { PrismaClient } from "@prisma/client";
 import { notFound, redirect } from "next/navigation";
@@ -32,6 +33,10 @@ async function getInvestorData(id: string) {
       notfications: {
         orderBy: { createdAt: "desc" },
         take: 20,
+      },
+      investorFinancialOperations: {
+        orderBy: [{ operationDate: "desc" }, { id: "desc" }],
+        take: 100,
       },
     },
   });
@@ -201,6 +206,144 @@ export default async function PrivateInvestorPage({
                 </div>
               )}
             </div>
+
+            {/* العمليات المالية */}
+            {(() => {
+              const ops = investor.investorFinancialOperations;
+              const fmtMoney = (v: number) =>
+                new Intl.NumberFormat("ar-SA", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v);
+
+              const meta: Record<string, { label: string; color: string; bgLight: string; bgDark: string; icon: React.ReactNode }> = {
+                INVESTMENT_INJECTION: {
+                  label: "ضخ استثمار",
+                  color: "text-emerald-600 dark:text-emerald-400",
+                  bgLight: "bg-emerald-50",
+                  bgDark: "dark:bg-emerald-950/30",
+                  icon: (
+                    <svg xmlns="http://www.w3.org/2000/svg" height="18" viewBox="0 -960 960 960" width="18" fill="currentColor">
+                      <path d="M480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm-40-360H320v80h120v120h80v-120h120v-80H520v-120h-80v120Z" />
+                    </svg>
+                  ),
+                },
+                DISTRIBUTION_ACCRUAL: {
+                  label: "توزيعات مستحقة",
+                  color: "text-amber-600 dark:text-amber-400",
+                  bgLight: "bg-amber-50",
+                  bgDark: "dark:bg-amber-950/30",
+                  icon: (
+                    <svg xmlns="http://www.w3.org/2000/svg" height="18" viewBox="0 -960 960 960" width="18" fill="currentColor">
+                      <path d="M560-440q-50 0-85-35t-35-85q0-50 35-85t85-35q50 0 85 35t35 85q0 50-35 85t-85 35ZM280-320q-33 0-56.5-23.5T200-400v-320q0-33 23.5-56.5T280-800h560q33 0 56.5 23.5T920-720v320q0 33-23.5 56.5T840-320H280Zm80-80h400q0-33 23.5-56.5T840-480v-160q-33 0-56.5-23.5T760-720H360q0 33-23.5 56.5T280-640v160q33 0 56.5 23.5T360-400ZM120-160q-33 0-56.5-23.5T40-240v-440h80v440h680v80H120Z" />
+                    </svg>
+                  ),
+                },
+                BALANCE_WITHDRAWAL: {
+                  label: "سحب من الرصيد",
+                  color: "text-red-500 dark:text-red-400",
+                  bgLight: "bg-red-50",
+                  bgDark: "dark:bg-red-950/30",
+                  icon: (
+                    <svg xmlns="http://www.w3.org/2000/svg" height="18" viewBox="0 -960 960 960" width="18" fill="currentColor">
+                      <path d="M480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm-40-360v120h80v-120h120v-80H520v-120h-80v120H320v80h120Z" />
+                    </svg>
+                  ),
+                },
+              };
+
+              const totals = {
+                injected: ops.filter((o) => o.type === "INVESTMENT_INJECTION").reduce((s, o) => s + Number(o.amount), 0),
+                distributed: ops.filter((o) => o.type === "DISTRIBUTION_ACCRUAL").reduce((s, o) => s + Number(o.amount), 0),
+                withdrawn: ops.filter((o) => o.type === "BALANCE_WITHDRAWAL").reduce((s, o) => s + Number(o.amount), 0),
+              };
+
+              return (
+                <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
+                  {/* Header with gradient accent */}
+                  <div className="relative px-6 pt-6 pb-5">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#003B46] via-gold to-[#003B46]"></div>
+                    <h2 className="text-xl font-bold text-[#003B46] dark:text-white leading-relaxed flex items-center gap-2.5">
+                      <span className="shrink-0 w-8 h-8 rounded-lg bg-[#003B46]/10 dark:bg-gold/15 flex items-center justify-center text-gold">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20" fill="currentColor">
+                          <path d="M560-440q-50 0-85-35t-35-85q0-50 35-85t85-35q50 0 85 35t35 85q0 50-35 85t-85 35ZM280-320q-33 0-56.5-23.5T200-400v-320q0-33 23.5-56.5T280-800h560q33 0 56.5 23.5T920-720v320q0 33-23.5 56.5T840-320H280ZM120-160q-33 0-56.5-23.5T40-240v-440h80v440h680v80H120Z" />
+                        </svg>
+                      </span>
+                      العمليات المالية
+                    </h2>
+                  </div>
+
+                  {ops.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-14 px-6 text-gray-400 dark:text-gray-500">
+                      <svg xmlns="http://www.w3.org/2000/svg" height="48" viewBox="0 -960 960 960" width="48" fill="currentColor" className="mb-3 opacity-30">
+                        <path d="M560-440q-50 0-85-35t-35-85q0-50 35-85t85-35q50 0 85 35t35 85q0 50-35 85t-85 35ZM280-320q-33 0-56.5-23.5T200-400v-320q0-33 23.5-56.5T280-800h560q33 0 56.5 23.5T920-720v320q0 33-23.5 56.5T840-320H280ZM120-160q-33 0-56.5-23.5T40-240v-440h80v440h680v80H120Z" />
+                      </svg>
+                      <p className="text-sm">لا توجد عمليات مسجّلة حالياً</p>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Summary Cards */}
+                      <div className="grid grid-cols-3 gap-3 px-6 pb-5">
+                        <div className="rounded-xl bg-emerald-50 dark:bg-emerald-950/30 p-3 text-center">
+                          <p className="text-[11px] font-medium text-emerald-600/70 dark:text-emerald-400/70 mb-1">إجمالي الضخ</p>
+                          <p className="text-sm md:text-base font-bold text-emerald-700 dark:text-emerald-300 tabular-nums font-mono">{fmtMoney(totals.injected)}</p>
+                        </div>
+                        <div className="rounded-xl bg-amber-50 dark:bg-amber-950/30 p-3 text-center">
+                          <p className="text-[11px] font-medium text-amber-600/70 dark:text-amber-400/70 mb-1">التوزيعات</p>
+                          <p className="text-sm md:text-base font-bold text-amber-700 dark:text-amber-300 tabular-nums font-mono">{fmtMoney(totals.distributed)}</p>
+                        </div>
+                        <div className="rounded-xl bg-red-50 dark:bg-red-950/30 p-3 text-center">
+                          <p className="text-[11px] font-medium text-red-500/70 dark:text-red-400/70 mb-1">المسحوب</p>
+                          <p className="text-sm md:text-base font-bold text-red-600 dark:text-red-300 tabular-nums font-mono">{fmtMoney(totals.withdrawn)}</p>
+                        </div>
+                      </div>
+
+                      {/* Operations List */}
+                      <div className="border-t border-gray-100 dark:border-gray-800">
+                        <div className="divide-y divide-gray-50 dark:divide-gray-800/60">
+                          {ops.map((op) => {
+                            const m = meta[op.type] ?? meta.INVESTMENT_INJECTION;
+                            const n = Number(op.amount);
+                            const isWithdrawal = op.type === "BALANCE_WITHDRAWAL";
+                            return (
+                              <div key={op.id} className="flex items-center gap-3 px-6 py-4 hover:bg-gray-50/60 dark:hover:bg-white/[0.02] transition-colors">
+                                {/* Icon */}
+                                <div className={`shrink-0 w-10 h-10 rounded-xl ${m.bgLight} ${m.bgDark} flex items-center justify-center ${m.color}`}>
+                                  {m.icon}
+                                </div>
+                                {/* Info */}
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 leading-snug">
+                                    {m.label}
+                                  </p>
+                                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                                    {new Date(op.operationDate).toLocaleDateString("ar-SA", {
+                                      day: "numeric",
+                                      month: "long",
+                                      year: "numeric",
+                                    })}
+                                  </p>
+                                </div>
+                                {/* Amount */}
+                                <div className="text-left shrink-0">
+                                  <span
+                                    className={`text-sm md:text-base font-bold tabular-nums font-mono ${
+                                      isWithdrawal
+                                        ? "text-red-600 dark:text-red-400"
+                                        : "text-emerald-700 dark:text-emerald-400"
+                                    }`}
+                                  >
+                                    {isWithdrawal ? "−" : "+"}
+                                    {fmtMoney(n)}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* Quick Contact - مُخفى؛ يظهر زر العائم (تواصل معنا) في الجوال والديسكتوب */}
             <div className="hidden">

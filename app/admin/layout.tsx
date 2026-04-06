@@ -17,6 +17,7 @@ import {
   ShieldCheck,
   Paperclip,
   FileSignature,
+  Wallet,
 } from "lucide-react";
 
 const FULL_MENU: MenuItem[] = [
@@ -28,7 +29,7 @@ const FULL_MENU: MenuItem[] = [
     children: [
       { label: "صناديق الاستثمار", icon: <Landmark size={22} />, href: "/admin/funds", pageKey: "funds" },
       { label: "اتصل بنا", icon: <Contact size={22} />, href: "/admin/contact", exact: true, pageKey: "contact" },
-      { label: "التواصل السريع", icon: <PhoneCall size={22} />, href: "/admin/quick-contact", exact: true, pageKey: "quick-contact" },
+      { label: "تواصل المستثمرين", icon: <PhoneCall size={22} />, href: "/admin/quick-contact", exact: true, pageKey: "quick-contact" },
       { label: "سجل اهتمامك", icon: <UserPlus size={22} />, href: "/admin/investment-register", exact: true, pageKey: "investment-register" },
     ],
   },
@@ -37,7 +38,7 @@ const FULL_MENU: MenuItem[] = [
     icon: <Mail size={22} />,
     id: "mails",
     children: [
-      { label: "رسائل التواصل", icon: <MessageSquare size={22} />, href: "/admin/contact/messages", pageKey: "contact-messages" },
+      { label: "رسائل المستثمرين", icon: <MessageSquare size={22} />, href: "/admin/contact/messages", pageKey: "contact-messages" },
       { label: "طلبات سجل اهتمامك", icon: <ClipboardList size={22} />, href: "/admin/investment-register/submissions", exact: true, pageKey: "investment-register-submissions" },
       { label: "مراسلات البريد", icon: <Send size={22} />, href: "/admin/investor-mail", exact: true, pageKey: "investor-mail" },
       { label: "إرسال التنبيهات", icon: <Bell size={22} />, href: "/admin/investor-notifications", exact: true, pageKey: "investor-notifications" },
@@ -45,6 +46,7 @@ const FULL_MENU: MenuItem[] = [
   },
   { label: "استخراج التقارير", icon: <FileBarChart size={22} />, href: "/admin/extract-reports", pageKey: "extract-reports" },
   { label: "إرفاق ملف جماعي", icon: <Paperclip size={22} />, href: "/admin/bulk-attachments", pageKey: "extract-reports" },
+  { label: "العمليات المالية", icon: <Wallet size={22} />, href: "/admin/investor-financial-operations", pageKey: "investor-financial" },
   { label: "إضافة عقد", icon: <FileSignature size={22} />, href: "/admin/add-contract", pageKey: "investor-upload" },
   // { label: "مراجعة التقارير", icon: <FileCheck size={22} />, href: "/admin/review", pageKey: "review" },
   { label: "الصلاحيات والأدوار", icon: <ShieldCheck size={22} />, href: "/admin/roles", pageKey: "roles" },

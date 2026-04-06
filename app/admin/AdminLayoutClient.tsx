@@ -25,6 +25,8 @@ const MULTI_SEGMENT_KEYS: Record<string, string> = {
   investors: "investor-page",
   "bulk-attachments": "extract-reports",
   "add-contract": "investor-upload",
+  /** المسار أطول من مفتاح الصلاحية في RolePermission */
+  "investor-financial-operations": "investor-financial",
 };
 
 function pathToPageKey(pathname: string): string {
