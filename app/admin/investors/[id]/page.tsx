@@ -21,12 +21,14 @@ export default async function InvestorDetailsPage({ params }: Props) {
     canPublish: admin ? canEditPage(admin, "investor-publish") : false,
   };
   const canManageInvestors = admin ? canEditPage(admin, "investors-manage") : false;
+  const canFinancialEdit = admin ? canEditPage(admin, "investor-financial") : false;
 
   return (
     <InvestorDetailsClient
       investorId={investorId}
       permissions={permissions}
       canManageInvestors={canManageInvestors}
+      canFinancialEdit={canFinancialEdit}
     />
   );
 }

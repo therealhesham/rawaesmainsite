@@ -14,6 +14,7 @@ import {
   getInvestmentSectors,
   setInvestorInvestmentSectors,
 } from "../../actions";
+import { createFinancialOperation } from "../../investor-financial-operations/actions";
 import { REPORT_TYPE_OPTIONS, reportTypeLabelAr } from "@/lib/reportTypeAr";
 import dynamic from "next/dynamic";
 import { toast } from "sonner";
@@ -31,10 +32,12 @@ export default function InvestorDetailsClient({
   investorId,
   permissions,
   canManageInvestors,
+  canFinancialEdit,
 }: {
   investorId: number;
   permissions: InvestorPagePermissions;
   canManageInvestors: boolean;
+  canFinancialEdit: boolean;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -58,6 +61,12 @@ export default function InvestorDetailsClient({
   const [sectorSelection, setSectorSelection] = useState<number[]>([]);
   const [sectorsSaving, setSectorsSaving] = useState(false);
   const [downloadingAttachmentId, setDownloadingAttachmentId] = useState<number | null>(null);
+  const [showFinancialModal, setShowFinancialModal] = useState(false);
+  const [financialType, setFinancialType] = useState<"INVESTMENT_INJECTION" | "DISTRIBUTION_ACCRUAL" | "BALANCE_WITHDRAWAL">("INVESTMENT_INJECTION");
+  const [financialAmount, setFinancialAmount] = useState("");
+  const [financialDate, setFinancialDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [isSavingFinancial, setIsSavingFinancial] = useState(false);
+  const [financialError, setFinancialError] = useState("");
 
   const hasAnyReportAction = permissions.canApprove || permissions.canPublish || permissions.canDeleteFile;
 
@@ -270,6 +279,36 @@ export default function InvestorDetailsClient({
 
   const regularReports = (investor?.reports ?? []).filter((r: any) => r.type !== "attachment");
   const attachments = (investor?.reports ?? []).filter((r: any) => r.type === "attachment");
+  const financialOps = investor?.investorFinancialOperations ?? [];
+
+  async function handleCreateFinancialOperation(e: React.FormEvent) {
+    e.preventDefault();
+    setFinancialError("");
+    setIsSavingFinancial(true);
+    try {
+      const fd = new FormData();
+      fd.set("userId", String(investorId));
+      fd.set("type", financialType);
+      fd.set("amount", financialAmount);
+      fd.set("operationDate", financialDate);
+      const res = await createFinancialOperation(fd);
+      if ((res as { success?: boolean }).success) {
+        const data = await getInvestor(investorId);
+        setInvestor(data);
+        setShowFinancialModal(false);
+        setFinancialAmount("");
+        setFinancialType("INVESTMENT_INJECTION");
+        setFinancialDate(new Date().toISOString().slice(0, 10));
+        toast.success("تم إضافة العملية المالية");
+      } else {
+        setFinancialError((res as { error?: string }).error ?? "فشل حفظ العملية");
+      }
+    } catch {
+      setFinancialError("فشل حفظ العملية");
+    } finally {
+      setIsSavingFinancial(false);
+    }
+  }
 
   if (isLoading) return <div className="p-8 text-center">Loading...</div>;
   if (!investor) return <div className="p-8 text-center text-red-500">Investor not found</div>;
@@ -302,15 +341,87 @@ export default function InvestorDetailsClient({
               </div>
             </div>
           </div>
-          {permissions.canUpload && (
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="px-4 py-2.5 bg-primary hover:bg-primary/90 text-white font-medium rounded-xl flex items-center justify-center transition-colors shadow-sm gap-2"
-              title="إضافة تقرير جديد"
-            >
-              <Plus className="w-5 h-5" />
-              إضافة تقرير
-            </button>
+          <div className="flex items-center gap-2">
+            {canFinancialEdit && (
+              <button
+                onClick={() => {
+                  setFinancialError("");
+                  setShowFinancialModal(true);
+                }}
+                className="px-4 py-2.5 border border-emerald-200 text-emerald-700 hover:bg-emerald-50 font-medium rounded-xl flex items-center justify-center transition-colors shadow-sm gap-2"
+                title="إضافة عملية مالية"
+              >
+                <Plus className="w-5 h-5" />
+                إضافة عملية
+              </button>
+            )}
+            {permissions.canUpload && (
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="px-4 py-2.5 bg-primary hover:bg-primary/90 text-white font-medium rounded-xl flex items-center justify-center transition-colors shadow-sm gap-2"
+                title="إضافة تقرير جديد"
+              >
+                <Plus className="w-5 h-5" />
+                إضافة تقرير
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-card-dark p-5 shadow-sm">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-bold text-secondary dark:text-white flex items-center gap-2">
+              <FileOutput className="w-4 h-4 text-emerald-600" />
+              العمليات المالية ({financialOps.length})
+            </h3>
+          </div>
+          {financialOps.length === 0 ? (
+            <p className="text-sm text-gray-500">لا توجد عمليات مالية مسجّلة لهذا المستثمر.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm min-w-[620px]">
+                <thead>
+                  <tr className="text-gray-500 border-b border-gray-100 dark:border-gray-700">
+                    <th className="py-2 text-right font-semibold">التاريخ</th>
+                    <th className="py-2 text-right font-semibold">النوع</th>
+                    <th className="py-2 text-right font-semibold">المبلغ</th>
+                    <th className="py-2 text-right font-semibold">سجّلها</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {financialOps.map((op: any) => {
+                    const typeLabel =
+                      op.type === "INVESTMENT_INJECTION"
+                        ? "ضخ استثمار"
+                        : op.type === "DISTRIBUTION_ACCRUAL"
+                        ? "إثبات استحقاق توزيعات"
+                        : "سحب من الرصيد";
+                    const n = Number(op.amount || 0);
+                    const isWithdraw = op.type === "BALANCE_WITHDRAWAL";
+                    return (
+                      <tr key={op.id} className="border-b border-gray-50 dark:border-gray-800">
+                        <td className="py-2.5 text-gray-600 dark:text-gray-300">
+                          {new Date(op.operationDate).toLocaleDateString("ar-SA", {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                          })}
+                        </td>
+                        <td className="py-2.5 text-gray-800 dark:text-gray-100">{typeLabel}</td>
+                        <td className={`py-2.5 font-mono font-semibold ${isWithdraw ? "text-red-600" : "text-emerald-700"}`}>
+                          {isWithdraw ? "−" : "+"}
+                          {new Intl.NumberFormat("ar-SA", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          }).format(Math.abs(n))}
+                        </td>
+                        <td className="py-2.5 text-gray-500 text-xs">{op.createdByAdmin?.name ?? "—"}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
 
@@ -676,6 +787,112 @@ export default function InvestorDetailsClient({
                       <>
                         <UploadCloud className="w-4 h-4" />
                         <span>رفع التقرير</span>
+                      </>
+                    )}
+                  </button>
+                </form>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      )}
+
+      {canFinancialEdit && (
+        <AnimatePresence>
+          {showFinancialModal && (
+            <motion.div
+              key="add-financial-op-modal"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            >
+              <div
+                className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                onClick={() => !isSavingFinancial && setShowFinancialModal(false)}
+                aria-hidden
+              />
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                className="relative w-full max-w-lg rounded-2xl bg-white dark:bg-card-dark shadow-xl border border-gray-200 dark:border-gray-700"
+                dir="rtl"
+              >
+                <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-800">
+                  <h3 className="text-lg font-bold text-secondary dark:text-white flex items-center gap-2">
+                    <Plus className="w-5 h-5 text-emerald-600" />
+                    إضافة عملية مالية
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => !isSavingFinancial && setShowFinancialModal(false)}
+                    className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <form onSubmit={handleCreateFinancialOperation} className="p-6 space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">نوع العملية</label>
+                    <select
+                      value={financialType}
+                      onChange={(e) => setFinancialType(e.target.value as any)}
+                      className="w-full p-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:ring-2 focus:ring-primary/20"
+                    >
+                      <option value="INVESTMENT_INJECTION">ضخ استثمار</option>
+                      <option value="DISTRIBUTION_ACCRUAL">إثبات استحقاق توزيعات</option>
+                      <option value="BALANCE_WITHDRAWAL">سحب من الرصيد</option>
+                    </select>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">المبلغ</label>
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        value={financialAmount}
+                        onChange={(e) => setFinancialAmount(e.target.value)}
+                        placeholder="مثال: 5000.00"
+                        className="w-full p-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:ring-2 focus:ring-primary/20"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">تاريخ العملية</label>
+                      <input
+                        type="date"
+                        value={financialDate}
+                        onChange={(e) => setFinancialDate(e.target.value)}
+                        className="w-full p-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:ring-2 focus:ring-primary/20"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {financialError && (
+                    <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 rounded-xl text-sm">
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      {financialError}
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={isSavingFinancial || !financialAmount.trim()}
+                    className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSavingFinancial ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>جاري الحفظ...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="w-4 h-4" />
+                        <span>حفظ العملية</span>
                       </>
                     )}
                   </button>

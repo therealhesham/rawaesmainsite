@@ -244,6 +244,12 @@ export async function getInvestor(id: number) {
                 reports: {
                     orderBy: { createdAt: 'desc' }
                 },
+                investorFinancialOperations: {
+                    orderBy: [{ operationDate: "desc" }, { id: "desc" }],
+                    include: {
+                        createdByAdmin: { select: { id: true, name: true } },
+                    },
+                },
                 investmentSectors: {
                     include: { sector: true },
                 },

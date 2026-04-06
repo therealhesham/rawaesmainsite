@@ -70,12 +70,12 @@ export async function createFinancialOperation(formData: FormData) {
     return { error: "تاريخ غير صالح." };
   }
 
-  const inv = await prisma.user.findFirst({
-    where: { id: userId, isAdmin: false },
+  const inv = await prisma.user.findUnique({
+    where: { id: userId },
     select: { id: true },
   });
   if (!inv) {
-    return { error: "المستثمر غير موجود أو غير صالح." };
+    return { error: "المستثمر غير موجود." };
   }
 
   await prisma.investorFinancialOperation.create({
