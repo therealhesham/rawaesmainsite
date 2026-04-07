@@ -312,7 +312,7 @@ export default async function PrivateInvestorPage({
             {(() => {
               const ops = investor.investorFinancialOperations;
               const fmtMoney = (v: number) =>
-                new Intl.NumberFormat("ar-SA", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v);
+                new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v);
 
               const meta: Record<string, { label: string; color: string; bgLight: string; bgDark: string; icon: React.ReactNode }> = {
                 INVESTMENT_INJECTION: {

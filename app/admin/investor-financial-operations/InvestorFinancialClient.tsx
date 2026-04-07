@@ -18,7 +18,7 @@ const TYPE_LABELS: Record<InvestorFinancialOperationType, string> = {
 };
 
 function formatMoney(n: number) {
-  return new Intl.NumberFormat("ar-SA", {
+  return new Intl.NumberFormat("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(n);

@@ -410,7 +410,7 @@ export default function InvestorDetailsClient({
                         <td className="py-2.5 text-gray-800 dark:text-gray-100">{typeLabel}</td>
                         <td className={`py-2.5 font-mono font-semibold ${isWithdraw ? "text-red-600" : "text-emerald-700"}`}>
                           {isWithdraw ? "−" : "+"}
-                          {new Intl.NumberFormat("ar-SA", {
+                          {new Intl.NumberFormat("en-US", {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2,
                           }).format(Math.abs(n))}
