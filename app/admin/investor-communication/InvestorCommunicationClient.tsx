@@ -37,11 +37,13 @@ function PlaceholderInsertButtons({
   value,
   setValue,
   compact,
+  disabled,
 }: {
   inputRef: React.RefObject<HTMLInputElement | HTMLTextAreaElement | null>;
   value: string;
   setValue: (v: string) => void;
   compact?: boolean;
+  disabled?: boolean;
 }) {
   const insert = useCallback(
     (snippet: string) => {
@@ -72,9 +74,10 @@ function PlaceholderInsertButtons({
       <span className={`text-gray-500 ${compact ? "text-[10px]" : "text-[11px]"}`}>إدراج:</span>
       <button
         type="button"
+        disabled={disabled}
         onMouseDown={(e) => e.preventDefault()}
         onClick={() => insert("{{name}}")}
-        className="inline-flex items-center gap-1.5 font-mono text-[11px] px-2.5 py-1 rounded-lg border border-[#003B46]/35 bg-[#003B46]/8 text-[#003B46] hover:bg-[#003B46]/18 transition-colors select-none"
+        className="inline-flex items-center gap-1.5 font-mono text-[11px] px-2.5 py-1 rounded-lg border border-[#003B46]/35 bg-[#003B46]/8 text-[#003B46] hover:bg-[#003B46]/18 transition-colors select-none disabled:opacity-50 disabled:cursor-not-allowed"
         title="يُدرج {{name}} — يُستبدل باسم المستثمر عند الإرسال"
       >
         <span>اسم المستثمر</span>
@@ -454,6 +457,7 @@ export function InvestorCommunicationClient({
 
   const subjectInputRef = useRef<HTMLInputElement>(null);
   const bodyTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const templateSelected = templateId !== null;
 
   const toggleInvestor = useCallback((id: number) => {
     if (audienceMode === "INDIVIDUAL") {
@@ -476,6 +480,10 @@ export function InvestorCommunicationClient({
     e.preventDefault();
     setResult(null);
     const fd = new FormData(e.currentTarget);
+    if (!templateSelected) {
+      setResult({ error: "يجب اختيار قالب قبل الإرسال." });
+      return;
+    }
     fd.set("channels", JSON.stringify(selectedChannels));
     fd.set("mode", audienceMode);
     fd.set("subject", subject);
@@ -564,6 +572,9 @@ export function InvestorCommunicationClient({
                 </button>
               ))}
             </div>
+            <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-2">
+              ملاحظة: المرفقات يتم إرسالها فقط عبر البريد الإلكتروني (Email).
+            </p>
           </div>
 
           {/* Audience Mode */}
@@ -634,17 +645,8 @@ export function InvestorCommunicationClient({
           {/* Template Quick-Select */}
           {initialTemplates.filter((t) => t.channel === primaryChannel).length > 0 && (
             <div>
-              <label className="block text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">قالب سريع ({CHANNEL_META[primaryChannel].label})</label>
+              <label className="block text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">اختر قالبًا ({CHANNEL_META[primaryChannel].label})</label>
               <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => { setTemplateId(null); setSubject(""); setBody(""); }}
-                  className={`px-3 py-1.5 rounded-lg border text-xs font-medium transition-all ${
-                    !templateId ? "bg-[#003B46] text-white border-[#003B46]" : "bg-white text-gray-600 border-gray-200 hover:border-[#003B46]/40"
-                  }`}
-                >
-                  بدون قالب
-                </button>
                 {initialTemplates.filter((t) => t.channel === primaryChannel).map((t) => (
                   <button
                     key={t.id}
@@ -665,13 +667,13 @@ export function InvestorCommunicationClient({
           {hasNonSmsChannel && (
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">الموضوع</label>
-              <PlaceholderInsertButtons inputRef={subjectInputRef} value={subject} setValue={setSubject} />
+              <PlaceholderInsertButtons inputRef={subjectInputRef} value={subject} setValue={setSubject} disabled />
               <input
                 ref={subjectInputRef}
                 value={subject}
-                onChange={(e) => setSubject(e.target.value)}
+                readOnly
                 placeholder="مثال: تحديث هام بخصوص محفظتك الاستثمارية"
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#003B46]/30 focus:border-[#003B46] bg-gray-50 transition-all placeholder:text-gray-400"
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-800 bg-gray-100 transition-all placeholder:text-gray-400 cursor-not-allowed"
               />
             </div>
           )}
@@ -679,18 +681,18 @@ export function InvestorCommunicationClient({
           {/* Body */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">نص الرسالة</label>
-            <PlaceholderInsertButtons inputRef={bodyTextareaRef} value={body} setValue={setBody} />
+            <PlaceholderInsertButtons inputRef={bodyTextareaRef} value={body} setValue={setBody} disabled />
             <textarea
               ref={bodyTextareaRef}
               value={body}
-              onChange={(e) => setBody(e.target.value)}
+              readOnly
               required
               rows={6}
-              placeholder="اكتب نص الرسالة هنا… أو اضغط «إدراج» أعلاه لإضافة اسم المستثمر تلقائياً."
-              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#003B46]/30 focus:border-[#003B46] bg-gray-50 transition-all placeholder:text-gray-400 resize-none leading-relaxed"
+              placeholder="بعد اختيار القالب سيظهر النص هنا."
+              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-800 bg-gray-100 transition-all placeholder:text-gray-400 resize-none leading-relaxed cursor-not-allowed"
             />
             <p className="text-xs text-gray-500 mt-1.5">
-              المتغيرات تُستبدل باسم كل مستلم عند الإرسال؛ إذا وُجدت في الإيميل يُرسل لكل مستثمر على حدة.
+              الإرسال من القوالب فقط. لتعديل النص أو الموضوع عدّل القالب من "إدارة القوالب".
             </p>
           </div>
 
@@ -740,7 +742,7 @@ export function InvestorCommunicationClient({
             </p>
             <button
               type="submit"
-              disabled={isPending}
+              disabled={isPending || !templateSelected}
               className="flex items-center gap-2 bg-gradient-to-l from-[#003B46] to-[#005F6B] text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-[#003B46]/25 hover:shadow-[#003B46]/40 hover:scale-[1.02] transition-all duration-200 disabled:opacity-60 disabled:scale-100 disabled:cursor-not-allowed"
             >
               {isPending ? (

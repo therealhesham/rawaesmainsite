@@ -115,20 +115,16 @@ export async function sendInvestorCommunication(formData: FormData) {
   if (channels.length === 0) return { error: "اختر قناة إرسال واحدة على الأقل." };
   if (!["INDIVIDUAL", "MULTIPLE", "SECTOR", "BULK"].includes(mode)) return { error: "نمط الإرسال غير صالح." };
 
-  let selectedTemplate: { id: number; name: string; subject: string | null; body: string } | null = null;
-  if (templateIdRaw) {
-    const tId = parseInt(templateIdRaw, 10);
-    if (!Number.isNaN(tId)) {
-      selectedTemplate = await prisma.messageTemplate.findUnique({
-        where: { id: tId },
-        select: { id: true, name: true, subject: true, body: true },
-      });
-      if (selectedTemplate) {
-        if (!subject && selectedTemplate.subject) subject = selectedTemplate.subject;
-        if (!body) body = selectedTemplate.body;
-      }
-    }
-  }
+  const tId = parseInt(templateIdRaw, 10);
+  if (Number.isNaN(tId)) return { error: "يجب اختيار قالب للإرسال." };
+  const selectedTemplate = await prisma.messageTemplate.findUnique({
+    where: { id: tId },
+    select: { id: true, name: true, subject: true, body: true },
+  });
+  if (!selectedTemplate) return { error: "القالب المحدد غير موجود." };
+  // Template-only: نأخذ النص والموضوع حصراً من القالب
+  subject = selectedTemplate.subject || "";
+  body = selectedTemplate.body;
 
   if (!body) return { error: "نص الرسالة مطلوب." };
   if (channels.includes("EMAIL") && !subject) return { error: "موضوع الإيميل مطلوب." };
