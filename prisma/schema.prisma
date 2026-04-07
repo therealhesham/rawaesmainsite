@@ -39,6 +39,19 @@ model user {
   adminRecordedFinancialOps   InvestorFinancialOperation[] @relation("AdminRecordedFinancialOps")
 }
 
+enum CommunicationChannel {
+  SMS
+  EMAIL
+  NOTIFICATION
+}
+
+enum CommunicationMode {
+  INDIVIDUAL
+  MULTIPLE
+  SECTOR
+  BULK
+}
+
 /// ضخ استثمار | إثبات استحقاق توزيعات | سحب من الرصيد — تُسجَّل من لوحة الأدمن وتظهر للمستثمر
 enum InvestorFinancialOperationType {
   INVESTMENT_INJECTION
@@ -304,4 +317,37 @@ model QuickContactSettings {
   suggestionsPhone String? // للاقتراحات والمساعدة
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+}
+
+model MessageTemplate {
+  id        Int                  @id @default(autoincrement())
+  name      String
+  channel   CommunicationChannel
+  subject   String?
+  body      String               @db.Text
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+
+  @@index([channel])
+  @@map("message_template")
+}
+
+model InvestorCommunicationLog {
+  id              Int                  @id @default(autoincrement())
+  channel         CommunicationChannel
+  mode            CommunicationMode
+  templateId      Int?
+  templateName    String?
+  subject         String?
+  body            String               @db.Text
+  recipientsJson  String               @db.Text
+  attachmentNames String?              @db.Text
+  sentByAdminId   Int?
+  status          String               @default("sent")
+  errorMsg        String?              @db.Text
+  createdAt       DateTime             @default(now())
+
+  @@index([channel, createdAt])
+  @@index([templateId])
+  @@map("investor_communication_log")
 }

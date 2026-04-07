@@ -39,6 +39,7 @@ export type SendMailOptions = {
   text: string;
   html?: string;
   replyTo?: string;
+  attachments?: { filename: string; content: Buffer; contentType?: string }[];
   /** من لوحة التحكم: بريد الإرسال (SMTP) */
   smtpUser?: string;
   /** من لوحة التحكم: كلمة مرور بريد الإرسال */
@@ -84,6 +85,7 @@ export async function sendMail(options: SendMailOptions): Promise<boolean> {
       text: options.text,
       html: options.html ?? options.text.replace(/\n/g, "<br>"),
       replyTo: options.replyTo,
+      attachments: options.attachments,
     });
     console.log("[Mail] تم الإرسال بنجاح إلى:", options.to);
     return true;

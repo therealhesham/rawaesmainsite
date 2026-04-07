@@ -22,6 +22,7 @@ import { logoutAdmin } from "./login/action";
 const MULTI_SEGMENT_KEYS: Record<string, string> = {
   "contact/messages": "contact-messages",
   "investment-register/submissions": "investment-register-submissions",
+  "investor-communication": "investor-communication",
   investors: "investor-page",
   "bulk-attachments": "extract-reports",
   "add-contract": "investor-upload",
