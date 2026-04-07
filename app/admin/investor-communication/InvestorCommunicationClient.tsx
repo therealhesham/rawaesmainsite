@@ -1,10 +1,10 @@
 "use client";
 
 import { useCallback, useMemo, useRef, useState, useTransition, useEffect } from "react";
-import { createMessageTemplate, deleteMessageTemplate, sendInvestorCommunication } from "./actions";
+import { createMessageTemplate, deleteMessageTemplate, sendInvestorCommunication, updateMessageTemplate, uploadInvestorCommunicationLogo } from "./actions";
 import {
   X, Search, Users, User, Building2, Plus, Trash2, Send, Bell, Mail, MessageSquare,
-  FileText, CheckCircle, AlertCircle, ChevronDown, Paperclip, Link as LinkIcon,
+  FileText, CheckCircle, AlertCircle, ChevronDown, Paperclip, Link as LinkIcon, ImagePlus,
 } from "lucide-react";
 
 type Investor = { id: number; name: string; email: string | null; phoneNumber: string | null };
@@ -251,6 +251,25 @@ function TemplateManager({
     });
   };
 
+  const handleUpdate = () => {
+    if (!activeTemplate) return;
+    if (!tplName.trim() || !tplBody.trim()) {
+      setSaveResult({ error: "اسم القالب ونصه مطلوبان." });
+      return;
+    }
+    setSaveResult(null);
+    startTransition(async () => {
+      const fd = new FormData();
+      fd.set("id", String(activeTemplate.id));
+      fd.set("name", tplName);
+      fd.set("subject", tplSubject);
+      fd.set("body", tplBody);
+      const res = await updateMessageTemplate(fd);
+      if ((res as any).error) setSaveResult({ error: (res as any).error });
+      else setSaveResult({ success: true });
+    });
+  };
+
   const handleDelete = (id: number) => {
     setDeletingId(id);
     startTransition(async () => {
@@ -403,10 +422,16 @@ function TemplateManager({
                   </button>
                 )}
                 {!creating && activeTemplate && (
-                  <button type="button" onClick={handleUse} className="flex items-center gap-1.5 bg-[#003B46] text-white text-sm px-5 py-2.5 rounded-xl font-semibold hover:bg-[#005F6B] transition-colors">
-                    <Send size={16} />
-                    استخدام القالب
-                  </button>
+                  <>
+                    <button type="button" onClick={handleUpdate} className="flex items-center gap-1.5 bg-amber-500 text-white text-sm px-5 py-2.5 rounded-xl font-semibold hover:bg-amber-600 transition-colors">
+                      <CheckCircle size={16} />
+                      حفظ التعديلات
+                    </button>
+                    <button type="button" onClick={handleUse} className="flex items-center gap-1.5 bg-[#003B46] text-white text-sm px-5 py-2.5 rounded-xl font-semibold hover:bg-[#005F6B] transition-colors">
+                      <Send size={16} />
+                      استخدام القالب
+                    </button>
+                  </>
                 )}
               </div>
             </div>
@@ -422,11 +447,13 @@ export function InvestorCommunicationClient({
   sectors,
   templates: initialTemplates,
   logs,
+  emailLogoUrlDisplay,
 }: {
   investors: Investor[];
   sectors: Sector[];
   templates: Template[];
   logs: Log[];
+  emailLogoUrlDisplay?: string | null;
 }) {
   const [selectedChannels, setSelectedChannels] = useState<Channel[]>(["SMS"]);
   const [audienceMode, setAudienceMode] = useState<AudienceMode>("INDIVIDUAL");
@@ -439,7 +466,11 @@ export function InvestorCommunicationClient({
   const [result, setResult] = useState<{ success?: boolean; error?: string; count?: number } | null>(null);
   const [isPending, startTransition] = useTransition();
   const [showTemplates, setShowTemplates] = useState(false);
+  const [logoUploading, setLogoUploading] = useState(false);
+  const [logoError, setLogoError] = useState<string | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
   const primaryChannel: Channel = selectedChannels[0] ?? "SMS";
   const hasEmailChannel = selectedChannels.includes("EMAIL");
   const hasNotificationChannel = selectedChannels.includes("NOTIFICATION");
@@ -552,6 +583,76 @@ export function InvestorCommunicationClient({
         <div className="h-1 bg-gradient-to-l from-[#C9A84C] via-[#F0C040] to-[#C9A84C]" />
 
         <form ref={formRef} onSubmit={handleSubmit} className="p-6 md:p-8 space-y-6">
+          {/* Email Logo Upload */}
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+            <div className="flex items-start justify-between gap-3 flex-wrap">
+              <div>
+                <h3 className="text-sm font-bold text-secondary flex items-center gap-2">
+                  <ImagePlus size={16} className="text-primary" />
+                  شعار الإيميل
+                </h3>
+                <p className="text-xs text-gray-500 mt-1">يظهر في الإيميلات المرسلة للمستثمرين.</p>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                {(logoPreview ?? emailLogoUrlDisplay) && (
+                  <img
+                    src={logoPreview ?? emailLogoUrlDisplay ?? ""}
+                    alt="شعار الإيميل"
+                    className="h-10 w-auto object-contain rounded border border-gray-200 bg-white px-2"
+                  />
+                )}
+                <input
+                  ref={logoInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/svg+xml"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (logoPreview) URL.revokeObjectURL(logoPreview);
+                    setLogoPreview(file ? URL.createObjectURL(file) : null);
+                    setLogoError(null);
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => logoInputRef.current?.click()}
+                  className="px-3 py-1.5 rounded-lg border border-gray-300 bg-white text-xs font-medium hover:bg-gray-50"
+                >
+                  اختر صورة
+                </button>
+                <button
+                  type="button"
+                  disabled={logoUploading}
+                  onClick={async () => {
+                    const file = logoInputRef.current?.files?.[0];
+                    if (!file) {
+                      setLogoError("اختر صورة أولاً.");
+                      return;
+                    }
+                    setLogoUploading(true);
+                    setLogoError(null);
+                    const fd = new FormData();
+                    fd.set("file", file);
+                    const res = await uploadInvestorCommunicationLogo(fd);
+                    setLogoUploading(false);
+                    if ((res as any).success) {
+                      setResult({ success: true });
+                      setLogoPreview(null);
+                      if (logoInputRef.current) logoInputRef.current.value = "";
+                      window.location.reload();
+                    } else {
+                      setLogoError((res as any).error || "تعذر رفع الشعار.");
+                    }
+                  }}
+                  className="px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-medium hover:bg-primary/90 disabled:opacity-50"
+                >
+                  {logoUploading ? "جاري الرفع..." : "رفع الشعار"}
+                </button>
+              </div>
+            </div>
+            {logoError && <p className="text-xs text-red-600 mt-2">{logoError}</p>}
+          </div>
+
           {/* Channel Picker (multi-select) */}
           <div>
             <label className="block text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">قنوات الإرسال (متعدد)</label>

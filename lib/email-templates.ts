@@ -100,7 +100,7 @@ export function buildContactEmail(
       ${buildFooter({
     note: "تم الإرسال من نموذج التواصل في الموقع · يمكنك الرد مباشرة على هذا البريد",
     logoUrl: logoUrl ?? undefined,
-    brandName: "مجموعة روائس",
+    brandName: "روائس للاستثمار",
     tagline: "شركة استثمارية متخصصة في حلول الاستثمار المبتكرة والمستدامة",
   })}
     </div>
@@ -126,7 +126,7 @@ function buildFooter(options: {
   brandName?: string;
   tagline?: string;
 }): string {
-  const { note, logoUrl, brandName = "مجموعة روائس", tagline = "شركة استثمارية متخصصة في حلول الاستثمار المبتكرة والمستدامة" } = options;
+  const { note, logoUrl, brandName = "روائس للاستثمار", tagline = "شركة استثمارية متخصصة في حلول الاستثمار المبتكرة والمستدامة" } = options;
   const safeLogoUrl = logoUrl ? escAttr(logoUrl) : "";
   return `
       <div style="${BASE_STYLES.footer}">
@@ -251,7 +251,7 @@ export function buildInvestorEmail(
   <div style="${BASE_STYLES.container}">
     <div style="${BASE_STYLES.card}">
       <div style="${BASE_STYLES.header}">
-        ${logoUrl ? `<img src="${escAttr(logoUrl)}" alt="مجموعة روائس القمم" style="${BASE_STYLES.headerLogo}" />` : ""}
+        ${logoUrl ? `<img src="${escAttr(logoUrl)}" alt="روائس للاستثمار" style="${BASE_STYLES.headerLogo}" />` : ""}
         <h1 style="${BASE_STYLES.headerTitle}">${esc(data.subject)}</h1>
         <p style="${BASE_STYLES.headerSub}">مراسلات المستثمرين</p>
       </div>
@@ -259,10 +259,10 @@ export function buildInvestorEmail(
         <div style="font-size:16px; color:#374151; line-height:1.9; white-space:pre-wrap;">${data.body.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
       </div>
       ${buildFooter({
-    note: "هذه الرسالة مرسلة من مجموعة روائس القمم للاستثمار",
+    note: "هذه الرسالة مرسلة من نظام المراسلات.",
     logoUrl: logoUrl ?? undefined,
-    brandName: "مجموعة روائس القمم للاستثمار",
-    tagline: "إدارة الاستثمارات بكفاءة وموثوقية عالية",
+    brandName: "روائس للاستثمار",
+    tagline: "",
   })}
     </div>
   </div>

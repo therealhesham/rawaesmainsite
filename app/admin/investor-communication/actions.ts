@@ -6,8 +6,19 @@ import { requirePageEdit, requirePageView } from "../lib/auth";
 import { sendMail } from "@/lib/mail";
 import { buildInvestorEmail } from "@/lib/email-templates";
 import { applyInvestorNamePlaceholders, messageContainsNamePlaceholder } from "@/lib/investor-placeholders";
+import { resolveLogoUrl } from "@/lib/do-spaces";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
 const prisma = new PrismaClient();
+const s3Client = new S3Client({
+  endpoint: process.env.DO_SPACES_ENDPOINT,
+  region: process.env.DO_SPACES_REGION || "us-east-1",
+  credentials: {
+    accessKeyId: process.env.DO_SPACES_KEY || "",
+    secretAccessKey: process.env.DO_SPACES_SECRET || "",
+  },
+  forcePathStyle: false,
+});
 
 function cleanPhoneForSms(phone: string): string {
   const digits = (phone || "").replace(/\D/g, "");
@@ -38,7 +49,7 @@ async function getContactSettings() {
 export async function getInvestorCommunicationBootData() {
   await requirePageView("investor-communication");
 
-  const [investors, templates, logs, sectors] = await Promise.all([
+  const [investors, templates, logs, sectors, contact] = await Promise.all([
     prisma.user.findMany({
       where: { isAdmin: false },
       select: { id: true, name: true, email: true, phoneNumber: true },
@@ -50,9 +61,16 @@ export async function getInvestorCommunicationBootData() {
       take: 40,
     }),
     prisma.investmentSector.findMany({ orderBy: { id: "asc" } }),
+    prisma.contactUs.findFirst({ orderBy: { id: "desc" } }),
   ]);
 
-  return { investors, templates, logs, sectors };
+  return {
+    investors,
+    templates,
+    logs,
+    sectors,
+    emailLogoUrlDisplay: resolveLogoUrl(contact?.emailLogoUrl),
+  };
 }
 
 export async function createMessageTemplate(formData: FormData) {
@@ -83,6 +101,71 @@ export async function deleteMessageTemplate(id: number) {
   await prisma.messageTemplate.delete({ where: { id } });
   revalidatePath("/admin/investor-communication");
   return { success: true };
+}
+
+export async function updateMessageTemplate(formData: FormData) {
+  await requirePageEdit("investor-communication");
+  const id = parseInt(String(formData.get("id") || ""), 10);
+  const name = String(formData.get("name") || "").trim();
+  const subject = String(formData.get("subject") || "").trim();
+  const body = String(formData.get("body") || "").trim();
+
+  if (Number.isNaN(id)) return { error: "معرف القالب غير صالح." };
+  if (!name || !body) return { error: "اسم القالب ونصه مطلوبان." };
+
+  await prisma.messageTemplate.update({
+    where: { id },
+    data: {
+      name,
+      subject: subject || null,
+      body,
+    },
+  });
+
+  revalidatePath("/admin/investor-communication");
+  return { success: true };
+}
+
+export async function uploadInvestorCommunicationLogo(formData: FormData) {
+  await requirePageEdit("investor-communication");
+  try {
+    const file = formData.get("file") as File | null;
+    if (!file || file.size === 0) {
+      return { success: false, error: "يرجى اختيار صورة الشعار." };
+    }
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const timestamp = Date.now();
+    const safeName = file.name.replace(/\s+/g, "-").replace(/[^a-zA-Z0-9.-]/g, "") || "logo.png";
+    const key = `email-logos/investor-communication-${timestamp}-${safeName}`;
+
+    await s3Client.send(
+      new PutObjectCommand({
+        Bucket: process.env.DO_SPACES_BUCKET,
+        Key: key,
+        Body: buffer,
+        ACL: "public-read",
+        ContentType: file.type || "image/png",
+      })
+    );
+
+    const existing = await prisma.contactUs.findFirst({ orderBy: { id: "desc" } });
+    if (existing) {
+      await prisma.contactUs.update({
+        where: { id: existing.id },
+        data: { emailLogoUrl: key },
+      });
+    } else {
+      await prisma.contactUs.create({ data: { emailLogoUrl: key } });
+    }
+
+    revalidatePath("/admin/investor-communication");
+    revalidatePath("/admin/contact");
+    return { success: true };
+  } catch (error) {
+    console.error("uploadInvestorCommunicationLogo:", error);
+    return { success: false, error: "تعذر رفع الشعار. تحقق من إعدادات DigitalOcean." };
+  }
 }
 
 export async function sendInvestorCommunication(formData: FormData) {

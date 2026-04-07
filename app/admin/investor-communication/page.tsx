@@ -17,6 +17,7 @@ export default async function InvestorCommunicationPage() {
         sectors={data.sectors as any}
         templates={data.templates as any}
         logs={data.logs as any}
+        emailLogoUrlDisplay={data.emailLogoUrlDisplay}
       />
     </div>
   );
