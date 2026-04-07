@@ -280,6 +280,7 @@ export async function uploadReport(formData: FormData) {
     try {
         const userId = parseInt(formData.get("userId") as string);
         const type = formData.get("type") as string;
+        const yearRaw = formData.get("year") as string;
         const file = formData.get("file") as File;
 
         if (!userId || !type || !file) {
@@ -327,6 +328,12 @@ export async function uploadReport(formData: FormData) {
         // Use provided name or fallback to original file name
         const displayFileName = fileNameInput || file.name;
 
+        const parsedYear = Number(yearRaw);
+        const releaseYear =
+            Number.isInteger(parsedYear) && parsedYear >= 1900 && parsedYear <= 3000
+                ? parsedYear
+                : new Date().getFullYear() - 1;
+
         await prisma.reports.create({
             data: {
                 userId,
@@ -334,7 +341,7 @@ export async function uploadReport(formData: FormData) {
                 linkUrl: publicUrl,
                 fileName: displayFileName,
                 isPublished: false,
-                releaseDate: new Date(new Date().getFullYear() - 1, 0, 1),
+                releaseDate: new Date(releaseYear, 0, 1),
             }
         });
 

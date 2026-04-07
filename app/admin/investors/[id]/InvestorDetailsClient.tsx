@@ -44,6 +44,7 @@ export default function InvestorDetailsClient({
   const [investor, setInvestor] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [reportType, setReportType] = useState('lease');
+  const [reportYear, setReportYear] = useState(() => String(new Date().getFullYear() - 1));
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -220,6 +221,7 @@ export default function InvestorDetailsClient({
     const formData = new FormData();
     formData.append("userId", investorId.toString());
     formData.append("type", reportType);
+    formData.append("year", reportYear.trim());
     formData.append("file", file);
 
     const fileNameInput = (e.currentTarget.querySelector('input[name="fileName"]') as HTMLInputElement).value;
@@ -731,6 +733,27 @@ export default function InvestorDetailsClient({
                       placeholder="أدخل اسم الملف أو سيتم استخدام الاسم الأصلي"
                       className="w-full p-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:ring-2 focus:ring-primary/20"
                     />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">سنة التقرير</label>
+                    <input
+                      type="number"
+                      value={reportYear}
+                      onChange={(e) => setReportYear(e.target.value)}
+                      list="report-year-suggestions"
+                      min={1900}
+                      max={3000}
+                      placeholder="مثال: 2026"
+                      className="w-full p-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:ring-2 focus:ring-primary/20"
+                      required
+                    />
+                    <datalist id="report-year-suggestions">
+                      <option value={new Date().getFullYear()} />
+                      <option value={new Date().getFullYear() - 1} />
+                      <option value={new Date().getFullYear() - 2} />
+                      <option value={new Date().getFullYear() + 1} />
+                    </datalist>
                   </div>
 
                   <div>
