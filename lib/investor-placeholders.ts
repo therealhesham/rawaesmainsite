@@ -1,16 +1,11 @@
 /**
- * استبدال placeholders في قوالب التواصل مع المستثمرين.
- * - {{name}} أو {{ name }} — اسم المستثمر كما هو مسجل
- * - {{اسم}} — نفس المعنى (بديل عربي)
+ * استبدال placeholder اسم المستثمر — الصيغة الوحيدة: {{name}}
  */
 export function applyInvestorNamePlaceholders(text: string, investorName: string): string {
   const safe = investorName.trim() || "—";
-  return text
-    .replace(/\{\{\s*name\s*\}\}/gi, safe)
-    .replace(/\{\{\s*اسم\s*\}\}/g, safe);
+  return text.replace(/\{\{\s*name\s*\}\}/gi, safe);
 }
 
 export function messageContainsNamePlaceholder(subject: string, body: string): boolean {
-  const s = `${subject}\n${body}`;
-  return /\{\{\s*name\s*\}\}/i.test(s) || /\{\{\s*اسم\s*\}\}/.test(s);
+  return /\{\{\s*name\s*\}\}/i.test(`${subject}\n${body}`);
 }

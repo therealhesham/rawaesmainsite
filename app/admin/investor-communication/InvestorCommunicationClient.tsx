@@ -31,6 +31,59 @@ const CHANNEL_META: Record<Channel, { label: string; icon: React.ReactNode; colo
   NOTIFICATION: { label: "إشعار", icon: <Bell size={18} />, color: "from-amber-600 to-amber-700" },
 };
 
+/** زر يُدرج {{name}} (اسم المستثمر) عند موضع المؤشر — onMouseDown يمنع فقدان التحديد قبل النقر */
+function PlaceholderInsertButtons({
+  inputRef,
+  value,
+  setValue,
+  compact,
+}: {
+  inputRef: React.RefObject<HTMLInputElement | HTMLTextAreaElement | null>;
+  value: string;
+  setValue: (v: string) => void;
+  compact?: boolean;
+}) {
+  const insert = useCallback(
+    (snippet: string) => {
+      const el = inputRef.current;
+      const start = typeof el?.selectionStart === "number" ? el.selectionStart : value.length;
+      const end = typeof el?.selectionEnd === "number" ? el.selectionEnd : value.length;
+      const next = value.slice(0, start) + snippet + value.slice(end);
+      const pos = start + snippet.length;
+      setValue(next);
+      setTimeout(() => {
+        const node = inputRef.current;
+        if (!node) return;
+        node.focus();
+        try {
+          node.setSelectionRange(pos, pos);
+        } catch {
+          /* ignore */
+        }
+      }, 0);
+    },
+    [inputRef, value, setValue]
+  );
+
+  const wrap = compact ? "flex flex-wrap items-center gap-1.5" : "flex flex-wrap items-center gap-2 mb-2";
+
+  return (
+    <div className={wrap} role="group" aria-label="إدراج اسم المستثمر">
+      <span className={`text-gray-500 ${compact ? "text-[10px]" : "text-[11px]"}`}>إدراج:</span>
+      <button
+        type="button"
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={() => insert("{{name}}")}
+        className="inline-flex items-center gap-1.5 font-mono text-[11px] px-2.5 py-1 rounded-lg border border-[#003B46]/35 bg-[#003B46]/8 text-[#003B46] hover:bg-[#003B46]/18 transition-colors select-none"
+        title="يُدرج {{name}} — يُستبدل باسم المستثمر عند الإرسال"
+      >
+        <span>اسم المستثمر</span>
+        <span className="opacity-80">{"{{name}}"}</span>
+      </button>
+    </div>
+  );
+}
+
 function InvestorAutocomplete({
   investors,
   selectedIds,
@@ -151,6 +204,8 @@ function TemplateModal({
   const [result, setResult] = useState<{ success?: boolean; error?: string } | null>(null);
   const [, startTransition] = useTransition();
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const tplSubjectRef = useRef<HTMLInputElement>(null);
+  const tplBodyRef = useRef<HTMLTextAreaElement>(null);
 
   const filtered = useMemo(() => templates.filter((t) => t.channel === tab), [templates, tab]);
 
@@ -231,15 +286,32 @@ function TemplateModal({
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-3">
               <input value={name} onChange={(e) => setName(e.target.value)} placeholder="اسم القالب" className="w-full border rounded-lg px-3 py-2 text-sm bg-white" />
               {tab !== "SMS" && (
-                <input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="الموضوع" className="w-full border rounded-lg px-3 py-2 text-sm bg-white" />
+                <div>
+                  <label className="block text-[11px] font-medium text-gray-600 mb-1">الموضوع</label>
+                  <PlaceholderInsertButtons inputRef={tplSubjectRef} value={subject} setValue={setSubject} compact />
+                  <input
+                    ref={tplSubjectRef}
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                    placeholder="الموضوع"
+                    className="w-full border rounded-lg px-3 py-2 text-sm bg-white mt-1"
+                  />
+                </div>
               )}
-              <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={4} placeholder="مثال: مرحباً {{name}}، نود إبلاغك بـ..." className="w-full border rounded-lg px-3 py-2 text-sm bg-white resize-none" />
+              <div>
+                <label className="block text-[11px] font-medium text-gray-600 mb-1">نص القالب</label>
+                <PlaceholderInsertButtons inputRef={tplBodyRef} value={body} setValue={setBody} compact />
+                <textarea
+                  ref={tplBodyRef}
+                  value={body}
+                  onChange={(e) => setBody(e.target.value)}
+                  rows={4}
+                  placeholder="مثال: مرحباً، نود إبلاغك بـ… (اضغط «إدراج» أعلاه لإضافة اسم المستثمر)"
+                  className="w-full border rounded-lg px-3 py-2 text-sm bg-white resize-none mt-1"
+                />
+              </div>
               <p className="text-[11px] text-gray-500 leading-relaxed">
-                <span className="font-medium text-gray-600">متغير الاسم:</span> اكتب{" "}
-                <code className="font-mono bg-white/80 px-1 rounded border border-blue-200 text-[10px]">{"{{name}}"}</code>
-                {" "}أو{" "}
-                <code className="font-mono bg-white/80 px-1 rounded border border-blue-200 text-[10px]">{"{{اسم}}"}</code>
-                {" "}في الموضوع أو النص — يُستبدل تلقائياً باسم كل مستثمر عند الإرسال.
+                يُستبدل تلقائياً باسم كل مستثمر عند الإرسال.
               </p>
               {result?.error && <p className="text-xs text-red-600">{result.error}</p>}
               {result?.success && <p className="text-xs text-emerald-600">تم حفظ القالب بنجاح.</p>}
@@ -314,6 +386,8 @@ export function InvestorCommunicationClient({
   const [isPending, startTransition] = useTransition();
   const [showTemplates, setShowTemplates] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+  const subjectInputRef = useRef<HTMLInputElement>(null);
+  const bodyTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   const toggleInvestor = useCallback((id: number) => {
     if (audienceMode === "INDIVIDUAL") {
@@ -515,7 +589,9 @@ export function InvestorCommunicationClient({
           {channel !== "SMS" && (
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">الموضوع</label>
+              <PlaceholderInsertButtons inputRef={subjectInputRef} value={subject} setValue={setSubject} />
               <input
+                ref={subjectInputRef}
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
                 placeholder="مثال: تحديث هام بخصوص محفظتك الاستثمارية"
@@ -527,20 +603,18 @@ export function InvestorCommunicationClient({
           {/* Body */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">نص الرسالة</label>
+            <PlaceholderInsertButtons inputRef={bodyTextareaRef} value={body} setValue={setBody} />
             <textarea
+              ref={bodyTextareaRef}
               value={body}
               onChange={(e) => setBody(e.target.value)}
               required
               rows={6}
-              placeholder="اكتب نص الرسالة هنا… يمكنك استخدام {{name}} لعرض اسم المستثمر."
+              placeholder="اكتب نص الرسالة هنا… أو اضغط «إدراج» أعلاه لإضافة اسم المستثمر تلقائياً."
               className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#003B46]/30 focus:border-[#003B46] bg-gray-50 transition-all placeholder:text-gray-400 resize-none leading-relaxed"
             />
             <p className="text-xs text-gray-500 mt-1.5">
-              <span className="font-medium text-gray-600">اسم المستثمر:</span>{" "}
-              <code className="font-mono bg-gray-100 px-1.5 py-0.5 rounded text-[11px]">{"{{name}}"}</code>
-              {" "}أو{" "}
-              <code className="font-mono bg-gray-100 px-1.5 py-0.5 rounded text-[11px]">{"{{اسم}}"}</code>
-              {" "}في الموضوع أو النص — يُستبدل باسم كل مستلم عند الإرسال (الإيميل يُرسل لكل مستثمر على حدة عند وجود المتغير).
+              المتغيرات تُستبدل باسم كل مستلم عند الإرسال؛ إذا وُجدت في الإيميل يُرسل لكل مستثمر على حدة.
             </p>
           </div>
 
