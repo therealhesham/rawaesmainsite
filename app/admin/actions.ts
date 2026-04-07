@@ -578,6 +578,8 @@ export async function createInvestor(formData: FormData) {
     try {
         const name = String(formData.get("name") ?? "").trim();
         const phoneNumber = String(formData.get("phoneNumber") ?? "").trim();
+        const emailRaw = String(formData.get("email") ?? "").trim();
+        const email = emailRaw ? emailRaw.toLowerCase() : null;
         /** رقم الهوية — يُخزَّن فقط في عمود `user.password` (تسجيل الدخول مع الجوال) */
         const identity = String(formData.get("nationalId") ?? "").trim();
 
@@ -592,6 +594,9 @@ export async function createInvestor(formData: FormData) {
 
         if (!/^5\d{7,9}$/.test(phoneNumber)) {
             return { error: "رقم الجوال يجب أن يبدأ بـ 5 ويتكون من 8 إلى 10 أرقام" };
+        }
+        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            return { error: "صيغة البريد الإلكتروني غير صحيحة" };
         }
 
         const existingUser = await prisma.user.findFirst({
@@ -615,6 +620,7 @@ export async function createInvestor(formData: FormData) {
             data: {
                 name,
                 phoneNumber,
+                email,
                 password: identity,
                 isAdmin: false,
             },
@@ -674,6 +680,8 @@ export async function updateInvestor(formData: FormData) {
         const userId = parseInt(String(formData.get("userId") ?? ""), 10);
         const name = String(formData.get("name") ?? "").trim();
         const phoneNumber = String(formData.get("phoneNumber") ?? "").trim();
+        const emailRaw = String(formData.get("email") ?? "").trim();
+        const email = emailRaw ? emailRaw.toLowerCase() : null;
         /** رقم الهوية — عمود `user.password` فقط */
         const identity = String(formData.get("nationalId") ?? "").trim();
 
@@ -689,6 +697,9 @@ export async function updateInvestor(formData: FormData) {
 
         if (!/^5\d{7,9}$/.test(phoneNumber)) {
             return { error: "رقم الجوال يجب أن يبدأ بـ 5 ويتكون من 8 إلى 10 أرقام" };
+        }
+        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            return { error: "صيغة البريد الإلكتروني غير صحيحة" };
         }
 
         const target = await prisma.user.findUnique({
@@ -716,6 +727,7 @@ export async function updateInvestor(formData: FormData) {
         const userUpdate = {
             name,
             phoneNumber,
+            email,
             password: identity,
         };
 

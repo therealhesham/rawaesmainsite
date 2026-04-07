@@ -87,14 +87,32 @@ export async function deleteMessageTemplate(id: number) {
 
 export async function sendInvestorCommunication(formData: FormData) {
   const admin = await requirePageEdit("investor-communication");
-  const channel = String(formData.get("channel") || "").trim().toUpperCase();
+  const channelRaw = String(formData.get("channel") || "").trim().toUpperCase();
+  const channelsRaw = String(formData.get("channels") || "").trim();
   const mode = String(formData.get("mode") || "").trim().toUpperCase();
   const templateIdRaw = String(formData.get("templateId") || "").trim();
   let subject = String(formData.get("subject") || "").trim();
   let body = String(formData.get("body") || "").trim();
   const linkUrl = String(formData.get("linkUrl") || "#").trim() || "#";
 
-  if (!["SMS", "EMAIL", "NOTIFICATION"].includes(channel)) return { error: "القناة غير صالحة." };
+  let channels: ("SMS" | "EMAIL" | "NOTIFICATION")[] = [];
+  if (channelsRaw) {
+    try {
+      const parsed = JSON.parse(channelsRaw);
+      if (Array.isArray(parsed)) {
+        channels = parsed
+          .map((x) => String(x || "").toUpperCase())
+          .filter((x): x is "SMS" | "EMAIL" | "NOTIFICATION" => ["SMS", "EMAIL", "NOTIFICATION"].includes(x));
+      }
+    } catch {
+      // ignore and fallback
+    }
+  }
+  if (channels.length === 0 && ["SMS", "EMAIL", "NOTIFICATION"].includes(channelRaw)) {
+    channels = [channelRaw as "SMS" | "EMAIL" | "NOTIFICATION"];
+  }
+  channels = [...new Set(channels)];
+  if (channels.length === 0) return { error: "اختر قناة إرسال واحدة على الأقل." };
   if (!["INDIVIDUAL", "MULTIPLE", "SECTOR", "BULK"].includes(mode)) return { error: "نمط الإرسال غير صالح." };
 
   let selectedTemplate: { id: number; name: string; subject: string | null; body: string } | null = null;
@@ -113,7 +131,7 @@ export async function sendInvestorCommunication(formData: FormData) {
   }
 
   if (!body) return { error: "نص الرسالة مطلوب." };
-  if (channel === "EMAIL" && !subject) return { error: "موضوع الإيميل مطلوب." };
+  if (channels.includes("EMAIL") && !subject) return { error: "موضوع الإيميل مطلوب." };
 
   type TargetUser = { id: number; name: string; email: string | null; phoneNumber: string | null };
   let targetUsers: TargetUser[] = [];
@@ -147,121 +165,138 @@ export async function sendInvestorCommunication(formData: FormData) {
 
   if (targetUsers.length === 0) return { error: "لا يوجد مستثمرون مطابقون للإرسال." };
 
-  let status = "sent";
-  let errorMsg: string | null = null;
   const attachmentNames: string[] = [];
+  const files = formData.getAll("attachments").filter((f): f is File => f instanceof File && f.size > 0);
+  const attachments = await Promise.all(
+    files.map(async (file) => {
+      attachmentNames.push(file.name);
+      return {
+        filename: file.name,
+        content: Buffer.from(await file.arrayBuffer()),
+        contentType: file.type || undefined,
+      };
+    })
+  );
 
-  try {
-    if (channel === "EMAIL") {
-      const withMail = targetUsers.filter((u) => !!u.email);
-      if (!withMail.length) return { error: "لا يوجد بريد إلكتروني صالح للمستلمين." };
-      const settings = await getContactSettings();
-      const files = formData.getAll("attachments").filter((f): f is File => f instanceof File && f.size > 0);
-      const attachments = await Promise.all(
-        files.map(async (file) => {
-          attachmentNames.push(file.name);
-          return {
-            filename: file.name,
-            content: Buffer.from(await file.arrayBuffer()),
-            contentType: file.type || undefined,
-          };
-        })
-      );
-      const personalize = messageContainsNamePlaceholder(subject, body);
-      if (personalize) {
-        let failed = 0;
-        for (const u of withMail) {
-          const subj = applyInvestorNamePlaceholders(subject, u.name);
-          const msgBody = applyInvestorNamePlaceholders(body, u.name);
-          const content = buildInvestorEmail({ subject: subj, body: msgBody }, { logoUrl: settings.logoUrl });
-          const ok = await sendMail({
-            to: u.email!,
-            subject: subj,
-            text: content.text,
-            html: content.html,
-            smtpUser: settings.smtpUser,
-            smtpPass: settings.smtpPass,
-            attachments,
-          });
-          if (!ok) failed++;
-        }
-        if (failed > 0) {
+  const channelErrors: string[] = [];
+  for (const channel of channels) {
+    let status = "sent";
+    let errorMsg: string | null = null;
+    try {
+      if (channel === "EMAIL") {
+        const withMail = targetUsers.filter((u) => !!u.email);
+        if (!withMail.length) {
           status = "failed";
-          errorMsg = failed === withMail.length ? "فشل إرسال الإيميل." : `فشل إرسال ${failed} من ${withMail.length} إيميل.`;
+          errorMsg = "لا يوجد بريد إلكتروني صالح للمستلمين.";
+        } else {
+          const settings = await getContactSettings();
+          const personalize = messageContainsNamePlaceholder(subject, body);
+          if (personalize) {
+            let failed = 0;
+            for (const u of withMail) {
+              const subj = applyInvestorNamePlaceholders(subject, u.name);
+              const msgBody = applyInvestorNamePlaceholders(body, u.name);
+              const content = buildInvestorEmail({ subject: subj, body: msgBody }, { logoUrl: settings.logoUrl });
+              const ok = await sendMail({
+                to: u.email!,
+                subject: subj,
+                text: content.text,
+                html: content.html,
+                smtpUser: settings.smtpUser,
+                smtpPass: settings.smtpPass,
+                attachments,
+              });
+              if (!ok) failed++;
+            }
+            if (failed > 0) {
+              status = "failed";
+              errorMsg = failed === withMail.length ? "فشل إرسال الإيميل." : `فشل إرسال ${failed} من ${withMail.length} إيميل.`;
+            }
+          } else {
+            const content = buildInvestorEmail({ subject, body }, { logoUrl: settings.logoUrl });
+            const ok = await sendMail({
+              to: withMail.map((u) => u.email!).join(","),
+              subject,
+              text: content.text,
+              html: content.html,
+              smtpUser: settings.smtpUser,
+              smtpPass: settings.smtpPass,
+              attachments,
+            });
+            if (!ok) {
+              status = "failed";
+              errorMsg = "فشل إرسال الإيميل.";
+            }
+          }
         }
+      } else if (channel === "NOTIFICATION") {
+        await prisma.$transaction(
+          targetUsers.map((u) =>
+            prisma.notifications.create({
+              data: {
+                type: "admin",
+                title: subject ? applyInvestorNamePlaceholders(subject, u.name) : null,
+                message: applyInvestorNamePlaceholders(body, u.name),
+                isGlobal: mode === "BULK",
+                userId: u.id,
+                linkUrl,
+              },
+            })
+          )
+        );
       } else {
-        const content = buildInvestorEmail({ subject, body }, { logoUrl: settings.logoUrl });
-        const ok = await sendMail({
-          to: withMail.map((u) => u.email!).join(","),
-          subject,
-          text: content.text,
-          html: content.html,
-          smtpUser: settings.smtpUser,
-          smtpPass: settings.smtpPass,
-          attachments,
-        });
-        if (!ok) {
+        const withPhone = targetUsers.filter((u) => !!u.phoneNumber);
+        if (!withPhone.length) {
           status = "failed";
-          errorMsg = "فشل إرسال الإيميل.";
+          errorMsg = "لا يوجد جوال صالح للمستلمين.";
+        } else {
+          const settled = await Promise.allSettled(
+            withPhone.map(async (u) => {
+              const phoneForSms = cleanPhoneForSms(u.phoneNumber || "");
+              const smsBody = applyInvestorNamePlaceholders(body, u.name);
+              const smsRes = await fetch(buildSmsUrl(phoneForSms, smsBody));
+              if (!smsRes.ok) throw new Error(`SMS_FAILED_${u.id}`);
+            })
+          );
+          const failed = settled.filter((s) => s.status === "rejected").length;
+          if (failed > 0) {
+            status = "failed";
+            errorMsg = `فشل إرسال ${failed} رسالة SMS.`;
+          }
         }
       }
-    } else if (channel === "NOTIFICATION") {
-      await prisma.$transaction(
-        targetUsers.map((u) =>
-          prisma.notifications.create({
-            data: {
-              type: "admin",
-              title: subject ? applyInvestorNamePlaceholders(subject, u.name) : null,
-              message: applyInvestorNamePlaceholders(body, u.name),
-              isGlobal: mode === "BULK",
-              userId: u.id,
-              linkUrl,
-            },
-          })
-        )
-      );
-    } else {
-      const withPhone = targetUsers.filter((u) => !!u.phoneNumber);
-      if (!withPhone.length) return { error: "لا يوجد جوال صالح للمستلمين." };
-      const settled = await Promise.allSettled(
-        withPhone.map(async (u) => {
-          const phoneForSms = cleanPhoneForSms(u.phoneNumber || "");
-          const smsBody = applyInvestorNamePlaceholders(body, u.name);
-          const smsRes = await fetch(buildSmsUrl(phoneForSms, smsBody));
-          if (!smsRes.ok) throw new Error(`SMS_FAILED_${u.id}`);
-        })
-      );
-      const failed = settled.filter((s) => s.status === "rejected").length;
-      if (failed > 0) {
-        status = "failed";
-        errorMsg = `فشل إرسال ${failed} رسالة SMS.`;
-      }
+    } catch (e: any) {
+      status = "failed";
+      errorMsg = e?.message || "فشل الإرسال.";
     }
-  } catch (e: any) {
-    status = "failed";
-    errorMsg = e?.message || "فشل الإرسال.";
-  }
 
-  await prisma.investorCommunicationLog.create({
-    data: {
-      channel: channel as any,
-      mode: mode as any,
-      templateId: selectedTemplate?.id ?? null,
-      templateName: selectedTemplate?.name ?? null,
-      subject: subject || null,
-      body,
-      recipientsJson: JSON.stringify(targetUsers.map((u) => ({ id: u.id, name: u.name }))),
-      attachmentNames: attachmentNames.length ? JSON.stringify(attachmentNames) : null,
-      sentByAdminId: admin.id,
-      status,
-      errorMsg,
-    },
-  });
+    await prisma.investorCommunicationLog.create({
+      data: {
+        channel: channel as any,
+        mode: mode as any,
+        templateId: selectedTemplate?.id ?? null,
+        templateName: selectedTemplate?.name ?? null,
+        subject: subject || null,
+        body,
+        recipientsJson: JSON.stringify(targetUsers.map((u) => ({ id: u.id, name: u.name }))),
+        attachmentNames: attachmentNames.length ? JSON.stringify(attachmentNames) : null,
+        sentByAdminId: admin.id,
+        status,
+        errorMsg,
+      },
+    });
+
+    if (status === "failed") {
+      channelErrors.push(`${channel}: ${errorMsg || "فشل الإرسال."}`);
+    }
+  }
 
   revalidatePath("/admin/investor-communication");
   revalidatePath("/admin/investor-notifications");
   revalidatePath("/admin/investor-mail");
 
-  if (status === "failed") return { error: errorMsg || "فشل الإرسال." };
-  return { success: true, count: targetUsers.length };
+  if (channelErrors.length > 0) {
+    return { error: `تمت محاولة الإرسال مع أخطاء في بعض القنوات: ${channelErrors.join(" | ")}` };
+  }
+  return { success: true, count: targetUsers.length, channels };
 }

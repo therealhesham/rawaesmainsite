@@ -14,6 +14,7 @@ const INVESTORS_PAGE_SIZE = 40;
 type InvestorListItem = {
     id: number;
     name: string;
+    email?: string | null;
     nationalId: string | null;
     password: string;
     phoneNumber: string;
@@ -1256,6 +1257,19 @@ function EditInvestorModal({ investor, onClose }: { investor: InvestorListItem; 
                         </div>
                     </div>
 
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            البريد الإلكتروني
+                        </label>
+                        <input
+                            name="email"
+                            type="email"
+                            defaultValue={investor.email ?? ""}
+                            placeholder="investor@example.com"
+                            className="w-full p-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:ring-2 focus:ring-primary/20"
+                        />
+                    </div>
+
                     {sectors.length > 0 && (
                         <div>
                             <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">قطاعات الاستثمار</span>
@@ -1384,6 +1398,18 @@ function AddInvestorModal({ onClose }: { onClose: () => void }) {
                             />
                             <p className="text-xs text-gray-500 mt-1">يُستخدم مع رقم الجوال لتسجيل الدخول.</p>
                         </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            البريد الإلكتروني
+                        </label>
+                        <input
+                            name="email"
+                            type="email"
+                            placeholder="investor@example.com"
+                            className="w-full p-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:ring-2 focus:ring-primary/20"
+                        />
                     </div>
 
                     {sectors.length > 0 && (

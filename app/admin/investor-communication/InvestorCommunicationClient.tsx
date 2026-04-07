@@ -425,7 +425,7 @@ export function InvestorCommunicationClient({
   templates: Template[];
   logs: Log[];
 }) {
-  const [channel, setChannel] = useState<Channel>("SMS");
+  const [selectedChannels, setSelectedChannels] = useState<Channel[]>(["SMS"]);
   const [audienceMode, setAudienceMode] = useState<AudienceMode>("INDIVIDUAL");
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [sectorId, setSectorId] = useState("");
@@ -437,6 +437,21 @@ export function InvestorCommunicationClient({
   const [isPending, startTransition] = useTransition();
   const [showTemplates, setShowTemplates] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+  const primaryChannel: Channel = selectedChannels[0] ?? "SMS";
+  const hasEmailChannel = selectedChannels.includes("EMAIL");
+  const hasNotificationChannel = selectedChannels.includes("NOTIFICATION");
+  const hasNonSmsChannel = hasEmailChannel || hasNotificationChannel;
+
+  const toggleChannel = useCallback((ch: Channel) => {
+    setSelectedChannels((prev) => {
+      if (prev.includes(ch)) {
+        if (prev.length === 1) return prev;
+        return prev.filter((x) => x !== ch);
+      }
+      return [...prev, ch];
+    });
+  }, []);
+
   const subjectInputRef = useRef<HTMLInputElement>(null);
   const bodyTextareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -452,7 +467,7 @@ export function InvestorCommunicationClient({
 
   const handleApplyTemplate = useCallback((t: Template) => {
     setTemplateId(t.id);
-    setChannel(t.channel);
+    setSelectedChannels([t.channel]);
     if (t.channel !== "SMS") setSubject(t.subject || "");
     setBody(t.body);
   }, []);
@@ -461,7 +476,7 @@ export function InvestorCommunicationClient({
     e.preventDefault();
     setResult(null);
     const fd = new FormData(e.currentTarget);
-    fd.set("channel", channel);
+    fd.set("channels", JSON.stringify(selectedChannels));
     fd.set("mode", audienceMode);
     fd.set("subject", subject);
     fd.set("body", body);
@@ -514,7 +529,7 @@ export function InvestorCommunicationClient({
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-xl font-bold">تواصل مع المستثمر</h1>
-              <p className="text-sm text-white/70 mt-1">إرسال SMS أو بريد إلكتروني (مع مرفقات) أو إشعارات — من قوالب جاهزة أو رسالة مخصصة.</p>
+              <p className="text-sm text-white/70 mt-1">اختر قناة أو أكثر (SMS / Email / Notification) وأرسلهم دفعة واحدة.</p>
             </div>
             <button
               type="button"
@@ -529,17 +544,17 @@ export function InvestorCommunicationClient({
         <div className="h-1 bg-gradient-to-l from-[#C9A84C] via-[#F0C040] to-[#C9A84C]" />
 
         <form ref={formRef} onSubmit={handleSubmit} className="p-6 md:p-8 space-y-6">
-          {/* Channel Picker */}
+          {/* Channel Picker (multi-select) */}
           <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">قناة الإرسال</label>
+            <label className="block text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">قنوات الإرسال (متعدد)</label>
             <div className="grid grid-cols-3 gap-3">
               {(["SMS", "EMAIL", "NOTIFICATION"] as Channel[]).map((ch) => (
                 <button
                   key={ch}
                   type="button"
-                  onClick={() => setChannel(ch)}
+                  onClick={() => toggleChannel(ch)}
                   className={`flex items-center justify-center gap-2 py-3 rounded-xl border-2 transition-all duration-200 font-semibold text-sm ${
-                    channel === ch
+                    selectedChannels.includes(ch)
                       ? "bg-[#003B46] border-[#003B46] text-white shadow-lg shadow-[#003B46]/20"
                       : "bg-white border-gray-200 text-gray-500 hover:border-[#003B46]/30 hover:text-[#003B46]"
                   }`}
@@ -617,9 +632,9 @@ export function InvestorCommunicationClient({
           )}
 
           {/* Template Quick-Select */}
-          {initialTemplates.filter((t) => t.channel === channel).length > 0 && (
+          {initialTemplates.filter((t) => t.channel === primaryChannel).length > 0 && (
             <div>
-              <label className="block text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">قالب سريع</label>
+              <label className="block text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">قالب سريع ({CHANNEL_META[primaryChannel].label})</label>
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
@@ -630,7 +645,7 @@ export function InvestorCommunicationClient({
                 >
                   بدون قالب
                 </button>
-                {initialTemplates.filter((t) => t.channel === channel).map((t) => (
+                {initialTemplates.filter((t) => t.channel === primaryChannel).map((t) => (
                   <button
                     key={t.id}
                     type="button"
@@ -647,7 +662,7 @@ export function InvestorCommunicationClient({
           )}
 
           {/* Subject */}
-          {channel !== "SMS" && (
+          {hasNonSmsChannel && (
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">الموضوع</label>
               <PlaceholderInsertButtons inputRef={subjectInputRef} value={subject} setValue={setSubject} />
@@ -680,7 +695,7 @@ export function InvestorCommunicationClient({
           </div>
 
           {/* Link URL for notifications */}
-          {channel === "NOTIFICATION" && (
+          {hasNotificationChannel && (
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 <span className="flex items-center gap-1.5"><LinkIcon size={14} className="text-[#003B46]" /> رابط (اختياري)</span>
@@ -695,7 +710,7 @@ export function InvestorCommunicationClient({
           )}
 
           {/* Attachments */}
-          {channel === "EMAIL" && (
+          {hasEmailChannel && (
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 <span className="flex items-center gap-1.5"><Paperclip size={14} className="text-[#003B46]" /> مرفقات (اختياري)</span>
