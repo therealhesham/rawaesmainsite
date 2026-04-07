@@ -737,23 +737,17 @@ export default function InvestorDetailsClient({
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">سنة التقرير</label>
-                    <input
-                      type="number"
+                    <select
                       value={reportYear}
                       onChange={(e) => setReportYear(e.target.value)}
-                      list="report-year-suggestions"
-                      min={1900}
-                      max={3000}
-                      placeholder="مثال: 2026"
                       className="w-full p-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:ring-2 focus:ring-primary/20"
                       required
-                    />
-                    <datalist id="report-year-suggestions">
-                      <option value={new Date().getFullYear()} />
-                      <option value={new Date().getFullYear() - 1} />
-                      <option value={new Date().getFullYear() - 2} />
-                      <option value={new Date().getFullYear() + 1} />
-                    </datalist>
+                    >
+                      <option value={String(new Date().getFullYear())}>{new Date().getFullYear()}</option>
+                      <option value={String(new Date().getFullYear() - 1)}>{new Date().getFullYear() - 1}</option>
+                      <option value={String(new Date().getFullYear() - 2)}>{new Date().getFullYear() - 2}</option>
+                      <option value={String(new Date().getFullYear() + 1)}>{new Date().getFullYear() + 1}</option>
+                    </select>
                   </div>
 
                   <div>
