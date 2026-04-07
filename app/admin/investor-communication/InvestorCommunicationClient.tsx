@@ -183,49 +183,67 @@ function InvestorAutocomplete({
   );
 }
 
-function TemplateModal({
-  open,
-  onClose,
+function TemplateManager({
   templates,
-  onSelectTemplate,
-  isPending,
+  onClose,
+  onUseTemplate,
 }: {
-  open: boolean;
-  onClose: () => void;
   templates: Template[];
-  onSelectTemplate: (t: Template) => void;
-  isPending: boolean;
+  onClose: () => void;
+  onUseTemplate: (t: Template) => void;
 }) {
   const [tab, setTab] = useState<Channel>("SMS");
+  const [selectedId, setSelectedId] = useState<number | null>(null);
   const [creating, setCreating] = useState(false);
-  const [name, setName] = useState("");
-  const [subject, setSubject] = useState("");
-  const [body, setBody] = useState("");
-  const [result, setResult] = useState<{ success?: boolean; error?: string } | null>(null);
+
+  const [tplName, setTplName] = useState("");
+  const [tplSubject, setTplSubject] = useState("");
+  const [tplBody, setTplBody] = useState("");
+  const [saveResult, setSaveResult] = useState<{ success?: boolean; error?: string } | null>(null);
   const [, startTransition] = useTransition();
   const [deletingId, setDeletingId] = useState<number | null>(null);
-  const tplSubjectRef = useRef<HTMLInputElement>(null);
-  const tplBodyRef = useRef<HTMLTextAreaElement>(null);
+  const editorBodyRef = useRef<HTMLTextAreaElement>(null);
+  const editorSubjectRef = useRef<HTMLInputElement>(null);
 
   const filtered = useMemo(() => templates.filter((t) => t.channel === tab), [templates, tab]);
+  const activeTemplate = useMemo(() => (selectedId ? templates.find((t) => t.id === selectedId) : null), [templates, selectedId]);
 
-  const handleCreate = () => {
-    if (!name.trim() || !body.trim()) {
-      setResult({ error: "اسم القالب ونصه مطلوبان." });
+  const selectTemplate = (t: Template) => {
+    setSelectedId(t.id);
+    setCreating(false);
+    setTplName(t.name);
+    setTplSubject(t.subject || "");
+    setTplBody(t.body);
+    setSaveResult(null);
+  };
+
+  const startCreate = () => {
+    setSelectedId(null);
+    setCreating(true);
+    setTplName("");
+    setTplSubject("");
+    setTplBody("");
+    setSaveResult(null);
+  };
+
+  const handleSave = () => {
+    if (!tplName.trim() || !tplBody.trim()) {
+      setSaveResult({ error: "اسم القالب ونصه مطلوبان." });
       return;
     }
-    setResult(null);
+    setSaveResult(null);
     startTransition(async () => {
       const fd = new FormData();
-      fd.set("name", name);
+      fd.set("name", tplName);
       fd.set("channel", tab);
-      fd.set("subject", subject);
-      fd.set("body", body);
+      fd.set("subject", tplSubject);
+      fd.set("body", tplBody);
       const res = await createMessageTemplate(fd);
-      if ((res as any).error) setResult({ error: (res as any).error });
+      if ((res as any).error) setSaveResult({ error: (res as any).error });
       else {
-        setResult({ success: true });
-        setName(""); setSubject(""); setBody(""); setCreating(false);
+        setSaveResult({ success: true });
+        setCreating(false);
+        setTplName(""); setTplSubject(""); setTplBody("");
       }
     });
   };
@@ -234,129 +252,162 @@ function TemplateModal({
     setDeletingId(id);
     startTransition(async () => {
       await deleteMessageTemplate(id);
+      if (selectedId === id) { setSelectedId(null); setTplName(""); setTplSubject(""); setTplBody(""); }
       setDeletingId(null);
     });
   };
 
-  if (!open) return null;
+  const handleUse = () => {
+    if (activeTemplate) {
+      onUseTemplate(activeTemplate);
+      onClose();
+    }
+  };
+
+  const editorHasContent = creating || !!selectedId;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden m-4">
-        <div className="bg-gradient-to-l from-[#003B46] to-[#005F6B] p-5 text-white flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-3">
-            <FileText size={22} />
-            <h2 className="text-lg font-bold">إدارة القوالب</h2>
-          </div>
-          <div className="flex items-center gap-2">
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      {/* Header */}
+      <div className="bg-gradient-to-l from-[#003B46] to-[#005F6B] p-5 text-white flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <FileText size={22} />
+          <h2 className="text-lg font-bold">إدارة القوالب</h2>
+        </div>
+        <button type="button" onClick={onClose} className="flex items-center gap-1.5 bg-white/20 hover:bg-white/30 text-white text-sm px-4 py-2 rounded-lg transition-colors">
+          <X size={16} />
+          رجوع للإرسال
+        </button>
+      </div>
+      <div className="h-1 bg-gradient-to-l from-[#C9A84C] via-[#F0C040] to-[#C9A84C]" />
+
+      {/* Channel tabs */}
+      <div className="flex gap-1 p-3 bg-gray-50 border-b">
+        {(["SMS", "EMAIL", "NOTIFICATION"] as Channel[]).map((ch) => (
+          <button
+            key={ch}
+            type="button"
+            onClick={() => { setTab(ch); setSelectedId(null); setCreating(false); }}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-semibold transition-all ${tab === ch ? "bg-[#003B46] text-white shadow-sm" : "text-gray-500 hover:bg-gray-100"}`}
+          >
+            {CHANNEL_META[ch].icon}
+            {CHANNEL_META[ch].label}
+          </button>
+        ))}
+      </div>
+
+      {/* Split layout: list (right in RTL) + editor (left in RTL) */}
+      <div className="flex flex-col md:flex-row min-h-[420px]">
+        {/* Template list — right side (RTL) */}
+        <div className="md:w-64 lg:w-72 shrink-0 border-b md:border-b-0 md:border-l border-gray-100 flex flex-col bg-gray-50/50">
+          <div className="p-3 border-b border-gray-100 flex items-center justify-between">
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">النماذج ({filtered.length})</span>
             <button
               type="button"
-              onClick={() => setCreating(!creating)}
-              className="flex items-center gap-1.5 bg-white/20 hover:bg-white/30 text-white text-sm px-3 py-1.5 rounded-lg transition-colors"
+              onClick={startCreate}
+              className="flex items-center gap-1 text-xs font-semibold text-[#003B46] bg-[#003B46]/10 hover:bg-[#003B46]/20 px-2.5 py-1.5 rounded-lg transition-colors"
             >
-              <Plus size={16} />
-              قالب جديد
-            </button>
-            <button type="button" onClick={onClose} className="text-white/80 hover:text-white p-1">
-              <X size={22} />
+              <Plus size={14} />
+              جديد
             </button>
           </div>
-        </div>
-        <div className="h-1 bg-gradient-to-l from-[#C9A84C] via-[#F0C040] to-[#C9A84C] shrink-0" />
 
-        <div className="flex gap-1 p-3 bg-gray-50 border-b shrink-0">
-          {(["SMS", "EMAIL", "NOTIFICATION"] as Channel[]).map((ch) => (
-            <button
-              key={ch}
-              type="button"
-              onClick={() => setTab(ch)}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-semibold transition-all ${
-                tab === ch ? "bg-[#003B46] text-white shadow-sm" : "text-gray-500 hover:bg-gray-100"
-              }`}
-            >
-              {CHANNEL_META[ch].icon}
-              {CHANNEL_META[ch].label}
-            </button>
-          ))}
+          <div className="flex-1 overflow-y-auto p-2 space-y-1.5" style={{ maxHeight: "400px" }}>
+            {filtered.length === 0 && !creating && (
+              <div className="text-center py-10 text-gray-400">
+                <FileText size={28} className="mx-auto mb-1.5 opacity-40" />
+                <p className="text-xs">لا يوجد قوالب بعد</p>
+              </div>
+            )}
+            {filtered.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => selectTemplate(t)}
+                className={`w-full text-right p-3 rounded-xl transition-all text-sm group ${selectedId === t.id ? "bg-[#003B46] text-white shadow-md" : "bg-white border border-gray-100 hover:border-[#003B46]/30 hover:shadow-sm"}`}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className={`font-semibold truncate ${selectedId === t.id ? "text-white" : "text-gray-800"}`}>{t.name}</p>
+                    <p className={`text-[11px] mt-0.5 truncate ${selectedId === t.id ? "text-white/70" : "text-gray-400"}`}>{t.body.slice(0, 50)}…</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); handleDelete(t.id); }}
+                    disabled={deletingId === t.id}
+                    className={`shrink-0 p-1 rounded transition-colors ${selectedId === t.id ? "text-white/60 hover:text-red-300" : "text-gray-300 hover:text-red-500"} disabled:opacity-40`}
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-3">
-          {creating && (
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-3">
-              <input value={name} onChange={(e) => setName(e.target.value)} placeholder="اسم القالب" className="w-full border rounded-lg px-3 py-2 text-sm bg-white" />
+        {/* Editor — left side (RTL) */}
+        <div className="flex-1 p-5 flex flex-col">
+          {!editorHasContent ? (
+            <div className="flex-1 flex flex-col items-center justify-center text-gray-400 gap-3">
+              <FileText size={48} className="opacity-30" />
+              <p className="text-sm">اختر قالباً من القائمة أو أنشئ قالباً جديداً</p>
+            </div>
+          ) : (
+            <div className="flex-1 flex flex-col gap-4">
+              {/* Template name */}
+              <input
+                value={tplName}
+                onChange={(e) => setTplName(e.target.value)}
+                placeholder="اسم القالب"
+                className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#003B46]/30 focus:border-[#003B46] bg-white"
+              />
+
+              {/* Subject (email/notification only) */}
               {tab !== "SMS" && (
                 <div>
-                  <label className="block text-[11px] font-medium text-gray-600 mb-1">الموضوع</label>
-                  <PlaceholderInsertButtons inputRef={tplSubjectRef} value={subject} setValue={setSubject} compact />
+                  <PlaceholderInsertButtons inputRef={editorSubjectRef} value={tplSubject} setValue={setTplSubject} compact />
                   <input
-                    ref={tplSubjectRef}
-                    value={subject}
-                    onChange={(e) => setSubject(e.target.value)}
+                    ref={editorSubjectRef}
+                    value={tplSubject}
+                    onChange={(e) => setTplSubject(e.target.value)}
                     placeholder="الموضوع"
-                    className="w-full border rounded-lg px-3 py-2 text-sm bg-white mt-1"
+                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#003B46]/30 focus:border-[#003B46] bg-white mt-1"
                   />
                 </div>
               )}
-              <div>
-                <label className="block text-[11px] font-medium text-gray-600 mb-1">نص القالب</label>
-                <PlaceholderInsertButtons inputRef={tplBodyRef} value={body} setValue={setBody} compact />
+
+              {/* Body — the big green area */}
+              <div className="flex-1 flex flex-col">
+                <PlaceholderInsertButtons inputRef={editorBodyRef} value={tplBody} setValue={setTplBody} />
                 <textarea
-                  ref={tplBodyRef}
-                  value={body}
-                  onChange={(e) => setBody(e.target.value)}
-                  rows={4}
-                  placeholder="مثال: مرحباً، نود إبلاغك بـ… (اضغط «إدراج» أعلاه لإضافة اسم المستثمر)"
-                  className="w-full border rounded-lg px-3 py-2 text-sm bg-white resize-none mt-1"
+                  ref={editorBodyRef}
+                  value={tplBody}
+                  onChange={(e) => setTplBody(e.target.value)}
+                  placeholder="نص القالب… اضغط «اسم المستثمر» أعلاه لإدراج {{name}}"
+                  className="flex-1 min-h-[200px] w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#003B46]/30 focus:border-[#003B46] bg-gray-50 resize-none leading-relaxed"
                 />
               </div>
-              <p className="text-[11px] text-gray-500 leading-relaxed">
-                يُستبدل تلقائياً باسم كل مستثمر عند الإرسال.
-              </p>
-              {result?.error && <p className="text-xs text-red-600">{result.error}</p>}
-              {result?.success && <p className="text-xs text-emerald-600">تم حفظ القالب بنجاح.</p>}
-              <div className="flex gap-2 justify-end">
-                <button type="button" onClick={() => setCreating(false)} className="text-sm text-gray-500 px-3 py-1.5 rounded-lg hover:bg-gray-100">إلغاء</button>
-                <button type="button" onClick={handleCreate} disabled={isPending} className="text-sm bg-[#003B46] text-white px-4 py-1.5 rounded-lg disabled:opacity-60">حفظ القالب</button>
+
+              {/* Feedback + Actions */}
+              {saveResult?.error && <p className="text-xs text-red-600">{saveResult.error}</p>}
+              {saveResult?.success && <p className="text-xs text-emerald-600">تم حفظ القالب بنجاح.</p>}
+
+              <div className="flex items-center gap-2 justify-end pt-1">
+                {creating && (
+                  <button type="button" onClick={handleSave} className="flex items-center gap-1.5 bg-[#003B46] text-white text-sm px-5 py-2.5 rounded-xl font-semibold hover:bg-[#005F6B] transition-colors">
+                    <Plus size={16} />
+                    حفظ القالب
+                  </button>
+                )}
+                {!creating && activeTemplate && (
+                  <button type="button" onClick={handleUse} className="flex items-center gap-1.5 bg-[#003B46] text-white text-sm px-5 py-2.5 rounded-xl font-semibold hover:bg-[#005F6B] transition-colors">
+                    <Send size={16} />
+                    استخدام القالب
+                  </button>
+                )}
               </div>
             </div>
           )}
-
-          {filtered.length === 0 && !creating && (
-            <div className="text-center py-12 text-gray-400">
-              <FileText size={40} className="mx-auto mb-2 opacity-40" />
-              <p className="text-sm">لا يوجد قوالب لهذا النوع بعد.</p>
-            </div>
-          )}
-
-          {filtered.map((t) => (
-            <div key={t.id} className="bg-white border border-gray-100 rounded-xl p-4 hover:shadow-sm transition-shadow group">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-semibold text-gray-800 text-sm">{t.name}</h4>
-                  {t.subject && <p className="text-xs text-gray-500 mt-0.5">الموضوع: {t.subject}</p>}
-                  <p className="text-xs text-gray-400 mt-1 line-clamp-2 leading-relaxed">{t.body}</p>
-                </div>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => { onSelectTemplate(t); onClose(); }}
-                    className="text-xs bg-[#003B46] text-white px-3 py-1.5 rounded-lg hover:bg-[#005F6B] transition-colors"
-                  >
-                    استخدام
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(t.id)}
-                    disabled={deletingId === t.id}
-                    className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all disabled:opacity-40"
-                  >
-                    <Trash2 size={15} />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
         </div>
       </div>
     </div>
@@ -447,7 +498,17 @@ export function InvestorCommunicationClient({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Template Manager — inline, replaces the send card */}
+      {showTemplates && (
+        <TemplateManager
+          templates={initialTemplates}
+          onClose={() => setShowTemplates(false)}
+          onUseTemplate={(t) => { handleApplyTemplate(t); setShowTemplates(false); }}
+        />
+      )}
+
+      {/* Send Card — hidden when template manager is open */}
+      {!showTemplates && (
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="bg-gradient-to-l from-[#003B46] to-[#005F6B] p-6 text-white">
           <div className="flex items-center justify-between">
@@ -682,6 +743,7 @@ export function InvestorCommunicationClient({
           </div>
         </form>
       </div>
+      )}
 
       {/* Logs */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
@@ -730,14 +792,6 @@ export function InvestorCommunicationClient({
         )}
       </div>
 
-      {/* Template Management Modal */}
-      <TemplateModal
-        open={showTemplates}
-        onClose={() => setShowTemplates(false)}
-        templates={initialTemplates}
-        onSelectTemplate={handleApplyTemplate}
-        isPending={isPending}
-      />
     </div>
   );
 }
