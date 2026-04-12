@@ -35,6 +35,14 @@ const sectors = [
     desc: "تقوم الشركة بتوفير خدمات شاملة تشمل إدارة العقارات والتقييم العقاري، والاستشارات العقارية وتميز شركة الاستثمار في إدارة العقارات \"المستقبل العقاري\" برؤيتها الفذة والتي تهدف إلى تحقيق أقصى قدر من القيمة لعملائها.",
     cta: "للمزيد عن الاستثمار",
   },
+  {
+    icon: "/logistics.png",
+    title: "روائس للوجيستيات",
+    sub: "Rawaes Logistics",
+    desc: "تنسيق الشحن والتخزين وإدارة سلسلة التوريد. حلول لوجستية موثوقة تدعم عملياتكم التجارية بكفاءة.",
+    cta: "للمزيد عن اللوجيستيات",
+    noLink: true,
+  },
 ];
 
 const containerVariants = {
@@ -104,12 +112,18 @@ export function SectorsSection() {
                 <p className="text-xs text-gray-500 dark:text-gray-400 font-semibold tracking-wider text-center">
                   {s.sub}
                 </p>
-                <button
-                  type="button"
-                  className="mt-4 bg-primary text-white text-xs py-2 px-6 rounded-full opacity-70 group-hover:opacity-100 transition-opacity"
-                >
-                  {s.cta}
-                </button>
+                {s.noLink ? (
+                  <span className="mt-4 bg-primary/15 dark:bg-primary/25 text-primary text-xs py-2 px-6 rounded-full cursor-default">
+                    {s.cta}
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    className="mt-4 bg-primary text-white text-xs py-2 px-6 rounded-full opacity-70 group-hover:opacity-100 transition-opacity"
+                  >
+                    {s.cta}
+                  </button>
+                )}
               </div>
               <div className="p-6 text-sm text-gray-600 dark:text-gray-300 text-justify leading-relaxed">
                 {s.desc}
