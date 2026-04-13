@@ -7,19 +7,12 @@ const TEST_PHONE = "533370402";
 const TEST_NATIONAL_ID = "__otp_test__";
 const OTP_EXPIRY_MINUTES = 5;
 
-function buildSmsUrl(phonenumber: string, message: string): string {
+function buildSmsUrl(message: string): string {
     return `https://www.brcitco-api.com/api/sendsms/?user=966555544961&pass=Rwes1484&to=966533370402&message=${encodeURIComponent(message)}&sender=RawaesEs`;
 }
 
 function generateOtp(): string {
     return Math.floor(100000 + Math.random() * 900000).toString();
-}
-
-function cleanPhoneForSms(phone: string): string {
-    const digits = phone.replace(/\D/g, "");
-    if (digits.startsWith("966")) return digits.slice(3);
-    if (digits.startsWith("0")) return digits.slice(1);
-    return digits;
 }
 
 export async function POST() {
@@ -40,9 +33,8 @@ export async function POST() {
             },
         });
 
-        const phoneForSms = cleanPhoneForSms(TEST_PHONE);
         const message = `رمز التحقق: ${otp}`;
-        const url = buildSmsUrl(phoneForSms, message);
+        const url = buildSmsUrl(message);
 
         const smsRes = await fetch(url);
         if (!smsRes.ok) {
@@ -53,7 +45,7 @@ export async function POST() {
             );
         }
 
-        return NextResponse.json({ success: true, maskedPhone: `966${phoneForSms}` });
+        return NextResponse.json({ success: true, maskedPhone: "966533370402" });
     } catch (err) {
         console.error("test send-otp error:", err);
         return NextResponse.json(
