@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Tajawal, Manrope, Cairo, Almarai } from "next/font/google";
 import "./globals.css";
 
@@ -30,6 +30,13 @@ export const metadata: Metadata = {
   title: "مجموعة روائس - Rawaes Group",
   description:
     "كيان استثماري مكون من عدة شركات في مجالات وقطاعات مختلفة. الاستثمار، تأجير السيارات، الضيافة، الاستقدام.",
+};
+
+/** iOS: viewport-fit=cover يفعّل env(safe-area-inset-*) ويقلل قفزات العرض مع النوتش/الحواف */
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

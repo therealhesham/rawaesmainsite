@@ -154,7 +154,13 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen flex flex-col lg:flex-row bg-background-light dark:bg-background-dark overflow-x-hidden">
+        <div
+            className="box-border flex min-h-dvh w-full max-w-full flex-col overflow-x-hidden bg-background-light dark:bg-background-dark lg:flex-row"
+            style={{
+                paddingLeft: "max(1rem, env(safe-area-inset-left, 0px))",
+                paddingRight: "max(1rem, env(safe-area-inset-right, 0px))",
+            }}
+        >
             <AlertModal
                 open={!!loginError}
                 onClose={() => setLoginError(null)}
@@ -163,7 +169,7 @@ export default function LoginPage() {
                 variant="error"
             />
             {/* ── Branding Panel (Right in RTL) ── */}
-            <div className="relative w-full min-w-0 lg:w-[52%] min-h-[280px] lg:min-h-screen overflow-hidden flex items-center justify-center">
+            <div className="relative flex min-h-[280px] w-full min-w-0 shrink-0 items-center justify-center overflow-x-clip overflow-y-hidden lg:min-h-dvh lg:w-[52%]">
                 {/* Background */}
                 <div className="absolute inset-0 bg-secondary" />
                 <div
@@ -235,8 +241,8 @@ export default function LoginPage() {
             </div>
 
             {/* ── Login Form Panel — متمركز أفقياً + min-w-0 لتفادي دفع الـ flex ناحية اليمين على الموبايل ── */}
-            <div className="w-full lg:w-[48%] min-w-0 flex flex-col items-center justify-center p-6 md:p-12 lg:p-16">
-                <div className="mx-auto w-full max-w-md">
+            <div className="flex w-full min-w-0 shrink-0 flex-col items-center justify-center px-4 py-8 sm:px-6 md:px-10 md:py-12 lg:w-[48%] lg:px-16">
+                <div className="mx-auto w-full max-w-md min-w-0">
                     {/* Mobile logo (hidden on desktop) */}
                     <div className="lg:hidden flex justify-center mb-6">
                         <img src="/logo.png" alt="Rawaes" className="w-16 h-16 object-contain" />
@@ -269,7 +275,7 @@ export default function LoginPage() {
                                                         setNationalId(filtered);
                                                     }}
                                                     placeholder="رقم الهوية الوطنية"
-                                                    className="w-full pr-12 pl-4 py-3.5 bg-white dark:bg-card-dark border-2 border-gray-200 dark:border-gray-600 rounded-xl text-secondary dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none text-sm dir-ltr text-right"
+                                                    className="w-full max-w-full min-w-0 appearance-none rounded-xl border-2 border-gray-200 bg-white py-3.5 pl-4 pr-12 text-base text-secondary outline-none focus:border-primary focus:ring-4 focus:ring-inset focus:ring-primary/10 dark:border-gray-600 dark:bg-card-dark dark:text-white dark:placeholder:text-gray-500 dir-ltr text-right placeholder:text-gray-400"
                                                 />
                                             </div>
                                         </div>
@@ -287,7 +293,7 @@ export default function LoginPage() {
                                                         setPhoneNumber(filtered);
                                                     }}
                                                     placeholder="5x xxx xxxx"
-                                                    className="w-full pr-12 pl-4 py-3.5 bg-white dark:bg-card-dark border-2 border-gray-200 dark:border-gray-600 rounded-xl text-secondary dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none text-sm dir-ltr text-right"
+                                                    className="w-full max-w-full min-w-0 appearance-none rounded-xl border-2 border-gray-200 bg-white py-3.5 pl-4 pr-12 text-base text-secondary outline-none focus:border-primary focus:ring-4 focus:ring-inset focus:ring-primary/10 dark:border-gray-600 dark:bg-card-dark dark:text-white dark:placeholder:text-gray-500 dir-ltr text-right placeholder:text-gray-400"
                                                 />
                                             </div>
                                         </div>
@@ -326,7 +332,7 @@ export default function LoginPage() {
                                                 onChange={(e) => handleOtpChange(i, e.target.value)}
                                                 onKeyDown={(e) => handleOtpKeyDown(i, e)}
                                                 onPaste={handleOtpPaste}
-                                                className="w-11 h-14 sm:w-12 sm:h-14 text-center text-xl font-bold bg-white dark:bg-card-dark border-2 border-gray-200 dark:border-gray-600 rounded-xl text-secondary dark:text-white focus:border-primary focus:ring-4 focus:ring-primary/20 outline-none dir-ltr"
+                                                className="h-14 w-11 min-w-0 shrink-0 appearance-none rounded-xl border-2 border-gray-200 bg-white py-0 text-center text-lg font-bold text-secondary outline-none focus:border-primary focus:ring-4 focus:ring-inset focus:ring-primary/20 dark:border-gray-600 dark:bg-card-dark dark:text-white sm:h-14 sm:w-12 sm:text-xl dir-ltr"
                                             />
                                         ))}
                                         <button type="button" onClick={handleClearOtp} title="مسح الرمز" className="flex-shrink-0 p-0.5 text-red-500 hover:text-red-600 disabled:opacity-50 disabled:cursor-not-allowed" disabled={!otp.some((d) => d)}>
