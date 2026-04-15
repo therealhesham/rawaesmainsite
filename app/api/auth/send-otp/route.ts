@@ -4,8 +4,15 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 const OTP_EXPIRY_MINUTES = 5;
-function buildSmsUrl(phonenumber: string, message: string): string {
-    return `https://www.brcitco-api.com/api/sendsms/?user=966555544961&pass=Rwes1484&to=966${phonenumber}&message=${encodeURIComponent(message)}&sender=RawaesES`;
+
+/** نفس مزوّد الرابط الشغال؛ القيم الافتراضية = اختبارك المعمول به (بدون استدعاء من هنا). */
+function buildSmsUrl(phoneLocal: string, message: string): string {
+    const user = process.env.SMS_USER || "966555544961";
+    const pass = process.env.SMS_PASS || "Aa555544Bb";
+    const sender = process.env.SMS_SENDER || "RawaesES";
+    const base =
+        (process.env.SMS_API_BASE || "https://www.brcitco-api.com/api/sendsms/").replace(/\/?$/, "/");
+    return `${base}?user=${encodeURIComponent(user)}&pass=${encodeURIComponent(pass)}&to=966${phoneLocal}&message=${encodeURIComponent(message)}&sender=${encodeURIComponent(sender)}`;
 }
 
 function generateOtp(): string {
