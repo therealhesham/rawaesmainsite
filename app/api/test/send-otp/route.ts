@@ -8,7 +8,7 @@ const TEST_NATIONAL_ID = "__otp_test__";
 const OTP_EXPIRY_MINUTES = 5;
 
 function buildSmsUrl(message: string): string {
-    return `https://www.brcitco-api.com/api/sendsms/?user=966555544961&pass=Aa555544Bb&to=966533370402&message=thankyouforusingrawaes&sender=RawaesEs`;
+    return `https://www.brcitco-api.com/api/sendsms/?user=966555544961&pass=Aa555544Bb&to=966533370402&message=thankyouforusingrawaes&sender=RawaesES`;
 }
 
 function generateOtp(): string {
