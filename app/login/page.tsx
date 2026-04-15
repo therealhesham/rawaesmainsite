@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -172,87 +171,41 @@ export default function LoginPage() {
                     style={{ backgroundImage: "url('/wp.png')" }}
                 />
 
-                {/* Decorative geometric shapes */}
-                <motion.div
-                    className="absolute top-20 left-16 w-48 h-48 border-2 border-primary/20 rounded-full"
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 50, repeat: Infinity, ease: "linear" }}
-                />
-                <motion.div
-                    className="absolute bottom-32 right-20 w-32 h-32 border border-primary/15 rounded-full"
-                    animate={{ rotate: -360 }}
-                    transition={{ duration: 35, repeat: Infinity, ease: "linear" }}
-                />
-                <motion.div
-                    className="absolute top-1/3 right-12 w-3 h-3 bg-primary/40 rounded-full"
-                    animate={{ y: [0, -20, 0], opacity: [0.4, 1, 0.4] }}
-                    transition={{ duration: 4, repeat: Infinity }}
-                />
-                <motion.div
-                    className="absolute bottom-1/4 left-24 w-2 h-2 bg-primary/30 rounded-full"
-                    animate={{ y: [0, 15, 0], opacity: [0.3, 0.8, 0.3] }}
-                    transition={{ duration: 3.5, repeat: Infinity }}
-                />
+                {/* Decorative geometric shapes (ثابتة — بدون حركة) */}
+                <div className="absolute top-20 left-16 w-48 h-48 border-2 border-primary/20 rounded-full pointer-events-none" />
+                <div className="absolute bottom-32 right-20 w-32 h-32 border border-primary/15 rounded-full pointer-events-none" />
+                <div className="absolute top-1/3 right-12 w-3 h-3 bg-primary/40 rounded-full pointer-events-none" />
+                <div className="absolute bottom-1/4 left-24 w-2 h-2 bg-primary/30 rounded-full pointer-events-none" />
 
                 {/* Gradient overlays */}
                 <div className="absolute inset-0 bg-gradient-to-b from-secondary/40 via-transparent to-secondary/80" />
                 <div className="absolute inset-0 bg-gradient-to-l from-primary/5 to-transparent" />
 
                 {/* Content */}
-                <motion.div
-                    className="relative z-10 text-center px-8 max-w-lg"
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, delay: 0.2 }}
-                >
+                <div className="relative z-10 text-center px-8 max-w-lg">
                     {/* Logo */}
-                    <motion.div
-                        className="mx-auto mb-8 w-24 h-24"
-                        initial={{ scale: 0.8, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ duration: 0.6, delay: 0.4, type: "spring", stiffness: 200 }}
-                    >
+                    <div className="mx-auto mb-8 w-24 h-24">
                         <img
                             src="/logo.png"
                             alt="Rawaes Group Logo"
                             className="w-full h-full object-contain drop-shadow-2xl"
                         />
-                    </motion.div>
+                    </div>
 
                     {/* Gold accent line */}
-                    <motion.div
-                        className="w-16 h-[2px] bg-primary mx-auto mb-6"
-                        initial={{ width: 0 }}
-                        animate={{ width: 64 }}
-                        transition={{ duration: 0.8, delay: 0.6 }}
-                    />
+                    <div className="w-16 h-[2px] bg-primary mx-auto mb-6" />
 
-                    <motion.h1
-                        className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4 leading-tight"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.5 }}
-                    >
+                    <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4 leading-tight">
                         مجموعة{" "}
                         <span className="text-primary">روائس</span>
-                    </motion.h1>
+                    </h1>
 
-                    <motion.p
-                        className="text-gray-300 text-base md:text-lg leading-relaxed mb-8"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.65 }}
-                    >
+                    <p className="text-gray-300 text-base md:text-lg leading-relaxed mb-8">
                         بوابتك لاستعراض استثماراتك ومتابعة تقاريرك المالية
-                    </motion.p>
+                    </p>
 
                     {/* Stats */}
-                    <motion.div
-                        className="flex items-center justify-center gap-8"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.6, delay: 0.8 }}
-                    >
+                    <div className="flex items-center justify-center gap-8">
                         <div className="text-center">
                             <div className="text-2xl font-bold text-primary">+500</div>
                             <div className="text-xs text-gray-400 mt-1">مستثمر</div>
@@ -267,8 +220,8 @@ export default function LoginPage() {
                             <div className="text-2xl font-bold text-primary">+15</div>
                             <div className="text-xs text-gray-400 mt-1">سنة خبرة</div>
                         </div>
-                    </motion.div>
-                </motion.div>
+                    </div>
+                </div>
 
                 {/* Bottom wave for mobile */}
                 <div className="absolute bottom-0 left-0 right-0 lg:hidden">
@@ -304,7 +257,7 @@ export default function LoginPage() {
                                         <div className="space-y-2">
                                             <label htmlFor="national-id" className="block text-sm font-semibold text-secondary dark:text-gray-200 text-center">رقم الهوية</label>
                                             <div className="relative group">
-                                                <IdCard className="absolute right-4 top-1/2 -translate-y-1/2 size-5 text-primary/60 group-focus-within:text-primary transition-colors pointer-events-none" aria-hidden />
+                                                <IdCard className="absolute right-4 top-1/2 -translate-y-1/2 size-5 text-primary/60 group-focus-within:text-primary pointer-events-none" aria-hidden />
                                                 <input
                                                     id="national-id"
                                                     type="text"
@@ -316,14 +269,14 @@ export default function LoginPage() {
                                                         setNationalId(filtered);
                                                     }}
                                                     placeholder="رقم الهوية الوطنية"
-                                                    className="w-full pr-12 pl-4 py-3.5 bg-white dark:bg-card-dark border-2 border-gray-200 dark:border-gray-600 rounded-xl text-secondary dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-[color,background-color,border-color,box-shadow] duration-300 text-sm dir-ltr text-right"
+                                                    className="w-full pr-12 pl-4 py-3.5 bg-white dark:bg-card-dark border-2 border-gray-200 dark:border-gray-600 rounded-xl text-secondary dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none text-sm dir-ltr text-right"
                                                 />
                                             </div>
                                         </div>
                                         <div className="space-y-2">
                                             <label htmlFor="phone-number" className="block text-sm font-semibold text-secondary dark:text-gray-200 text-center">رقم الجوال</label>
                                             <div className="relative group">
-                                                <Smartphone className="absolute right-4 top-1/2 -translate-y-1/2 size-5 text-primary/60 group-focus-within:text-primary transition-colors pointer-events-none" aria-hidden />
+                                                <Smartphone className="absolute right-4 top-1/2 -translate-y-1/2 size-5 text-primary/60 group-focus-within:text-primary pointer-events-none" aria-hidden />
                                                 <input
                                                     id="phone-number"
                                                     type="tel"
@@ -334,7 +287,7 @@ export default function LoginPage() {
                                                         setPhoneNumber(filtered);
                                                     }}
                                                     placeholder="5x xxx xxxx"
-                                                    className="w-full pr-12 pl-4 py-3.5 bg-white dark:bg-card-dark border-2 border-gray-200 dark:border-gray-600 rounded-xl text-secondary dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-[color,background-color,border-color,box-shadow] duration-300 text-sm dir-ltr text-right"
+                                                    className="w-full pr-12 pl-4 py-3.5 bg-white dark:bg-card-dark border-2 border-gray-200 dark:border-gray-600 rounded-xl text-secondary dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none text-sm dir-ltr text-right"
                                                 />
                                             </div>
                                         </div>
@@ -342,7 +295,7 @@ export default function LoginPage() {
                                     <button
                                         type="submit"
                                         disabled={loading}
-                                        className="w-full py-4 bg-gradient-to-l from-[#d4af79] to-[#c49b60] hover:from-[#c49b60] hover:to-[#b5905f] disabled:opacity-70 text-white font-bold text-base rounded-xl shadow-lg shadow-primary/25 transition-colors duration-300 flex items-center justify-center gap-2 cursor-pointer"
+                                        className="w-full py-4 bg-gradient-to-l from-[#d4af79] to-[#c49b60] hover:from-[#c49b60] hover:to-[#b5905f] disabled:opacity-70 text-white font-bold text-base rounded-xl shadow-lg shadow-primary/25 flex items-center justify-center gap-2 cursor-pointer"
                                     >
                                         {loading ? <Loader2 className="size-5 animate-spin shrink-0" aria-hidden /> : <><span>إرسال رمز التحقق</span><MessageSquare className="size-5 shrink-0" aria-hidden /></>}
                                     </button>
@@ -373,10 +326,10 @@ export default function LoginPage() {
                                                 onChange={(e) => handleOtpChange(i, e.target.value)}
                                                 onKeyDown={(e) => handleOtpKeyDown(i, e)}
                                                 onPaste={handleOtpPaste}
-                                                className="w-11 h-14 sm:w-12 sm:h-14 text-center text-xl font-bold bg-white dark:bg-card-dark border-2 border-gray-200 dark:border-gray-600 rounded-xl text-secondary dark:text-white focus:border-primary focus:ring-4 focus:ring-primary/20 outline-none transition-[color,background-color,border-color,box-shadow] duration-300 dir-ltr"
+                                                className="w-11 h-14 sm:w-12 sm:h-14 text-center text-xl font-bold bg-white dark:bg-card-dark border-2 border-gray-200 dark:border-gray-600 rounded-xl text-secondary dark:text-white focus:border-primary focus:ring-4 focus:ring-primary/20 outline-none dir-ltr"
                                             />
                                         ))}
-                                        <button type="button" onClick={handleClearOtp} title="مسح الرمز" className="flex-shrink-0 p-0.5 text-red-500 hover:text-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled={!otp.some((d) => d)}>
+                                        <button type="button" onClick={handleClearOtp} title="مسح الرمز" className="flex-shrink-0 p-0.5 text-red-500 hover:text-red-600 disabled:opacity-50 disabled:cursor-not-allowed" disabled={!otp.some((d) => d)}>
                                             <span className="text-md font-serif italic select-none" style={{ fontFamily: "cursive" }}>×</span>
                                         </button>
                                     </div>
@@ -384,7 +337,7 @@ export default function LoginPage() {
                                         <button
                                             type="submit"
                                             disabled={loading || otp.join("").length !== OTP_LENGTH}
-                                            className="w-full py-4 bg-gradient-to-l from-[#d4af79] to-[#c49b60] hover:from-[#c49b60] hover:to-[#b5905f] disabled:opacity-70 text-white font-bold text-base rounded-xl shadow-lg shadow-primary/25 transition-colors duration-300 flex items-center justify-center gap-2 cursor-pointer"
+                                            className="w-full py-4 bg-gradient-to-l from-[#d4af79] to-[#c49b60] hover:from-[#c49b60] hover:to-[#b5905f] disabled:opacity-70 text-white font-bold text-base rounded-xl shadow-lg shadow-primary/25 flex items-center justify-center gap-2 cursor-pointer"
                                         >
                                             {loading ? <Loader2 className="size-5 animate-spin shrink-0" aria-hidden /> : <><span>تسجيل الدخول</span><LogIn className="size-5 shrink-0" aria-hidden /></>}
                                         </button>
@@ -401,7 +354,7 @@ export default function LoginPage() {
                                 <button
                                     type="button"
                                     onClick={() => { setStep("credentials"); setOtp(Array(OTP_LENGTH).fill("")); setLoginError(null); }}
-                                    className="mt-6 mx-auto flex w-fit items-center justify-center gap-2 text-sm text-secondary/60 dark:text-gray-500 hover:text-primary transition-colors"
+                                    className="mt-6 mx-auto flex w-fit items-center justify-center gap-2 text-sm text-secondary/60 dark:text-gray-500 hover:text-primary"
                                 >
                                     <ArrowRight className="size-4 shrink-0" aria-hidden />
                                     <span>تغيير رقم الجوال</span>
@@ -424,7 +377,7 @@ export default function LoginPage() {
                     <div className="mt-8 text-center">
                         <Link
                             href="/"
-                            className="inline-flex items-center justify-center gap-2 text-sm text-secondary/50 dark:text-gray-500 hover:text-primary transition-colors"
+                            className="inline-flex items-center justify-center gap-2 text-sm text-secondary/50 dark:text-gray-500 hover:text-primary"
                         >
                             <ArrowRight className="size-4 shrink-0" aria-hidden />
                             <span>العودة إلى الرئيسية</span>
