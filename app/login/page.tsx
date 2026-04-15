@@ -4,35 +4,37 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { checkUserExists, loginWithNationalIdAndPhone, getMatchingProfiles, loginAsProfile } from "./actions";
 import { AlertModal } from "@/app/components/AlertModal";
 
 const OTP_LENGTH = 6;
-const MOCK_OTP = "666666";
 
 export default function LoginPage() {
     const router = useRouter();
     const [nationalId, setNationalId] = useState("");
     const [phoneNumber, setPhoneNumber] = useState("");
-    const [step, setStep] = useState<"credentials" | "otp" | "profiles">("credentials");
+    const [step, setStep] = useState<"credentials" | "otp">("credentials");
     const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
     const [loading, setLoading] = useState(false);
     const [loginError, setLoginError] = useState<string | null>(null);
     const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
-    const [profiles, setProfiles] = useState<{ id: number; name: string; profilepicture: string | null; email: string | null; sectors: string[] }[]>([]);
 
     const handleCredentialsSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoginError(null);
         setLoading(true);
         try {
-            const result = await checkUserExists(nationalId, phoneNumber);
-            if (result.exists) {
+            const res = await fetch("/api/auth/send-otp", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ nationalId: nationalId.trim(), phoneNumber: phoneNumber.trim() }),
+            });
+            const data = await res.json();
+            if (data.success) {
                 setOtp(Array(OTP_LENGTH).fill(""));
                 setStep("otp");
-                setTimeout(() => otpRefs.current[0]?.focus(), 350);
+                setTimeout(() => otpRefs.current[0]?.focus(), 100);
             } else {
-                setLoginError(result.error || "خطأ في تسجيل الدخول");
+                setLoginError(data.error || "حدث خطأ");
             }
         } catch {
             setLoginError("حدث خطأ. حاول لاحقاً.");
@@ -54,12 +56,13 @@ export default function LoginPage() {
 
     const handleOtpKeyDown = (index: number, e: React.KeyboardEvent) => {
         if (e.key === "Backspace") {
-            e.preventDefault();
             if (otp[index]) {
+                e.preventDefault();
                 const next = [...otp];
                 next[index] = "";
                 setOtp(next);
             } else if (index > 0) {
+                e.preventDefault();
                 const next = [...otp];
                 next[index - 1] = "";
                 setOtp(next);
@@ -88,22 +91,28 @@ export default function LoginPage() {
     const handleOtpSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const code = otp.join("");
-        if (code !== MOCK_OTP) {
-            setLoginError("رمز التحقق غير صحيح. استخدم 666666 للتجربة.");
+        if (code.length !== OTP_LENGTH) {
+            setLoginError("أدخل رمز التحقق كاملاً");
             return;
         }
         setLoginError(null);
         setLoading(true);
         try {
-            const result = await loginWithNationalIdAndPhone(nationalId, phoneNumber);
-            if (result.success && result.multipleProfiles) {
-                const profilesResult = await getMatchingProfiles(nationalId, phoneNumber);
-                setProfiles(profilesResult.profiles);
-                setStep("profiles");
-            } else if (result.success && result.userId) {
-                router.push(`/privatepage/${result.userId}`);
+            const res = await fetch("/api/auth/verify-otp", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({
+                    nationalId: nationalId.trim(),
+                    phoneNumber: phoneNumber.trim(),
+                    otp: code,
+                }),
+            });
+            const data = await res.json();
+            if (data.success && data.userId) {
+                router.push(`/privatepage/${data.userId}`);
             } else {
-                setLoginError(result.error || "خطأ في تسجيل الدخول");
+                setLoginError(data.error || "رمز غير صحيح");
             }
         } catch {
             setLoginError("حدث خطأ. حاول لاحقاً.");
@@ -112,15 +121,22 @@ export default function LoginPage() {
         }
     };
 
-    const handleProfileSelect = async (profileId: number) => {
-        setLoading(true);
+    const handleResendOtp = async () => {
         setLoginError(null);
+        setLoading(true);
         try {
-            const result = await loginAsProfile(profileId);
-            if (result.success && result.userId) {
-                router.push(`/privatepage/${result.userId}`);
+            const res = await fetch("/api/auth/send-otp", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ nationalId: nationalId.trim(), phoneNumber: phoneNumber.trim() }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                setOtp(Array(OTP_LENGTH).fill(""));
+                setLoginError(null);
+                otpRefs.current[0]?.focus();
             } else {
-                setLoginError(result.error || "خطأ في تسجيل الدخول");
+                setLoginError(data.error || "فشل إعادة الإرسال");
             }
         } catch {
             setLoginError("حدث خطأ. حاول لاحقاً.");
@@ -134,7 +150,7 @@ export default function LoginPage() {
             <AlertModal
                 open={!!loginError}
                 onClose={() => setLoginError(null)}
-                title="خطأ في تسجيل الدخول"
+                title={step === "otp" ? "خطأ في التحقق" : "خطأ في تسجيل الدخول"}
                 message={loginError ?? ""}
                 variant="error"
             />
@@ -283,7 +299,7 @@ export default function LoginPage() {
                                         تسجيل دخول المستثمرين
                                     </h2>
                                     <p className="text-secondary/60 dark:text-gray-400 text-sm">
-                                        أدخل رقم الهوية ورقم الجوال للوصول إلى صفحتك الاستثمارية
+                                        أدخل رقم الهوية ورقم الجوال لإرسال رمز التحقق
                                     </p>
                                 </motion.div>
                                 <form onSubmit={handleCredentialsSubmit} className="space-y-6">
@@ -347,13 +363,12 @@ export default function LoginPage() {
                                 transition={{ duration: 0.3 }}
                             >
                                 <motion.div className="mb-10">
-                                    <button type="button" onClick={() => { setStep("credentials"); setOtp(Array(OTP_LENGTH).fill("")); setLoginError(null); }} className="flex items-center gap-2 text-secondary/60 dark:text-gray-400 hover:text-primary mb-4 transition-colors">
-                                        <span className="material-icons">arrow_forward</span>
-                                        <span>تغيير الرقم</span>
-                                    </button>
                                     <h2 className="text-2xl md:text-3xl font-bold text-secondary dark:text-white mb-3">أدخل رمز التحقق</h2>
                                     <p className="text-secondary/60 dark:text-gray-400 text-sm">
-                                        أدخل الرمز <span dir="ltr" className="font-semibold text-primary">666666</span> للتجربة (بدون إرسال SMS)
+                                        تم إرسال رمز مكوّن من 6 أرقام إلى{" "}
+                                        <span dir="ltr" className="font-semibold text-primary">
+                                            {phoneNumber}
+                                        </span>
                                     </p>
                                 </motion.div>
                                 <form onSubmit={handleOtpSubmit} className="space-y-6">
@@ -364,6 +379,7 @@ export default function LoginPage() {
                                                 ref={(el) => { otpRefs.current[i] = el; }}
                                                 type="text"
                                                 inputMode="numeric"
+                                                autoComplete={i === 0 ? "one-time-code" : "off"}
                                                 maxLength={1}
                                                 value={digit}
                                                 onChange={(e) => handleOtpChange(i, e.target.value)}
@@ -376,87 +392,34 @@ export default function LoginPage() {
                                             <span className="text-md font-serif italic select-none" style={{ fontFamily: "cursive" }}>×</span>
                                         </button>
                                     </div>
-                                    <motion.button
-                                        type="submit"
-                                        disabled={loading || otp.join("").length !== OTP_LENGTH}
-                                        whileHover={loading || otp.join("").length !== OTP_LENGTH ? undefined : { scale: 1.01 }}
-                                        whileTap={loading || otp.join("").length !== OTP_LENGTH ? undefined : { scale: 0.98 }}
-                                        className="w-full py-4 bg-gradient-to-l from-[#d4af79] to-[#c49b60] hover:from-[#c49b60] hover:to-[#b5905f] disabled:opacity-70 text-white font-bold text-base rounded-xl shadow-lg shadow-primary/25 transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"
-                                    >
-                                        {loading ? <span className="material-icons animate-spin">refresh</span> : <><span>تسجيل الدخول</span><span className="material-icons text-lg">login</span></>}
-                                    </motion.button>
-                                </form>
-                            </motion.div>
-                        )}
-                        {step === "profiles" && (
-                            <motion.div
-                                key="profiles"
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.95 }}
-                                transition={{ duration: 0.4 }}
-                            >
-                                <motion.div className="mb-8 text-center">
-                                    <button
-                                        type="button"
-                                        onClick={() => { setStep("credentials"); setOtp(Array(OTP_LENGTH).fill("")); setLoginError(null); setProfiles([]); }}
-                                        className="flex items-center gap-2 text-secondary/60 dark:text-gray-400 hover:text-primary mb-4 transition-colors"
-                                    >
-                                        <span className="material-icons">arrow_forward</span>
-                                        <span>رجوع</span>
-                                    </button>
-                                    <h2 className="text-2xl md:text-3xl font-bold text-secondary dark:text-white mb-3">
-                                        اختر ملفك الاستثماري
-                                    </h2>
-                                    <p className="text-secondary/60 dark:text-gray-400 text-sm">
-                                        لديك عدة ملفات استثمارية، اختر الملف الذي تريد الدخول إليه
-                                    </p>
-                                </motion.div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    {profiles.map((profile, index) => (
+                                    <div className="flex flex-col gap-4">
                                         <motion.button
-                                            key={profile.id}
-                                            type="button"
-                                            onClick={() => handleProfileSelect(profile.id)}
-                                            disabled={loading}
-                                            initial={{ opacity: 0, y: 20 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            transition={{ duration: 0.3, delay: index * 0.1 }}
-                                            whileHover={{ scale: 1.04, y: -4 }}
-                                            whileTap={{ scale: 0.97 }}
-                                            className="group relative flex flex-col items-center gap-3 p-5 rounded-2xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-card-dark hover:border-primary hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 cursor-pointer disabled:opacity-60"
+                                            type="submit"
+                                            disabled={loading || otp.join("").length !== OTP_LENGTH}
+                                            whileHover={loading || otp.join("").length !== OTP_LENGTH ? undefined : { scale: 1.01 }}
+                                            whileTap={loading || otp.join("").length !== OTP_LENGTH ? undefined : { scale: 0.98 }}
+                                            className="w-full py-4 bg-gradient-to-l from-[#d4af79] to-[#c49b60] hover:from-[#c49b60] hover:to-[#b5905f] disabled:opacity-70 text-white font-bold text-base rounded-xl shadow-lg shadow-primary/25 transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"
                                         >
-                                            <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-                                            <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-[#003B46] to-[#005a6e] flex items-center justify-center text-2xl font-bold text-white shadow-lg group-hover:shadow-primary/30 transition-shadow duration-300 overflow-hidden">
-                                          
-                                                    <span>{profile.name.charAt(0)}</span>
-                                                
-                                                <div className="absolute inset-0 rounded-full border-2 border-transparent group-hover:border-primary transition-colors duration-300" />
-                                            </div>
-
-                                            <div className="relative text-center min-w-0 w-full">
-                                                <p className="font-bold text-secondary dark:text-white text-sm truncate group-hover:text-primary transition-colors duration-300">
-                                                    {profile.name}
-                                                </p>
-                                                {profile.sectors.length > 0 && (
-                                                    <p className="text-xs text-secondary/50 dark:text-gray-500 mt-1 truncate">
-                                                        {profile.sectors.join(" • ")}
-                                                    </p>
-                                                )}
-                                            </div>
-
-                                            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                            {loading ? <span className="material-icons animate-spin">refresh</span> : <><span>تسجيل الدخول</span><span className="material-icons text-lg">login</span></>}
                                         </motion.button>
-                                    ))}
-                                </div>
-
-                                {loading && (
-                                    <div className="flex justify-center mt-6">
-                                        <span className="material-icons animate-spin text-primary text-3xl">refresh</span>
+                                        <button
+                                            type="button"
+                                            onClick={handleResendOtp}
+                                            disabled={loading}
+                                            className="text-sm text-primary hover:underline disabled:opacity-50"
+                                        >
+                                            إعادة إرسال الرمز
+                                        </button>
                                     </div>
-                                )}
+                                </form>
+                                <button
+                                    type="button"
+                                    onClick={() => { setStep("credentials"); setOtp(Array(OTP_LENGTH).fill("")); setLoginError(null); }}
+                                    className="mt-6 flex items-center gap-2 text-sm text-secondary/60 dark:text-gray-500 hover:text-primary transition-colors"
+                                >
+                                    <span className="material-icons text-base">arrow_forward</span>
+                                    <span>تغيير رقم الجوال</span>
+                                </button>
                             </motion.div>
                         )}
                     </AnimatePresence>
