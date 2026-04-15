@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { Bed, Car, Hotel, Mail, Phone, Plane } from "lucide-react";
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
 import { BannerHeroSection } from "../components/BannerHeroSection";
@@ -168,15 +169,9 @@ export default function RawaesHotelsPage() {
                   <div className="bg-[#1b4394] p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all flex flex-col items-center justify-center text-white">
                     <span className="text-xl font-bold italic">priceline</span>
                     <div className="flex gap-1 mt-2">
-                      <span className="material-symbols-outlined text-xs">
-                        hotel
-                      </span>
-                      <span className="material-symbols-outlined text-xs">
-                        flight
-                      </span>
-                      <span className="material-symbols-outlined text-xs">
-                        directions_car
-                      </span>
+                      <Hotel className="size-3.5 shrink-0" aria-hidden />
+                      <Plane className="size-3.5 shrink-0" aria-hidden />
+                      <Car className="size-3.5 shrink-0" aria-hidden />
                     </div>
                   </div>
                   <div className="bg-[#003580] p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center text-white">
@@ -184,9 +179,7 @@ export default function RawaesHotelsPage() {
                   </div>
                   <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all border border-slate-100 dark:border-slate-700 flex items-center justify-center">
                     <div className="flex flex-col items-center text-blue-900 dark:text-blue-400">
-                      <span className="material-symbols-outlined text-4xl">
-                        bed
-                      </span>
+                      <Bed className="size-10 shrink-0" strokeWidth={1.25} aria-hidden />
                       <span className="font-bold text-xs">Bluepillow</span>
                     </div>
                   </div>
@@ -243,9 +236,7 @@ export default function RawaesHotelsPage() {
                         className="flex items-center gap-2 hover:text-[#c5a065] transition-colors"
                         href="mailto:h@rawaes.com"
                       >
-                        <span className="material-symbols-outlined text-sm">
-                          mail
-                        </span>
+                        <Mail className="size-4 shrink-0" aria-hidden />
                         h@rawaes.com
                       </a>
                       <a
@@ -253,9 +244,7 @@ export default function RawaesHotelsPage() {
                         dir="ltr"
                         href="tel:0566576591"
                       >
-                        <span className="material-symbols-outlined text-sm">
-                          call
-                        </span>
+                        <Phone className="size-4 shrink-0" aria-hidden />
                         0566576591
                       </a>
                     </div>

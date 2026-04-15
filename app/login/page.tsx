@@ -1,9 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import {
+    ArrowRight,
+    IdCard,
+    Loader2,
+    LogIn,
+    MessageSquare,
+    Phone,
+    Smartphone,
+} from "lucide-react";
 import { AlertModal } from "@/app/components/AlertModal";
 
 const OTP_LENGTH = 6;
@@ -272,42 +281,30 @@ export default function LoginPage() {
                 </div>
             </div>
 
-            {/* ── Login Form Panel (Left in RTL) ── */}
+            {/* ── Login Form Panel (Left in RTL) — بدون motion لتفادي إزاحة العرض عند focus على الموبايل ── */}
             <div className="w-full lg:w-[48%] flex items-center justify-center p-6 md:p-12 lg:p-16">
-                <motion.div
-                    className="w-full max-w-md"
-                    initial={{ opacity: 0, x: -40 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.7, delay: 0.3 }}
-                >
+                <div className="w-full max-w-md">
                     {/* Mobile logo (hidden on desktop) */}
                     <div className="lg:hidden flex justify-center mb-6">
                         <img src="/logo.png" alt="Rawaes" className="w-16 h-16 object-contain" />
                     </div>
 
-                    <AnimatePresence mode="wait">
-                        {step === "credentials" && (
-                            <motion.div
-                                key="credentials"
-                                initial={{ opacity: 0, x: 20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -20 }}
-                                transition={{ duration: 0.3 }}
-                            >
-                                <motion.div className="mb-10">
+                    {step === "credentials" ? (
+                        <div key="credentials">
+                                <div className="mb-10">
                                     <h2 className="text-2xl md:text-3xl font-bold text-secondary dark:text-white mb-3">
                                         تسجيل دخول المستثمرين
                                     </h2>
                                     <p className="text-secondary/60 dark:text-gray-400 text-sm">
                                         أدخل رقم الهوية ورقم الجوال لإرسال رمز التحقق
                                     </p>
-                                </motion.div>
+                                </div>
                                 <form onSubmit={handleCredentialsSubmit} className="space-y-6">
                                     <div className="space-y-4">
                                         <div className="space-y-2">
                                             <label htmlFor="national-id" className="block text-sm font-semibold text-secondary dark:text-gray-200">رقم الهوية</label>
                                             <div className="relative group">
-                                                <span className="absolute right-4 top-1/2 -translate-y-1/2 material-icons text-xl text-primary/60 group-focus-within:text-primary transition-colors">badge</span>
+                                                <IdCard className="absolute right-4 top-1/2 -translate-y-1/2 size-5 text-primary/60 group-focus-within:text-primary transition-colors pointer-events-none" aria-hidden />
                                                 <input
                                                     id="national-id"
                                                     type="text"
@@ -319,14 +316,14 @@ export default function LoginPage() {
                                                         setNationalId(filtered);
                                                     }}
                                                     placeholder="رقم الهوية الوطنية"
-                                                    className="w-full pr-12 pl-4 py-3.5 bg-white dark:bg-card-dark border-2 border-gray-200 dark:border-gray-600 rounded-xl text-secondary dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all duration-300 text-sm dir-ltr text-right"
+                                                    className="w-full pr-12 pl-4 py-3.5 bg-white dark:bg-card-dark border-2 border-gray-200 dark:border-gray-600 rounded-xl text-secondary dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-[color,background-color,border-color,box-shadow] duration-300 text-sm dir-ltr text-right"
                                                 />
                                             </div>
                                         </div>
                                         <div className="space-y-2">
                                             <label htmlFor="phone-number" className="block text-sm font-semibold text-secondary dark:text-gray-200">رقم الجوال</label>
                                             <div className="relative group">
-                                                <span className="absolute right-4 top-1/2 -translate-y-1/2 material-icons text-xl text-primary/60 group-focus-within:text-primary transition-colors">phone_iphone</span>
+                                                <Smartphone className="absolute right-4 top-1/2 -translate-y-1/2 size-5 text-primary/60 group-focus-within:text-primary transition-colors pointer-events-none" aria-hidden />
                                                 <input
                                                     id="phone-number"
                                                     type="tel"
@@ -337,32 +334,23 @@ export default function LoginPage() {
                                                         setPhoneNumber(filtered);
                                                     }}
                                                     placeholder="5x xxx xxxx"
-                                                    className="w-full pr-12 pl-4 py-3.5 bg-white dark:bg-card-dark border-2 border-gray-200 dark:border-gray-600 rounded-xl text-secondary dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all duration-300 text-sm dir-ltr text-right"
+                                                    className="w-full pr-12 pl-4 py-3.5 bg-white dark:bg-card-dark border-2 border-gray-200 dark:border-gray-600 rounded-xl text-secondary dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-[color,background-color,border-color,box-shadow] duration-300 text-sm dir-ltr text-right"
                                                 />
                                             </div>
                                         </div>
                                     </div>
-                                    <motion.button
+                                    <button
                                         type="submit"
                                         disabled={loading}
-                                        whileHover={{ scale: loading ? 1 : 1.01 }}
-                                        whileTap={{ scale: loading ? 1 : 0.98 }}
-                                        className="w-full py-4 bg-gradient-to-l from-[#d4af79] to-[#c49b60] hover:from-[#c49b60] hover:to-[#b5905f] disabled:opacity-70 text-white font-bold text-base rounded-xl shadow-lg shadow-primary/25 transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"
+                                        className="w-full py-4 bg-gradient-to-l from-[#d4af79] to-[#c49b60] hover:from-[#c49b60] hover:to-[#b5905f] disabled:opacity-70 text-white font-bold text-base rounded-xl shadow-lg shadow-primary/25 transition-colors duration-300 flex items-center justify-center gap-2 cursor-pointer"
                                     >
-                                        {loading ? <span className="material-icons animate-spin">refresh</span> : <><span>إرسال رمز التحقق</span><span className="material-icons text-lg">sms</span></>}
-                                    </motion.button>
+                                        {loading ? <Loader2 className="size-5 animate-spin shrink-0" aria-hidden /> : <><span>إرسال رمز التحقق</span><MessageSquare className="size-5 shrink-0" aria-hidden /></>}
+                                    </button>
                                 </form>
-                            </motion.div>
-                        )}
-                        {step === "otp" && (
-                            <motion.div
-                                key="otp"
-                                initial={{ opacity: 0, x: 20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -20 }}
-                                transition={{ duration: 0.3 }}
-                            >
-                                <motion.div className="mb-10">
+                        </div>
+                    ) : (
+                        <div key="otp">
+                                <div className="mb-10">
                                     <h2 className="text-2xl md:text-3xl font-bold text-secondary dark:text-white mb-3">أدخل رمز التحقق</h2>
                                     <p className="text-secondary/60 dark:text-gray-400 text-sm">
                                         تم إرسال رمز مكوّن من 6 أرقام إلى{" "}
@@ -370,7 +358,7 @@ export default function LoginPage() {
                                             {phoneNumber}
                                         </span>
                                     </p>
-                                </motion.div>
+                                </div>
                                 <form onSubmit={handleOtpSubmit} className="space-y-6">
                                     <div dir="ltr" className="flex flex-row justify-center items-center gap-2 sm:gap-3" style={{ direction: "ltr" }}>
                                         {otp.map((digit, i) => (
@@ -385,7 +373,7 @@ export default function LoginPage() {
                                                 onChange={(e) => handleOtpChange(i, e.target.value)}
                                                 onKeyDown={(e) => handleOtpKeyDown(i, e)}
                                                 onPaste={handleOtpPaste}
-                                                className="w-11 h-14 sm:w-12 sm:h-14 text-center text-xl font-bold bg-white dark:bg-card-dark border-2 border-gray-200 dark:border-gray-600 rounded-xl text-secondary dark:text-white focus:border-primary focus:ring-4 focus:ring-primary/20 outline-none transition-all duration-300 dir-ltr"
+                                                className="w-11 h-14 sm:w-12 sm:h-14 text-center text-xl font-bold bg-white dark:bg-card-dark border-2 border-gray-200 dark:border-gray-600 rounded-xl text-secondary dark:text-white focus:border-primary focus:ring-4 focus:ring-primary/20 outline-none transition-[color,background-color,border-color,box-shadow] duration-300 dir-ltr"
                                             />
                                         ))}
                                         <button type="button" onClick={handleClearOtp} title="مسح الرمز" className="flex-shrink-0 p-0.5 text-red-500 hover:text-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled={!otp.some((d) => d)}>
@@ -393,15 +381,13 @@ export default function LoginPage() {
                                         </button>
                                     </div>
                                     <div className="flex flex-col gap-4">
-                                        <motion.button
+                                        <button
                                             type="submit"
                                             disabled={loading || otp.join("").length !== OTP_LENGTH}
-                                            whileHover={loading || otp.join("").length !== OTP_LENGTH ? undefined : { scale: 1.01 }}
-                                            whileTap={loading || otp.join("").length !== OTP_LENGTH ? undefined : { scale: 0.98 }}
-                                            className="w-full py-4 bg-gradient-to-l from-[#d4af79] to-[#c49b60] hover:from-[#c49b60] hover:to-[#b5905f] disabled:opacity-70 text-white font-bold text-base rounded-xl shadow-lg shadow-primary/25 transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"
+                                            className="w-full py-4 bg-gradient-to-l from-[#d4af79] to-[#c49b60] hover:from-[#c49b60] hover:to-[#b5905f] disabled:opacity-70 text-white font-bold text-base rounded-xl shadow-lg shadow-primary/25 transition-colors duration-300 flex items-center justify-center gap-2 cursor-pointer"
                                         >
-                                            {loading ? <span className="material-icons animate-spin">refresh</span> : <><span>تسجيل الدخول</span><span className="material-icons text-lg">login</span></>}
-                                        </motion.button>
+                                            {loading ? <Loader2 className="size-5 animate-spin shrink-0" aria-hidden /> : <><span>تسجيل الدخول</span><LogIn className="size-5 shrink-0" aria-hidden /></>}
+                                        </button>
                                         <button
                                             type="button"
                                             onClick={handleResendOtp}
@@ -417,47 +403,34 @@ export default function LoginPage() {
                                     onClick={() => { setStep("credentials"); setOtp(Array(OTP_LENGTH).fill("")); setLoginError(null); }}
                                     className="mt-6 flex items-center gap-2 text-sm text-secondary/60 dark:text-gray-500 hover:text-primary transition-colors"
                                 >
-                                    <span className="material-icons text-base">arrow_forward</span>
+                                    <ArrowRight className="size-4 shrink-0" aria-hidden />
                                     <span>تغيير رقم الجوال</span>
                                 </button>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
+                        </div>
+                    )}
 
                     {/* Contact support card */}
-                    <motion.div
-                        className="bg-gray-50 dark:bg-[#1a2233] border border-gray-100 dark:border-gray-700 rounded-xl p-5 text-center"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.9 }}
-                    >
+                    <div className="bg-gray-50 dark:bg-[#1a2233] border border-gray-100 dark:border-gray-700 rounded-xl p-5 text-center mt-8">
                         <p className="text-secondary/60 dark:text-gray-400 text-sm mb-2">
                             تحتاج مساعدة؟ تواصل مع فريق الدعم
                         </p>
                         <div className="flex items-center justify-center gap-2 text-primary font-bold text-sm">
-                            <span className="material-icons text-base">phone</span>
+                            <Phone className="size-4 shrink-0" aria-hidden />
                             <span dir="ltr">9200 10 356</span>
                         </div>
-                    </motion.div>
+                    </div>
 
                     {/* Back to home */}
-                    <motion.div
-                        className="mt-8 text-center"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 1 }}
-                    >
+                    <div className="mt-8 text-center">
                         <Link
                             href="/"
                             className="inline-flex items-center gap-2 text-sm text-secondary/50 dark:text-gray-500 hover:text-primary transition-colors group"
                         >
-                            <span className="material-icons text-base group-hover:translate-x-[-4px] transition-transform">
-                                arrow_forward
-                            </span>
+                            <ArrowRight className="size-4 shrink-0 group-hover:translate-x-[-4px] transition-transform" aria-hidden />
                             <span>العودة إلى الرئيسية</span>
                         </Link>
-                    </motion.div>
-                </motion.div>
+                    </div>
+                </div>
             </div>
         </div>
     );

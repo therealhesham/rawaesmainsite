@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import type { LucideIcon } from "lucide-react";
+import { Briefcase, Gavel, Lightbulb, X } from "lucide-react";
 
 interface QuickContactSettings {
     legalPhone: string | null;
@@ -8,11 +10,12 @@ interface QuickContactSettings {
     suggestionsPhone: string | null;
 }
 
-const options = (settings: QuickContactSettings | null) => [
-    { title: "الإدارة القانونية", phone: settings?.legalPhone || "", icon: "gavel" },
-    { title: "الإدارة العليا", phone: settings?.managementPhone || "", icon: "business_center" },
-    { title: "اقتراحات ومساعدة", phone: settings?.suggestionsPhone || "", icon: "lightbulb_outline" },
-];
+const options = (settings: QuickContactSettings | null) =>
+    [
+        { title: "الإدارة القانونية", phone: settings?.legalPhone || "", Icon: Gavel },
+        { title: "الإدارة العليا", phone: settings?.managementPhone || "", Icon: Briefcase },
+        { title: "اقتراحات ومساعدة", phone: settings?.suggestionsPhone || "", Icon: Lightbulb },
+    ] as { title: string; phone: string; Icon: LucideIcon }[];
 
 export default function FloatingWhatsAppButton({
     settings,
@@ -62,9 +65,7 @@ export default function FloatingWhatsAppButton({
                             }`}
                             style={{ transitionDelay: isOpen ? `${(2 - i) * 60}ms` : "0ms" }}
                         >
-                            <span className="material-icons text-[20px] text-[#25D366] shrink-0">
-                                {item.icon}
-                            </span>
+                            <item.Icon className="size-5 text-[#25D366] shrink-0" strokeWidth={1.75} aria-hidden />
                             <span className="text-sm font-medium">
                                 {item.title}
                             </span>
@@ -81,7 +82,11 @@ export default function FloatingWhatsAppButton({
                     className="h-12 rounded-full bg-[#25D366] text-white shadow-lg shadow-[#25D366]/40 hover:bg-[#20BD5A] active:scale-95 transition-all duration-200 flex items-center justify-center overflow-hidden"
                     style={{ width: isOpen ? 48 : "auto", paddingInline: isOpen ? 0 : 20 }}
                 >
-                    <span className={`material-icons text-2xl absolute transition-all duration-200 ${isOpen ? "opacity-100 rotate-0" : "opacity-0 rotate-90"}`}>close</span>
+                    <X
+                        className={`size-7 absolute transition-all duration-200 ${isOpen ? "opacity-100 rotate-0" : "opacity-0 rotate-90"}`}
+                        strokeWidth={2}
+                        aria-hidden
+                    />
                     <span className={`flex items-center gap-2 transition-all duration-200 ${isOpen ? "opacity-0 scale-75" : "opacity-100 scale-100"}`}>
                         <span className="text-sm font-bold whitespace-nowrap">محتاج مساعدة ؟</span>
                         <img

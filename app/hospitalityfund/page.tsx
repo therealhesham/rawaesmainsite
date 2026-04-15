@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ArrowLeft, FileText } from "lucide-react";
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
 
@@ -76,14 +77,14 @@ export default function HospitalityFundPage() {
                                     className="flex items-center justify-end gap-3 py-4 px-6 bg-white dark:bg-slate-700/90 border border-slate-200 dark:border-slate-600 rounded-xl text-secondary dark:text-gold font-bold shadow-sm hover:shadow-md transition-all duration-300 text-right"
                                 >
                                     <span>تقرير السنوي 2021</span>
-                                    <span className="material-icons-round text-2xl text-secondary dark:text-gold">description</span>
+                                    <FileText className="size-7 shrink-0 text-secondary dark:text-gold" strokeWidth={1.25} aria-hidden />
                                 </a>
                                 <a
                                     href="#"
                                     className="flex items-center justify-end gap-3 py-4 px-6 bg-white dark:bg-slate-700/90 border border-slate-200 dark:border-slate-600 rounded-xl text-secondary dark:text-gold font-bold shadow-sm hover:shadow-md transition-all duration-300 text-right"
                                 >
                                     <span>تقرير السنوي 2023</span>
-                                    <span className="material-icons-round text-2xl text-secondary dark:text-gold">description</span>
+                                    <FileText className="size-7 shrink-0 text-secondary dark:text-gold" strokeWidth={1.25} aria-hidden />
                                 </a>
                             </div>
                             <div className="flex flex-col gap-4">
@@ -92,21 +93,21 @@ export default function HospitalityFundPage() {
                                     className="flex items-center justify-end gap-3 py-4 px-6 bg-white dark:bg-slate-700/90 border border-slate-200 dark:border-slate-600 rounded-xl text-secondary dark:text-gold font-bold shadow-sm hover:shadow-md transition-all duration-300 text-right"
                                 >
                                     <span>تقرير السنوي 2024</span>
-                                    <span className="material-icons-round text-2xl text-secondary dark:text-gold">description</span>
+                                    <FileText className="size-7 shrink-0 text-secondary dark:text-gold" strokeWidth={1.25} aria-hidden />
                                 </a>
                                 <a
                                     href="#"
                                     className="flex items-center justify-end gap-3 py-4 px-6 bg-white dark:bg-slate-700/90 border border-slate-200 dark:border-slate-600 rounded-xl text-secondary dark:text-gold font-bold shadow-sm hover:shadow-md transition-all duration-300 text-right"
                                 >
                                     <span>تقرير السنوي 2020</span>
-                                    <span className="material-icons-round text-2xl text-secondary dark:text-gold">description</span>
+                                    <FileText className="size-7 shrink-0 text-secondary dark:text-gold" strokeWidth={1.25} aria-hidden />
                                 </a>
                                 <a
                                     href="#"
                                     className="flex items-center justify-end gap-3 py-4 px-6 bg-white dark:bg-slate-700/90 border border-slate-200 dark:border-slate-600 rounded-xl text-secondary dark:text-gold font-bold shadow-sm hover:shadow-md transition-all duration-300 text-right"
                                 >
                                     <span>تقرير السنوي 2022</span>
-                                    <span className="material-icons-round text-2xl text-secondary dark:text-gold">description</span>
+                                    <FileText className="size-7 shrink-0 text-secondary dark:text-gold" strokeWidth={1.25} aria-hidden />
                                 </a>
                             </div>
                         </div>
@@ -115,7 +116,7 @@ export default function HospitalityFundPage() {
                                 href="/investment#funds"
                                 className="inline-flex items-center justify-center gap-2 py-3 px-8 rounded-xl font-bold shadow-lg transition-all duration-300 bg-[#c5a065] hover:bg-[#b89050] text-white"
                             >
-                                <span className="material-icons-round">arrow_back</span>
+                                <ArrowLeft className="size-5 shrink-0" aria-hidden />
                                 <span>الخلف</span>
                             </Link>
                         </div>

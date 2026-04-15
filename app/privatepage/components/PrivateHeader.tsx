@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ChevronDown, Menu } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 export function PrivateHeader() {
@@ -30,13 +31,13 @@ export function PrivateHeader() {
             href="#"
           >
             استثمر معنا{" "}
-            <span className="material-icons text-md">expand_more</span>
+            <ChevronDown className="size-4 shrink-0" aria-hidden />
           </a>
           <a
             className={`${navLinkClass} flex items-center gap-1`}
             href="#sectors"
           >
-            قطاعاتنا <span className="material-icons text-md">expand_more</span>
+            قطاعاتنا <ChevronDown className="size-4 shrink-0" aria-hidden />
           </a>
           <Link className={navLinkClass} href="#about">
             نبذه عنا
@@ -57,7 +58,7 @@ export function PrivateHeader() {
           className="lg:hidden text-secondary dark:text-white"
           aria-label="القائمة"
         >
-          <span className="material-icons text-3xl">menu</span>
+          <Menu className="size-8" strokeWidth={1.75} aria-hidden />
         </button>
       </div>
     </header>

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
 
@@ -75,7 +76,7 @@ export default function CarRentalFundPage() {
                                     className="flex items-center justify-center gap-2 py-4 px-6 bg-white/90 dark:bg-slate-700/90 border-2 border-secondary/30 dark:border-gold/30 rounded-2xl text-secondary dark:text-gold font-bold shadow-sm hover:shadow-lg hover:border-gold/50 transition-all duration-300"
                                 >
                                     <span>{report.label}</span>
-                                    <span className="material-icons-round text-xl">arrow_forward</span>
+                                    <ArrowRight className="size-5 shrink-0" aria-hidden />
                                 </a>
                             ))}
                         </div>
@@ -89,7 +90,7 @@ export default function CarRentalFundPage() {
                             href="/investment#funds"
                             className="inline-flex items-center justify-center gap-2 py-3 px-10 rounded-2xl font-bold shadow-lg transition-all duration-300 bg-gradient-to-b from-gold to-[#c5a065] hover:from-[#d8ae6d] hover:to-[#b89050] text-secondary border border-[#b89050]/30"
                         >
-                            <span className="material-icons-round">arrow_back</span>
+                            <ArrowLeft className="size-5 shrink-0" aria-hidden />
                             <span>الخلف</span>
                         </Link>
                     </div>

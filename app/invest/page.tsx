@@ -1,3 +1,4 @@
+import { TrendingUp } from "lucide-react";
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
 import { InvestSection } from "../components/InvestSection";
@@ -25,7 +26,7 @@ export default function InvestPage() {
                         {/* Decorative line */}
                         <div className="flex items-center justify-center gap-4 mb-8">
                             <div className="h-[2px] w-16 bg-primary/60" />
-                            <span className="material-icons text-primary text-3xl">trending_up</span>
+                            <TrendingUp className="size-8 text-primary shrink-0" strokeWidth={1.5} aria-hidden />
                             <div className="h-[2px] w-16 bg-primary/60" />
                         </div>
 

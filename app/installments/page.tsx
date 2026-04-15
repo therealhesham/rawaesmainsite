@@ -1,6 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import {
+  CheckCircle2,
+  CreditCard,
+  FileText,
+  Hand,
+  Home,
+  Scale,
+  Smartphone,
+} from "lucide-react";
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
 import { BannerHeroSection } from "../components/BannerHeroSection";
@@ -44,7 +53,7 @@ export default function InstallmentsPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="bg-secondary p-8 rounded-xl text-center flex flex-col items-center shadow-2xl hover:-translate-y-2 transition-transform">
               <div className="mb-6 p-4 rounded-full bg-primary/10">
-                <span className="material-icons text-primary text-5xl">home</span>
+                <Home className="size-14 text-primary mx-auto" strokeWidth={1.25} aria-hidden />
               </div>
               <h3 className="text-2xl font-bold text-primary mb-4">العقار</h3>
               <p className="text-slate-300 leading-relaxed mb-6">
@@ -54,9 +63,7 @@ export default function InstallmentsPage() {
             </div>
             <div className="bg-secondary p-8 rounded-xl text-center flex flex-col items-center shadow-2xl hover:-translate-y-2 transition-transform">
               <div className="mb-6 p-4 rounded-full bg-primary/10">
-                <span className="material-icons text-primary text-5xl">
-                  devices
-                </span>
+                <Smartphone className="size-14 text-primary mx-auto" strokeWidth={1.25} aria-hidden />
               </div>
               <h3 className="text-2xl font-bold text-primary mb-4">
                 تقسيط الأجهزة
@@ -68,9 +75,7 @@ export default function InstallmentsPage() {
             </div>
             <div className="bg-secondary p-8 rounded-xl text-center flex flex-col items-center shadow-2xl hover:-translate-y-2 transition-transform">
               <div className="mb-6 p-4 rounded-full bg-primary/10">
-                <span className="material-icons text-primary text-5xl">
-                  credit_card
-                </span>
+                <CreditCard className="size-14 text-primary mx-auto" strokeWidth={1.25} aria-hidden />
               </div>
               <h3 className="text-2xl font-bold text-primary mb-4">
                 التمويل الشرعي
@@ -96,98 +101,74 @@ export default function InstallmentsPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="bg-white dark:bg-card-dark border border-slate-100 dark:border-slate-800 p-8 rounded-xl shadow-lg">
               <div className="flex justify-center mb-6">
-                <span className="material-icons text-secondary dark:text-primary text-4xl">
-                  rule
-                </span>
+                <Scale className="size-10 text-secondary dark:text-primary" strokeWidth={1.25} aria-hidden />
               </div>
               <h4 className="text-xl font-bold text-primary text-center mb-6">
                 شروط التمويل
               </h4>
               <ul className="space-y-4 text-slate-600 dark:text-slate-300">
                 <li className="flex items-start gap-3">
-                  <span className="material-icons text-primary text-sm mt-1">
-                    check_circle
-                  </span>
+                  <CheckCircle2 className="size-4 text-primary shrink-0 mt-1" aria-hidden />
                   <span>
                     مشتري موظف حكومي حالة المبلغ لا يتجاوز 5000.
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="material-icons text-primary text-sm mt-1">
-                    check_circle
-                  </span>
+                  <CheckCircle2 className="size-4 text-primary shrink-0 mt-1" aria-hidden />
                   <span>
                     مشتري و كفيل موظفان حكوميان حالة المبلغ اعلى من 25000.
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="material-icons text-primary text-sm mt-1">
-                    check_circle
-                  </span>
+                  <CheckCircle2 className="size-4 text-primary shrink-0 mt-1" aria-hidden />
                   <span>كفيل موظف حكومي حالة المبلغ اقل من 25000.</span>
                 </li>
               </ul>
             </div>
             <div className="bg-white dark:bg-card-dark border border-slate-100 dark:border-slate-800 p-8 rounded-xl shadow-lg">
               <div className="flex justify-center mb-6">
-                <span className="material-icons text-secondary dark:text-primary text-4xl">
-                  smartphone
-                </span>
+                <Smartphone className="size-10 text-secondary dark:text-primary" strokeWidth={1.25} aria-hidden />
               </div>
               <h4 className="text-xl font-bold text-primary text-center mb-6">
                 شروط التقسيط
               </h4>
               <ul className="space-y-4 text-slate-600 dark:text-slate-300">
                 <li className="flex items-start gap-3">
-                  <span className="material-icons text-primary text-sm mt-1">
-                    check_circle
-                  </span>
+                  <CheckCircle2 className="size-4 text-primary shrink-0 mt-1" aria-hidden />
                   <span>
                     مشتري موظف حكومي - أو يلزم وجود كفيل موظف حكومي.
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="material-icons text-primary text-sm mt-1">
-                    check_circle
-                  </span>
+                  <CheckCircle2 className="size-4 text-primary shrink-0 mt-1" aria-hidden />
                   <span>
                     لا تتجاوز قيمة الجهاز 5000 أو يلزم كفيل موظف حكومي.
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="material-icons text-primary text-sm mt-1">
-                    check_circle
-                  </span>
+                  <CheckCircle2 className="size-4 text-primary shrink-0 mt-1" aria-hidden />
                   <span>حضور المشتري والكفيل وقت التوقيع على العقد.</span>
                 </li>
               </ul>
             </div>
             <div className="bg-white dark:bg-card-dark border border-slate-100 dark:border-slate-800 p-8 rounded-xl shadow-lg">
               <div className="flex justify-center mb-6">
-                <span className="material-icons text-secondary dark:text-primary text-4xl">
-                  description
-                </span>
+                <FileText className="size-10 text-secondary dark:text-primary" strokeWidth={1.25} aria-hidden />
               </div>
               <h4 className="text-xl font-bold text-primary text-center mb-6">
                 المستندات المطلوبة
               </h4>
               <ul className="space-y-4 text-slate-600 dark:text-slate-300">
                 <li className="flex items-start gap-3">
-                  <span className="material-icons text-primary text-sm mt-1">
-                    check_circle
-                  </span>
+                  <CheckCircle2 className="size-4 text-primary shrink-0 mt-1" aria-hidden />
                   <span>أصل هوية المشتري.</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="material-icons text-primary text-sm mt-1">
-                    check_circle
-                  </span>
+                  <CheckCircle2 className="size-4 text-primary shrink-0 mt-1" aria-hidden />
                   <span>أصل هوية الكفيل.</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="material-icons text-primary text-sm mt-1">
-                    check_circle
-                  </span>
+                  <CheckCircle2 className="size-4 text-primary shrink-0 mt-1" aria-hidden />
                   <span>تعريف بالراتب للمشتري والكفيل.</span>
                 </li>
               </ul>
@@ -214,7 +195,7 @@ export default function InstallmentsPage() {
                 className="gold-gradient text-white px-12 py-4 rounded-xl font-bold text-xl flex items-center gap-3 mx-auto md:mx-0 w-fit shadow-lg hover:shadow-primary/40 transition-all active:scale-95"
               >
                 <span>تقديم طلب تقسيط</span>
-                <span className="material-icons">touch_app</span>
+                <Hand className="size-6 shrink-0" aria-hidden />
               </Link>
             </div>
             <div className="flex-1 flex justify-center">

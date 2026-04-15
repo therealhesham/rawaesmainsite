@@ -1,5 +1,7 @@
 "use client";
 
+import { Moon, Sun } from "lucide-react";
+
 export function ThemeToggle() {
   return (
     <button
@@ -8,8 +10,8 @@ export function ThemeToggle() {
       onClick={() => document.documentElement.classList.toggle("dark")}
       aria-label="تبديل الوضع الليلي"
     >
-      <span className="material-symbols-outlined block dark:hidden">dark_mode</span>
-      <span className="material-symbols-outlined hidden dark:block">light_mode</span>
+      <Moon className="size-5 block dark:hidden" aria-hidden />
+      <Sun className="size-5 hidden dark:block" aria-hidden />
     </button>
   );
 }

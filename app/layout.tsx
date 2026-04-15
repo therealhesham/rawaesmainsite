@@ -39,12 +39,6 @@ export default function RootLayout({
 }>) {
   return (
     <html dir="rtl" lang="ar" suppressHydrationWarning>
-      <head>
-        <link
-          href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Icons+Round|Material+Symbols+Outlined:wght,FILL@100..700,0..1"
-          rel="stylesheet"
-        />
-      </head>
       <body
         className={`${tajawal.variable} ${manrope.variable} ${cairo.variable} ${almarai.variable} min-h-screen antialiased bg-background-light dark:bg-background-dark text-text-dark dark:text-text-light font-body`}
       >

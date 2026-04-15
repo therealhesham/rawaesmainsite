@@ -1,4 +1,13 @@
 import type React from "react";
+import {
+  Building2,
+  CarFront,
+  CreditCard,
+  FileText,
+  Hotel,
+  Paperclip,
+  type LucideIcon,
+} from "lucide-react";
 import { Header } from "../../components/Header";
 import { PrismaClient } from "@prisma/client";
 import { notFound, redirect } from "next/navigation";
@@ -10,6 +19,13 @@ import FloatingWhatsAppButton from "./FloatingWhatsAppButton";
 import ReportFileActions from "./ReportFileActions";
 import ProfileSwitcher from "./ProfileSwitcher";
 const prisma = new PrismaClient();
+
+const REPORT_CATEGORY_ICONS: Record<string, LucideIcon> = {
+  lease: CarFront,
+  hotel: Hotel,
+  real_estate: Building2,
+  installment: CreditCard,
+};
 
 const getSecretKey = () => {
   const secret = process.env.JWT_SECRET;
@@ -215,18 +231,21 @@ export default async function PrivateInvestorPage({
             {/* Categorized Reports */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {[
-                { id: 'lease', label: 'تقرير الاستثمار في قطاع السيارات', icon: 'car_rental' },
-                { id: 'hotel', label: 'تقرير الاستثمار في قطاع فنادق', icon: 'hotel' },
-                { id: 'real_estate', label: 'تقرير الاستثمار في قطاع عقاري', icon: 'apartment' },
-                { id: 'installment', label: 'تقرير الاستثمار في قطاع تقسيط', icon: 'credit_card' },
+                { id: "lease", label: "تقرير الاستثمار في قطاع السيارات" },
+                { id: "hotel", label: "تقرير الاستثمار في قطاع فنادق" },
+                { id: "real_estate", label: "تقرير الاستثمار في قطاع عقاري" },
+                { id: "installment", label: "تقرير الاستثمار في قطاع تقسيط" },
               ].map((type) => {
                 const reports = investor.reports.filter((r) => r.type === type.id);
                 if (reports.length === 0) return null;
+                const CategoryIcon = REPORT_CATEGORY_ICONS[type.id];
                 return (
                   <div key={type.id} className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
                     <div className="flex items-center gap-3 mb-4 border-b border-gray-100 dark:border-gray-700 pb-3">
                       <div className="w-10 h-10 shrink-0 rounded-full bg-gold/15 flex items-center justify-center text-[#003B46] dark:text-gold">
-                        <span className="material-icons text-[22px]">{type.icon}</span>
+                        {CategoryIcon ? (
+                          <CategoryIcon className="size-[22px]" strokeWidth={1.5} aria-hidden />
+                        ) : null}
                       </div>
                       <h3 className="font-bold text-[#003B46] dark:text-white text-base leading-snug min-w-0 break-words">
                         {type.label}
@@ -239,7 +258,7 @@ export default async function PrivateInvestorPage({
                           <div key={report.id} className="flex justify-between items-center group">
                             <div className="flex flex-col gap-0.5 mt-2">
                               <div className="flex items-center gap-2 overflow-hidden">
-                                <span className="material-icons text-gold text-sm">description</span>
+                                <FileText className="size-4 text-gold shrink-0" strokeWidth={1.5} aria-hidden />
                                 <span className="text-sm font-semibold text-gray-800 dark:text-gray-200  max-w-[150px]">
                                   {report.fileName || "تقرير استثماري"}
                                 </span>
@@ -274,7 +293,7 @@ export default async function PrivateInvestorPage({
               <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
                 <div className="flex items-center gap-3 mb-4 border-b border-gray-100 dark:border-gray-700 pb-3">
                   <div className="w-10 h-10 shrink-0 rounded-full bg-gold/15 flex items-center justify-center text-[#003B46] dark:text-gold">
-                    <span className="material-icons text-[22px]">attach_file</span>
+                    <Paperclip className="size-[22px]" strokeWidth={1.5} aria-hidden />
                   </div>
                   <h3 className="font-bold text-[#003B46] dark:text-white text-base leading-snug min-w-0 break-words">
                     المرفقات ({investor.reports.filter((r: any) => r.type === "attachment").length})
@@ -285,7 +304,7 @@ export default async function PrivateInvestorPage({
                     <div key={report.id} className="flex justify-between items-center group">
                       <div className="flex flex-col gap-0.5 mt-2">
                         <div className="flex items-center gap-2 overflow-hidden">
-                          <span className="material-icons text-gold text-sm">description</span>
+                          <FileText className="size-4 text-gold shrink-0" strokeWidth={1.5} aria-hidden />
                           <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 max-w-[200px] truncate">
                             {report.fileName || "مرفق"}
                           </span>

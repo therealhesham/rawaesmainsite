@@ -4,6 +4,15 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import {
+    ArrowRight,
+    IdCard,
+    Loader2,
+    LogIn,
+    MessageSquare,
+    Phone,
+    Smartphone,
+} from "lucide-react";
 import { AlertModal } from "@/app/components/AlertModal";
 
 const OTP_LENGTH = 6;
@@ -295,9 +304,7 @@ export default function LoginOtpPage() {
                                                 رقم الهوية
                                             </label>
                                             <div className="relative group">
-                                                <span className="absolute right-4 top-1/2 -translate-y-1/2 material-icons text-xl text-primary/60 group-focus-within:text-primary transition-colors">
-                                                    badge
-                                                </span>
+                                                <IdCard className="absolute right-4 top-1/2 -translate-y-1/2 size-5 text-primary/60 group-focus-within:text-primary transition-colors pointer-events-none" aria-hidden />
                                                 <input
                                                     id="national-id"
                                                     type="text"
@@ -319,9 +326,7 @@ export default function LoginOtpPage() {
                                                 رقم الجوال
                                             </label>
                                             <div className="relative group">
-                                                <span className="absolute right-4 top-1/2 -translate-y-1/2 material-icons text-xl text-primary/60 group-focus-within:text-primary transition-colors">
-                                                    phone_iphone
-                                                </span>
+                                                <Smartphone className="absolute right-4 top-1/2 -translate-y-1/2 size-5 text-primary/60 group-focus-within:text-primary transition-colors pointer-events-none" aria-hidden />
                                                 <input
                                                     id="phone-number"
                                                     type="tel"
@@ -341,11 +346,11 @@ export default function LoginOtpPage() {
                                         className="w-full py-4 bg-gradient-to-l from-[#d4af79] to-[#c49b60] hover:from-[#c49b60] hover:to-[#b5905f] disabled:opacity-70 text-white font-bold text-base rounded-xl shadow-lg shadow-primary/25 transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"
                                     >
                                         {loading ? (
-                                            <span className="material-icons animate-spin">refresh</span>
+                                            <Loader2 className="size-5 animate-spin shrink-0" aria-hidden />
                                         ) : (
                                             <>
                                                 <span>إرسال رمز التحقق</span>
-                                                <span className="material-icons text-lg">sms</span>
+                                                <MessageSquare className="size-5 shrink-0" aria-hidden />
                                             </>
                                         )}
                                     </motion.button>
@@ -417,11 +422,11 @@ export default function LoginOtpPage() {
                                             className="w-full py-4 bg-gradient-to-l from-[#d4af79] to-[#c49b60] hover:from-[#c49b60] hover:to-[#b5905f] disabled:opacity-70 text-white font-bold text-base rounded-xl shadow-lg shadow-primary/25 transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"
                                         >
                                             {loading ? (
-                                                <span className="material-icons animate-spin">refresh</span>
+                                                <Loader2 className="size-5 animate-spin shrink-0" aria-hidden />
                                             ) : (
                                                 <>
                                                     <span>تسجيل الدخول</span>
-                                                    <span className="material-icons text-lg">login</span>
+                                                    <LogIn className="size-5 shrink-0" aria-hidden />
                                                 </>
                                             )}
                                         </motion.button>
@@ -440,7 +445,7 @@ export default function LoginOtpPage() {
                                     onClick={() => setStep("credentials")}
                                     className="mt-6 flex items-center gap-2 text-sm text-secondary/60 dark:text-gray-500 hover:text-primary transition-colors"
                                 >
-                                    <span className="material-icons text-base">arrow_forward</span>
+                                    <ArrowRight className="size-4 shrink-0" aria-hidden />
                                     <span>تغيير رقم الجوال</span>
                                 </button>
                             </motion.div>
@@ -461,7 +466,7 @@ export default function LoginOtpPage() {
                             تحتاج مساعدة؟ تواصل مع فريق الدعم
                         </p>
                         <div className="flex items-center justify-center gap-2 text-primary font-bold text-sm">
-                            <span className="material-icons text-base">phone</span>
+                            <Phone className="size-4 shrink-0" aria-hidden />
                             <span dir="ltr">9200 10 356</span>
                         </div>
                     </motion.div>
@@ -471,9 +476,7 @@ export default function LoginOtpPage() {
                             href="/"
                             className="inline-flex items-center gap-2 text-sm text-secondary/50 dark:text-gray-500 hover:text-primary transition-colors group"
                         >
-                            <span className="material-icons text-base group-hover:translate-x-[-4px] transition-transform">
-                                arrow_forward
-                            </span>
+                            <ArrowRight className="size-4 shrink-0 group-hover:translate-x-[-4px] transition-transform" aria-hidden />
                             <span>العودة إلى الرئيسية</span>
                         </Link>
                     </motion.div>

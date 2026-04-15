@@ -1,5 +1,7 @@
 "use client";
 
+import { AlertCircle, Info } from "lucide-react";
+
 type AlertModalProps = {
   open: boolean;
   onClose: () => void;
@@ -42,9 +44,11 @@ export function AlertModal({
                   : "bg-primary/10 text-primary"
               }`}
             >
-              <span className="material-icons">
-                {isError ? "error_outline" : "info"}
-              </span>
+              {isError ? (
+                <AlertCircle className="size-5 shrink-0" aria-hidden />
+              ) : (
+                <Info className="size-5 shrink-0" aria-hidden />
+              )}
             </span>
             <h2
               id="alert-modal-title"

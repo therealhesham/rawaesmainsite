@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useActionState } from "react";
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import type { InvestmentRegisterBlockData } from "@/app/investment/getInvestmentRegisterBlock";
 import { submitInvestmentInterest, type InvestmentInterestFormState } from "@/app/investment/actions";
 
@@ -123,7 +124,7 @@ export function InvestmentHowToSection({ block }: Props) {
                                     {...(card.href.startsWith("http") ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                                 >
                                     اقرأ المزيد
-                                    <span className="material-icons-round text-sm">arrow_back</span>
+                                    <ArrowLeft className="size-3.5 shrink-0" aria-hidden />
                                 </Link>
                             </div>
                         ))}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { ArrowLeft, ArrowLeftRight, ChevronDown, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { switchProfile } from "../../login/actions";
 
@@ -60,13 +61,12 @@ export default function ProfileSwitcher({
                 onClick={() => setOpen((v) => !v)}
                 className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-l from-[#003B46] to-[#005a6e] hover:from-[#005a6e] hover:to-[#007a8e] text-white text-sm font-bold transition-all duration-300 shadow-md hover:shadow-lg"
             >
-                <span className="material-icons text-base">swap_horiz</span>
+                <ArrowLeftRight className="size-4 shrink-0" aria-hidden />
                 <span>تبديل الملف الاستثماري</span>
-                <span
-                    className={`material-icons text-sm transition-transform duration-200 ${open ? "rotate-180" : ""}`}
-                >
-                    expand_more
-                </span>
+                <ChevronDown
+                    className={`size-4 shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+                    aria-hidden
+                />
             </button>
 
             {open && (
@@ -108,11 +108,9 @@ export default function ProfileSwitcher({
                                 </div>
                                 <div className="shrink-0">
                                     {switching === profile.id ? (
-                                        <span className="material-icons animate-spin text-primary text-xl">refresh</span>
+                                        <Loader2 className="size-5 animate-spin text-primary shrink-0" aria-hidden />
                                     ) : (
-                                        <span className="material-icons text-gray-300 dark:text-gray-600 group-hover:text-primary text-xl">
-                                            arrow_back
-                                        </span>
+                                        <ArrowLeft className="size-5 text-gray-300 dark:text-gray-600 group-hover:text-primary shrink-0" aria-hidden />
                                     )}
                                 </div>
                             </button>

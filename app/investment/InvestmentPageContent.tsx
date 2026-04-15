@@ -1,6 +1,26 @@
 "use client";
 
 import React from "react";
+import type { LucideIcon } from "lucide-react";
+import {
+  BadgeCheck,
+  Bed,
+  BedDouble,
+  Building2,
+  Car,
+  CarFront,
+  FileText,
+  Gem,
+  Headset,
+  Landmark,
+  Star,
+  Store,
+  Sun,
+  User,
+  UserPlus,
+  Users,
+  UtensilsCrossed,
+} from "lucide-react";
 import { motion } from "framer-motion";
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
@@ -12,12 +32,32 @@ import { useSearchParams } from "next/navigation";
 import type { FundsData } from "./getFunds";
 import type { InvestmentRegisterBlockData } from "./getInvestmentRegisterBlock";
 
-const HOTEL_BRANDS = [
-    { icon: "diamond", name: "Rest In Hotel" },
-    { icon: "bed", name: "Resan Hotel" },
-    { icon: "star", name: "Rawaes Hotel" },
-    { icon: "wb_sunny", name: "Shams Hotel" },
+const HOTEL_BRANDS: { Icon: LucideIcon; name: string }[] = [
+    { Icon: Gem, name: "Rest In Hotel" },
+    { Icon: Bed, name: "Resan Hotel" },
+    { Icon: Star, name: "Rawaes Hotel" },
+    { Icon: Sun, name: "Shams Hotel" },
 ];
+
+const STAT_ICONS: Record<string, LucideIcon> = {
+    groups: Users,
+    restaurant_menu: UtensilsCrossed,
+    king_bed: BedDouble,
+    apartment: Building2,
+    location_city: Landmark,
+    description: FileText,
+    group_add: UserPlus,
+    workspace_premium: BadgeCheck,
+    car_rental: CarFront,
+    support_agent: Headset,
+    directions_car: Car,
+    store: Store,
+};
+
+function FundStatIcon({ name, className }: { name: string; className?: string }) {
+    const Icon = STAT_ICONS[name] ?? Building2;
+    return <Icon className={className} strokeWidth={1.15} aria-hidden />;
+}
 
 const HOSPITALITY_IMAGE =
     "https://lh3.googleusercontent.com/aida-public/AB6AXuCj4ygmIs_eB2rNZI9TW4i4vXoUlIU-2nGsdTKJMLLv0j7qqyNAc9nB2029wLwXa7lhJrgCQObkG6Sx-o2Ct4_LPAlhqZeGCcKeJNZ7dGDNijkTMtIJ9bpipRLPYW-FT-zKPyQUy5dZsO7UWVlJSrGsYk0I6mR1dg9arDs1VsQZkC8oWT__9zKJ5t-ShzVL1F0KBYjq3N5cTgUWkw94rG6HLpPnn_HN3nwu480rcsjzNevxyx5dNSMzUwCL-95zi0wFkJHcVU2E1ss";
@@ -348,9 +388,10 @@ export function InvestmentPageContent({ tabs, funds, registerBlock }: Investment
                                                     className="bg-white dark:bg-slate-800 p-8 rounded-[32px] text-center shadow-lg hover:-translate-y-2 transition-transform duration-300 group"
                                                 >
                                                     <div className="bg-gold/10 dark:bg-slate-700 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-gold transition-colors duration-300">
-                                                        <span className="material-icons-round text-gold group-hover:text-white text-4xl">
-                                                            {stat.icon}
-                                                        </span>
+                                                        <FundStatIcon
+                                                            name={stat.icon}
+                                                            className="size-10 text-gold group-hover:text-white"
+                                                        />
                                                     </div>
                                                     <div className="text-4xl font-bold text-gold mb-1">
                                                         {stat.value}
@@ -366,7 +407,7 @@ export function InvestmentPageContent({ tabs, funds, registerBlock }: Investment
                                                 {HOTEL_BRANDS.map((brand) => (
                                                     <div key={brand.name} className="flex flex-col items-center">
                                                         <div className="w-12 h-12 bg-gold/20 rounded-full flex items-center justify-center mb-1 text-gold">
-                                                            <span className="material-icons-round">{brand.icon}</span>
+                                                            <brand.Icon className="size-6" aria-hidden />
                                                         </div>
                                                         <span className="text-xs font-bold text-secondary dark:text-gray-300 uppercase">
                                                             {brand.name}
@@ -379,9 +420,6 @@ export function InvestmentPageContent({ tabs, funds, registerBlock }: Investment
                                                 className="bg-corporate hover:bg-slate-800 text-white px-10 py-4 rounded-2xl font-bold text-lg flex items-center gap-3 transition-all duration-300 group shadow-xl"
                                             >
                                                 <span>أعرف أكثر عن صندوق روائس للضيافة</span>
-                                                <span className="material-icons-round transform group-hover:-translate-x-1 transition-transform">
-                                                    chevron_left
-                                                </span>
                                             </a> */}
                                         </div>
                                     </>
@@ -418,9 +456,10 @@ export function InvestmentPageContent({ tabs, funds, registerBlock }: Investment
                                                     className="bg-white dark:bg-slate-800 p-8 rounded-[32px] text-center shadow-lg hover:-translate-y-2 transition-transform duration-300 group"
                                                 >
                                                     <div className="bg-gold/10 dark:bg-slate-700 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-gold transition-colors duration-300">
-                                                        <span className="material-icons-round text-gold group-hover:text-white text-4xl">
-                                                            {stat.icon}
-                                                        </span>
+                                                        <FundStatIcon
+                                                            name={stat.icon}
+                                                            className="size-10 text-gold group-hover:text-white"
+                                                        />
                                                     </div>
                                                     <div className="text-4xl font-bold text-gold mb-1">
                                                         {stat.value}
@@ -434,7 +473,7 @@ export function InvestmentPageContent({ tabs, funds, registerBlock }: Investment
                                         <div className="flex flex-col lg:flex-row items-center justify-between gap-8 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm p-4 rounded-3xl border border-white/20">
                                             <div className="flex flex-col items-center gap-2">
                                                 <div className="w-16 h-16 bg-gold/20 rounded-2xl flex items-center justify-center text-gold">
-                                                    <span className="material-icons-round text-4xl">person</span>
+                                                    <User className="size-10" strokeWidth={1.15} aria-hidden />
                                                 </div>
                                                 <span className="font-bold text-secondary dark:text-gray-300">روائس للاستقدام</span>
                                                 <span className="text-sm text-secondary/70 dark:text-gray-400">Rawaes Recruitment</span>
@@ -444,9 +483,6 @@ export function InvestmentPageContent({ tabs, funds, registerBlock }: Investment
                                                 className="bg-corporate hover:bg-slate-800 text-white px-10 py-4 rounded-2xl font-bold text-lg flex items-center gap-3 transition-all duration-300 group shadow-xl"
                                             >
                                                 <span>أعرف أكثر عن صندوق روائس للاستقدام</span>
-                                                <span className="material-icons-round transform group-hover:-translate-x-1 transition-transform">
-                                                    chevron_left
-                                                </span>
                                             </a> */}
                                         </div>
                                     </>
@@ -483,9 +519,10 @@ export function InvestmentPageContent({ tabs, funds, registerBlock }: Investment
                                                     className="bg-white dark:bg-slate-800 p-8 rounded-[32px] text-center shadow-lg hover:-translate-y-2 transition-transform duration-300 group"
                                                 >
                                                     <div className="bg-gold/10 dark:bg-slate-700 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-gold transition-colors duration-300">
-                                                        <span className="material-icons-round text-gold group-hover:text-white text-4xl">
-                                                            {stat.icon}
-                                                        </span>
+                                                        <FundStatIcon
+                                                            name={stat.icon}
+                                                            className="size-10 text-gold group-hover:text-white"
+                                                        />
                                                     </div>
                                                     <div className="text-4xl font-bold text-gold mb-1">
                                                         {stat.value}
@@ -499,7 +536,7 @@ export function InvestmentPageContent({ tabs, funds, registerBlock }: Investment
                                         <div className="flex flex-col lg:flex-row items-center justify-between gap-8 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm p-4 rounded-3xl border border-white/20">
                                             <div className="flex flex-col items-center gap-2">
                                                 <div className="w-16 h-16 bg-gold/20 rounded-2xl flex items-center justify-center text-gold">
-                                                    <span className="material-icons-round text-4xl">directions_car</span>
+                                                    <Car className="size-10" strokeWidth={1.15} aria-hidden />
                                                 </div>
                                                 <span className="font-bold text-secondary dark:text-gray-300">روائس لتأجير السيارات</span>
                                                 <span className="text-sm text-secondary/70 dark:text-gray-400">Rawaes Rent Cars</span>
@@ -509,9 +546,6 @@ export function InvestmentPageContent({ tabs, funds, registerBlock }: Investment
                                                 className="bg-corporate hover:bg-slate-800 text-white px-10 py-4 rounded-2xl font-bold text-lg flex items-center gap-3 transition-all duration-300 group shadow-xl"
                                             >
                                                 <span>أعرف أكثر عن صندوق روائس لتأجير السيارات</span>
-                                                <span className="material-icons-round transform group-hover:-translate-x-1 transition-transform">
-                                                    chevron_left
-                                                </span>
                                             </a> */}
                                         </div>
                                     </>
