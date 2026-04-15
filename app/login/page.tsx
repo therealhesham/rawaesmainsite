@@ -155,7 +155,7 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen flex flex-col lg:flex-row bg-background-light dark:bg-background-dark">
+        <div className="min-h-screen flex flex-col lg:flex-row bg-background-light dark:bg-background-dark overflow-x-hidden">
             <AlertModal
                 open={!!loginError}
                 onClose={() => setLoginError(null)}
@@ -164,7 +164,7 @@ export default function LoginPage() {
                 variant="error"
             />
             {/* ── Branding Panel (Right in RTL) ── */}
-            <div className="relative w-full lg:w-[52%] min-h-[280px] lg:min-h-screen overflow-hidden flex items-center justify-center">
+            <div className="relative w-full min-w-0 lg:w-[52%] min-h-[280px] lg:min-h-screen overflow-hidden flex items-center justify-center">
                 {/* Background */}
                 <div className="absolute inset-0 bg-secondary" />
                 <div
@@ -281,9 +281,9 @@ export default function LoginPage() {
                 </div>
             </div>
 
-            {/* ── Login Form Panel (Left in RTL) — بدون motion لتفادي إزاحة العرض عند focus على الموبايل ── */}
-            <div className="w-full lg:w-[48%] flex items-center justify-center p-6 md:p-12 lg:p-16">
-                <div className="w-full max-w-md">
+            {/* ── Login Form Panel — متمركز أفقياً + min-w-0 لتفادي دفع الـ flex ناحية اليمين على الموبايل ── */}
+            <div className="w-full lg:w-[48%] min-w-0 flex flex-col items-center justify-center p-6 md:p-12 lg:p-16">
+                <div className="mx-auto w-full max-w-md">
                     {/* Mobile logo (hidden on desktop) */}
                     <div className="lg:hidden flex justify-center mb-6">
                         <img src="/logo.png" alt="Rawaes" className="w-16 h-16 object-contain" />
@@ -291,7 +291,7 @@ export default function LoginPage() {
 
                     {step === "credentials" ? (
                         <div key="credentials">
-                                <div className="mb-10">
+                                <div className="mb-10 text-center">
                                     <h2 className="text-2xl md:text-3xl font-bold text-secondary dark:text-white mb-3">
                                         تسجيل دخول المستثمرين
                                     </h2>
@@ -302,7 +302,7 @@ export default function LoginPage() {
                                 <form onSubmit={handleCredentialsSubmit} className="space-y-6">
                                     <div className="space-y-4">
                                         <div className="space-y-2">
-                                            <label htmlFor="national-id" className="block text-sm font-semibold text-secondary dark:text-gray-200">رقم الهوية</label>
+                                            <label htmlFor="national-id" className="block text-sm font-semibold text-secondary dark:text-gray-200 text-center">رقم الهوية</label>
                                             <div className="relative group">
                                                 <IdCard className="absolute right-4 top-1/2 -translate-y-1/2 size-5 text-primary/60 group-focus-within:text-primary transition-colors pointer-events-none" aria-hidden />
                                                 <input
@@ -321,7 +321,7 @@ export default function LoginPage() {
                                             </div>
                                         </div>
                                         <div className="space-y-2">
-                                            <label htmlFor="phone-number" className="block text-sm font-semibold text-secondary dark:text-gray-200">رقم الجوال</label>
+                                            <label htmlFor="phone-number" className="block text-sm font-semibold text-secondary dark:text-gray-200 text-center">رقم الجوال</label>
                                             <div className="relative group">
                                                 <Smartphone className="absolute right-4 top-1/2 -translate-y-1/2 size-5 text-primary/60 group-focus-within:text-primary transition-colors pointer-events-none" aria-hidden />
                                                 <input
@@ -350,11 +350,11 @@ export default function LoginPage() {
                         </div>
                     ) : (
                         <div key="otp">
-                                <div className="mb-10">
+                                <div className="mb-10 text-center">
                                     <h2 className="text-2xl md:text-3xl font-bold text-secondary dark:text-white mb-3">أدخل رمز التحقق</h2>
                                     <p className="text-secondary/60 dark:text-gray-400 text-sm">
                                         تم إرسال رمز مكوّن من 6 أرقام إلى{" "}
-                                        <span dir="ltr" className="font-semibold text-primary">
+                                        <span dir="ltr" className="font-semibold text-primary inline-block">
                                             {phoneNumber}
                                         </span>
                                     </p>
@@ -401,7 +401,7 @@ export default function LoginPage() {
                                 <button
                                     type="button"
                                     onClick={() => { setStep("credentials"); setOtp(Array(OTP_LENGTH).fill("")); setLoginError(null); }}
-                                    className="mt-6 flex items-center gap-2 text-sm text-secondary/60 dark:text-gray-500 hover:text-primary transition-colors"
+                                    className="mt-6 mx-auto flex w-fit items-center justify-center gap-2 text-sm text-secondary/60 dark:text-gray-500 hover:text-primary transition-colors"
                                 >
                                     <ArrowRight className="size-4 shrink-0" aria-hidden />
                                     <span>تغيير رقم الجوال</span>
@@ -424,9 +424,9 @@ export default function LoginPage() {
                     <div className="mt-8 text-center">
                         <Link
                             href="/"
-                            className="inline-flex items-center gap-2 text-sm text-secondary/50 dark:text-gray-500 hover:text-primary transition-colors group"
+                            className="inline-flex items-center justify-center gap-2 text-sm text-secondary/50 dark:text-gray-500 hover:text-primary transition-colors"
                         >
-                            <ArrowRight className="size-4 shrink-0 group-hover:translate-x-[-4px] transition-transform" aria-hidden />
+                            <ArrowRight className="size-4 shrink-0" aria-hidden />
                             <span>العودة إلى الرئيسية</span>
                         </Link>
                     </div>
