@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 
 const OTP_EXPIRY_MINUTES = 5;
 function buildSmsUrl(phonenumber: string, message: string): string {
-    return `https://www.brcitco-api.com/api/sendsms/?user=966555544961&pass=Rwes1484&to=966${phonenumber}&message=${encodeURIComponent(message)}&sender=RawaesEs`;
+    return `https://www.brcitco-api.com/api/sendsms/?user=966555544961&pass=Rwes1484&to=966${phonenumber}&message=${encodeURIComponent(message)}&sender=RawaesES`;
 }
 
 function generateOtp(): string {

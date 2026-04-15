@@ -30,7 +30,7 @@ function cleanPhoneForSms(phone: string): string {
 function buildSmsUrl(phone: string, message: string): string {
   const user = process.env.SMS_USER || "966555544961";
   const pass = process.env.SMS_PASS || "Rwes1484";
-  const sender = process.env.SMS_SENDER || "RawaesEs";
+  const sender = process.env.SMS_SENDER || "RawaesES";
   const base = process.env.SMS_API_BASE || "https://www.brcitco-api.com/api/sendsms/";
   return `${base}?user=${encodeURIComponent(user)}&pass=${encodeURIComponent(pass)}&to=966${phone}&message=${encodeURIComponent(message)}&sender=${encodeURIComponent(sender)}`;
 }
