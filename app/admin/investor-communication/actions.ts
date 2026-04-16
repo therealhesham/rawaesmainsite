@@ -7,6 +7,7 @@ import { sendMail } from "@/lib/mail";
 import { buildInvestorEmail } from "@/lib/email-templates";
 import { applyInvestorNamePlaceholders, messageContainsNamePlaceholder } from "@/lib/investor-placeholders";
 import { resolveLogoUrl } from "@/lib/do-spaces";
+import { buildBrcitcoSmsUrl, cleanPhoneForSms } from "@/lib/brcitco-sms";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
 const prisma = new PrismaClient();
@@ -19,21 +20,6 @@ const s3Client = new S3Client({
   },
   forcePathStyle: false,
 });
-
-function cleanPhoneForSms(phone: string): string {
-  const digits = (phone || "").replace(/\D/g, "");
-  if (digits.startsWith("966")) return digits.slice(3);
-  if (digits.startsWith("0")) return digits.slice(1);
-  return digits;
-}
-
-function buildSmsUrl(phone: string, message: string): string {
-  const user = process.env.SMS_USER || "966555544961";
-  const pass = process.env.SMS_PASS || "Aa555544Bb";
-  const sender = process.env.SMS_SENDER || "RawaesES";
-  const base = process.env.SMS_API_BASE || "https://www.brcitco-api.com/api/sendsms/";
-  return `${base}?user=${encodeURIComponent(user)}&pass=${encodeURIComponent(pass)}&to=966${phone}&message=${encodeURIComponent(message)}&sender=${encodeURIComponent(sender)}`;
-}
 
 async function getContactSettings() {
   const contact = await prisma.contactUs.findFirst({ orderBy: { id: "desc" } });
@@ -324,7 +310,9 @@ export async function sendInvestorCommunication(formData: FormData) {
           )
         );
       } else {
-        const withPhone = targetUsers.filter((u) => !!u.phoneNumber);
+        const withPhone = targetUsers.filter(
+          (u) => !!u.phoneNumber && cleanPhoneForSms(u.phoneNumber || "").length > 0
+        );
         if (!withPhone.length) {
           status = "failed";
           errorMsg = "لا يوجد جوال صالح للمستلمين.";
@@ -333,7 +321,8 @@ export async function sendInvestorCommunication(formData: FormData) {
             withPhone.map(async (u) => {
               const phoneForSms = cleanPhoneForSms(u.phoneNumber || "");
               const smsBody = applyInvestorNamePlaceholders(body, u.name);
-              const smsRes = await fetch(buildSmsUrl(phoneForSms, smsBody));
+              if (!phoneForSms) throw new Error(`SMS_FAILED_${u.id}`);
+              const smsRes = await fetch(buildBrcitcoSmsUrl(phoneForSms, smsBody));
               if (!smsRes.ok) throw new Error(`SMS_FAILED_${u.id}`);
             })
           );
