@@ -14,7 +14,8 @@ import {
 } from "lucide-react";
 import { AlertModal } from "@/app/components/AlertModal";
 
-const OTP_LENGTH = 6;
+/** طول الرمز الذي ترسله مسيجات — يتبع إعداد الحساب عندهم. */
+const OTP_LENGTH = 4;
 
 export default function LoginPage() {
     const router = useRouter();
@@ -312,7 +313,7 @@ export default function LoginPage() {
                                 <div className="mb-10 text-center">
                                     <h2 className="text-2xl md:text-3xl font-bold text-secondary dark:text-white mb-3">أدخل رمز التحقق</h2>
                                     <p className="text-secondary/60 dark:text-gray-400 text-sm">
-                                        تم إرسال رمز مكوّن من 6 أرقام إلى{" "}
+                                        تم إرسال رمز مكوّن من {OTP_LENGTH} أرقام إلى{" "}
                                         <span dir="ltr" className="font-semibold text-primary inline-block">
                                             {phoneNumber}
                                         </span>

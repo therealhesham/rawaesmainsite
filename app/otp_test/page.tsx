@@ -39,7 +39,7 @@ export default function OtpTestPage() {
                     اختبار إرسال OTP
                 </h1>
                 <p className="text-sm text-secondary/70 dark:text-gray-400 mb-6">
-                    يُرسل رمز تحقق من 6 أرقام إلى الجوال{" "}
+                    يُرسل رمز تحقق من 4 أرقام إلى الجوال{" "}
                     <span dir="ltr" className="font-mono font-semibold text-primary">
                         533370402
                     </span>
