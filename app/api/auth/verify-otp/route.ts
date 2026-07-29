@@ -49,6 +49,7 @@ export async function POST(req: NextRequest) {
         }
 
         const verified = await verifyOtpCode(record.providerRef, otpStr);
+        console.log("msegat verifyOTPCode:", { id: record.providerRef, raw: verified.raw });
         if (!verified.ok) {
             // 400 = انتهت صلاحيته عند مسيجات، 404 = لم يعد موجوداً — في الحالتين لا فائدة من إبقاء السجل.
             if (verified.code === "400" || verified.code === "404") {

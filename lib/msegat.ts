@@ -15,14 +15,21 @@
 const API_BASE = (process.env.MSEGAT_API_BASE || "https://www.msegat.com/gw").replace(/\/+$/, "");
 
 export type MsegatResult = {
-  /** نجحت العملية (code === "1"). */
+  /** نجحت العملية. */
   ok: boolean;
   /** كود مسيجات كما رجع (نصاً). */
   code: string;
   message: string;
   /** معرّف طلب التحقق — يرجع من sendOTPCode ويُمرَّر إلى verifyOTPCode. */
   id?: string;
+  /** جسم الرد الخام — للتشخيص في اللوجات فقط. */
+  raw?: string;
 };
+
+/** التوثيق يذكر عائلتَي أكواد للنجاح: "1" و "M0000". */
+function isSuccessCode(code: string): boolean {
+  return code === "1" || code.toUpperCase() === "M0000";
+}
 
 function credentials() {
   const userName = process.env.MSEGAT_USERNAME;
@@ -57,20 +64,23 @@ async function post(endpoint: string, body: Record<string, unknown>): Promise<Ms
   });
 
   const text = await res.text();
+  const raw = text.slice(0, 500);
   let data: Record<string, unknown> = {};
   try {
     data = JSON.parse(text);
   } catch {
     // مسيجات قد ترجع نصاً عادياً عند أخطاء البوابة
-    return { ok: false, code: String(res.status), message: text.slice(0, 300) };
+    return { ok: false, code: String(res.status), message: raw, raw };
   }
 
   const code = String(data.code ?? "");
   return {
-    ok: code === "1",
+    // بعض الردود تحمل success بدل code، فنقبل أياً منهما.
+    ok: isSuccessCode(code) || data.success === true,
     code,
     message: String(data.message ?? ""),
     id: data.id != null ? String(data.id) : undefined,
+    raw,
   };
 }
 

@@ -41,6 +41,7 @@ export async function POST(req: NextRequest) {
 
         // مسيجات هي من يولّد الرمز ويرسله؛ نحتفظ بالمعرّف الراجع للتحقق لاحقاً.
         const sent = await sendOtpCode(phone);
+        console.log("msegat sendOTPCode:", sent.raw);
         if (!sent.ok || !sent.id) {
             console.error("msegat sendOTPCode failed:", sent.code, sent.message);
             return NextResponse.json(
