@@ -103,7 +103,9 @@ model OtpVerification {
   id          Int      @id @default(autoincrement())
   nationalId  String
   phoneNumber String
-  otp         String
+  // معرّف طلب التحقق الراجع من مسيجات — الرمز نفسه يبقى عند المزوّد ولا نخزّنه.
+  // العمود في الداتا بيس ما زال اسمه `otp`، فلا حاجة لأي migration.
+  providerRef String   @map("otp")
   expiresAt   DateTime
   createdAt   DateTime @default(now())
 

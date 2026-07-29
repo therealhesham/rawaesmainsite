@@ -7,7 +7,7 @@ import { sendMail } from "@/lib/mail";
 import { buildInvestorEmail } from "@/lib/email-templates";
 import { applyInvestorNamePlaceholders, messageContainsNamePlaceholder } from "@/lib/investor-placeholders";
 import { resolveLogoUrl } from "@/lib/do-spaces";
-import { buildBrcitcoSmsUrl, cleanPhoneForSms } from "@/lib/brcitco-sms";
+import { sendSms, toMsegatNumber } from "@/lib/msegat";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
 const prisma = new PrismaClient();
@@ -310,20 +310,19 @@ export async function sendInvestorCommunication(formData: FormData) {
           )
         );
       } else {
-        const withPhone = targetUsers.filter(
-          (u) => !!u.phoneNumber && cleanPhoneForSms(u.phoneNumber || "").length > 0
-        );
+        const withPhone = targetUsers.filter((u) => !!toMsegatNumber(u.phoneNumber || ""));
         if (!withPhone.length) {
           status = "failed";
           errorMsg = "لا يوجد جوال صالح للمستلمين.";
         } else {
           const settled = await Promise.allSettled(
             withPhone.map(async (u) => {
-              const phoneForSms = cleanPhoneForSms(u.phoneNumber || "");
               const smsBody = applyInvestorNamePlaceholders(body, u.name);
-              if (!phoneForSms) throw new Error(`SMS_FAILED_${u.id}`);
-              const smsRes = await fetch(buildBrcitcoSmsUrl(phoneForSms, smsBody));
-              if (!smsRes.ok) throw new Error(`SMS_FAILED_${u.id}`);
+              const smsRes = await sendSms(u.phoneNumber || "", smsBody);
+              if (!smsRes.ok) {
+                console.error("msegat sendsms failed:", u.id, smsRes.code, smsRes.message);
+                throw new Error(`SMS_FAILED_${u.id}`);
+              }
             })
           );
           const failed = settled.filter((s) => s.status === "rejected").length;

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { SignJWT } from "jose";
 import { cookies } from "next/headers";
+import { verifyOtpCode } from "@/lib/msegat";
 
 const prisma = new PrismaClient();
 
@@ -47,7 +48,17 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        if (record.otp !== otpStr) {
+        const verified = await verifyOtpCode(record.providerRef, otpStr);
+        if (!verified.ok) {
+            // 400 = انتهت صلاحيته عند مسيجات، 404 = لم يعد موجوداً — في الحالتين لا فائدة من إبقاء السجل.
+            if (verified.code === "400" || verified.code === "404") {
+                await prisma.otpVerification.delete({ where: { id: record.id } });
+                return NextResponse.json(
+                    { success: false, error: "انتهى رمز التحقق. اطلب رمزاً جديداً." },
+                    { status: 401 }
+                );
+            }
+            console.error("msegat verifyOTPCode failed:", verified.code, verified.message);
             return NextResponse.json(
                 { success: false, error: "رمز التحقق غير صحيح." },
                 { status: 401 }

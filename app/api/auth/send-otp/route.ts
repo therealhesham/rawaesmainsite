@@ -1,30 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
+import { sendOtpCode } from "@/lib/msegat";
 
 const prisma = new PrismaClient();
 
+/** حارس محلي فقط؛ مسيجات تفرض صلاحيتها الخاصة على الرمز أيضاً. */
 const OTP_EXPIRY_MINUTES = 5;
-
-/** نفس مزوّد الرابط الشغال؛ القيم الافتراضية = اختبارك المعمول به (بدون استدعاء من هنا). */
-function buildSmsUrl(phoneLocal: string, message: string): string {
-    const user = process.env.SMS_USER || "966555544961";
-    const pass = process.env.SMS_PASS || "Aa555544Bb";
-    const sender = process.env.SMS_SENDER || "RawaesES";
-    const base =
-        (process.env.SMS_API_BASE || "https://www.brcitco-api.com/api/sendsms/").replace(/\/?$/, "/");
-    return `${base}?user=${encodeURIComponent(user)}&pass=${encodeURIComponent(pass)}&to=966${phoneLocal}&message=${encodeURIComponent(message)}&sender=${encodeURIComponent(sender)}`;
-}
-
-function generateOtp(): string {
-    return Math.floor(100000 + Math.random() * 900000).toString();
-}
-
-function cleanPhoneForSms(phone: string): string {
-    const digits = phone.replace(/\D/g, "");
-    if (digits.startsWith("966")) return digits.slice(3);
-    if (digits.startsWith("0")) return digits.slice(1);
-    return digits;
-}
 
 export async function POST(req: NextRequest) {
     try {
@@ -58,8 +39,15 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        const otp = generateOtp();
-        const expiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
+        // مسيجات هي من يولّد الرمز ويرسله؛ نحتفظ بالمعرّف الراجع للتحقق لاحقاً.
+        const sent = await sendOtpCode(phone);
+        if (!sent.ok || !sent.id) {
+            console.error("msegat sendOTPCode failed:", sent.code, sent.message);
+            return NextResponse.json(
+                { success: false, error: "فشل إرسال الرسالة. حاول لاحقاً." },
+                { status: 500 }
+            );
+        }
 
         await prisma.otpVerification.deleteMany({
             where: { nationalId: nid, phoneNumber: phone },
@@ -69,23 +57,10 @@ export async function POST(req: NextRequest) {
             data: {
                 nationalId: nid,
                 phoneNumber: phone,
-                otp,
-                expiresAt,
+                providerRef: sent.id,
+                expiresAt: new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000),
             },
         });
-
-        const phoneForSms = cleanPhoneForSms(phone);
-        const message = `رمز التحقق: ${otp}`;
-        const url = buildSmsUrl(phoneForSms, message);
-
-        const smsRes = await fetch(url);
-        if (!smsRes.ok) {
-            console.error("SMS API error:", await smsRes.text());
-            return NextResponse.json(
-                { success: false, error: "فشل إرسال الرسالة. حاول لاحقاً." },
-                { status: 500 }
-            );
-        }
 
         return NextResponse.json({ success: true });
     } catch (err) {
